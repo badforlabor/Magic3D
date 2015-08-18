@@ -1,0 +1,39 @@
+#pragma once
+#include "GppDefines.h"
+#include <fstream>
+#include <iostream>
+
+namespace GPP
+{
+    enum LogLevel
+    {
+        LOGLEVEL_DEBUG = 0,
+        LOGLEVEL_INFO,
+        LOGLEVEL_WARN,
+        LOGLEVEL_ERROR,
+        LOGLEVEL_OFF
+    };
+
+    extern const LogLevel gSystemLogLevel;
+
+#define GPPLog(level) \
+    if (level < GPP::gSystemLogLevel) ;\
+    else GPP::LogSystem::Get()->GetOFStream() 
+#define GPPDebug GPPLog(GPP::LOGLEVEL_DEBUG)
+#define GPPInfo GPPLog(GPP::LOGLEVEL_INFO)
+#define GPPWarn GPPLog(GPP::LOGLEVEL_WARN)
+#define GPPError GPPLog(GPP::LOGLEVEL_ERROR)
+
+    class GPP_EXPORT LogSystem
+    {
+    private:
+        static LogSystem* mpLogSystem;
+        LogSystem(void);
+    public:
+        static LogSystem* Get(void);
+        ~LogSystem(void);
+        std::ofstream& GetOFStream();
+    public:
+        std::ofstream mOFStream;
+    };
+}
