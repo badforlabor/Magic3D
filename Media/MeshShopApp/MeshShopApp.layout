@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MyGUI type="Layout" version="3.2.0">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 200 768" align="Left Top" layer="Back">
+        <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportMesh"/>
+        <Widget type="Button" skin="But_Save" position="15 90 60 60" align="Left Top" name="But_ExportMesh">
+            <Property key="Enabled" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Home" position="15 390 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Contact" position="15 465 60 60" align="Left Top" name="But_Contact"/>
+    </Widget>
+</MyGUI>

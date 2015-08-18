@@ -1,2 +1,2 @@
 # Magic3D
-Magic 3D applications.
+Magic 3D Applications.

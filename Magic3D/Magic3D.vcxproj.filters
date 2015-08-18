@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Application">
+      <UniqueIdentifier>{3fd0206f-3357-4431-a4b8-2bef637f4a58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{d024b6c8-b149-49df-a81c-e1e53e50ddb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Common">
+      <UniqueIdentifier>{1f65aeb8-c516-46d6-bd47-bb62405ffe5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Homepage">
+      <UniqueIdentifier>{e435a95e-38d5-4e9d-b226-4c051bc398d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\MeshShopApp">
+      <UniqueIdentifier>{292e845e-777e-453c-b619-7d27db1d9ce7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\PointShopApp">
+      <UniqueIdentifier>{0e06b2e9-62f9-4cc1-b328-4861a5198548}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\GUISystem.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\InputSystem.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\MagicFramework.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\MagicListener.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\MagicOgre.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\RenderSystem.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\ResourceManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\ToolKit.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\LogSystem.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\AppManager.h">
+      <Filter>Application\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\AppBase.h">
+      <Filter>Application\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\HomepageUI.h">
+      <Filter>Application\Homepage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\Homepage.h">
+      <Filter>Application\Homepage</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\MeshShopAppUI.h">
+      <Filter>Application\MeshShopApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\MeshShopApp.h">
+      <Filter>Application\MeshShopApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\PointShopAppUI.h">
+      <Filter>Application\PointShopApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\PointShopApp.h">
+      <Filter>Application\PointShopApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\ViewTool.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Magic3D.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\GUISystem.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\InputSystem.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\MagicFramework.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\MagicListener.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\RenderSystem.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\ResourceManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\ToolKit.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\LogSystem.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\AppBase.cpp">
+      <Filter>Application\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\AppManager.cpp">
+      <Filter>Application\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\Homepage.cpp">
+      <Filter>Application\Homepage</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\HomepageUI.cpp">
+      <Filter>Application\Homepage</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\MeshShopApp.cpp">
+      <Filter>Application\MeshShopApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\MeshShopAppUI.cpp">
+      <Filter>Application\MeshShopApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\PointShopApp.cpp">
+      <Filter>Application\PointShopApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\PointShopAppUI.cpp">
+      <Filter>Application\PointShopApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\ViewTool.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
