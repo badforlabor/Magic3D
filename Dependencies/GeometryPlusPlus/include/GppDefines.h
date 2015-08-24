@@ -1,10 +1,8 @@
 #pragma once
 
-#ifdef GPP_SOURCE
-#define GPP_EXPORT
-#else
+#ifdef GPP_DLL_EXPORT
 #ifdef WIN32
-#if GPP_BUILD
+#ifdef GPP_BUILD
 #define GPP_EXPORT __declspec(dllexport)
 #else
 #define GPP_EXPORT __declspec(dllimport)
@@ -12,6 +10,12 @@
 #else
 #define GPP_EXPORT
 #endif
+#else
+#define GPP_EXPORT
+#endif
+
+#ifndef NULL
+#define NULL 0
 #endif
 
 namespace GPP
