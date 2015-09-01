@@ -22,6 +22,9 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ImportPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ImportPointCloud);
         mRoot.at(0)->findWidget("But_ExportPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ExportPointCloud);
         mRoot.at(0)->findWidget("But_SmoothPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SmoothPointCloud);
+        mRoot.at(0)->findWidget("But_SamplePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SamplePointCloud);
+        mRoot.at(0)->findWidget("But_CalNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::CalculatePointCloudNormal);
+        mRoot.at(0)->findWidget("But_Reconstruction")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ReconstructMesh);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::BackToHomepage);
         mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::Contact);
     }
@@ -42,6 +45,9 @@ namespace MagicApp
             {
                 mRoot.at(0)->findWidget("But_ExportPointCloud")->castType<MyGUI::Button>()->setEnabled(true);
                 mRoot.at(0)->findWidget("But_SmoothPointCloud")->castType<MyGUI::Button>()->setEnabled(true);
+                mRoot.at(0)->findWidget("But_SamplePointCloud")->castType<MyGUI::Button>()->setEnabled(true);
+                mRoot.at(0)->findWidget("But_CalNormal")->castType<MyGUI::Button>()->setEnabled(true);
+                mRoot.at(0)->findWidget("But_Reconstruction")->castType<MyGUI::Button>()->setEnabled(true);
             }
         }
     }
@@ -56,6 +62,33 @@ namespace MagicApp
         if (pointShop != NULL)
         {
             pointShop->SmoothPointCloud();
+        }
+    }
+
+    void PointShopAppUI::SamplePointCloud(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->SamplePointCloud();
+        }
+    }
+
+    void PointShopAppUI::CalculatePointCloudNormal(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->CalculatePointCloudNormal();
+        }
+    }
+
+    void PointShopAppUI::ReconstructMesh(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->ReconstructMesh();
         }
     }
 

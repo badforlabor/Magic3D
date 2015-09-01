@@ -158,6 +158,17 @@ namespace MagicApp
         return false;
     }
 
+    void MeshShopApp::SetMesh(GPP::TriMesh* triMesh)
+    {
+        if (!mpTriMesh)
+        {
+            delete mpTriMesh;
+        }
+        mpTriMesh = triMesh;
+        InitViewTool();
+        UpdateMeshRendering();
+    }
+
     void MeshShopApp::UpdateMeshRendering()
     {
         if (mpTriMesh == NULL)

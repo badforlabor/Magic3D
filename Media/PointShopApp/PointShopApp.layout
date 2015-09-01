@@ -8,7 +8,16 @@
     <Widget type="Button" skin="But_Smooth" position="15 155 60 60" align="Left Top" name="But_SmoothPointCloud">
         <Property key="Enabled" value="false"/>
     </Widget>
-	<Widget type="Button" skin="But_Home" position="15 390 60 60" align="Left Top" name="But_BackToHomepage"/>
-	<Widget type="Button" skin="But_Contact" position="15 465 60 60" align="Left Top" name="But_Contact"/>
+    <Widget type="Button" skin="But_Sampling" position="15 225 60 60" align="Left Top" name="But_SamplePointCloud">
+        <Property key="Enabled" value="false"/>
+    </Widget>
+    <Widget type="Button" skin="But_Normal" position="15 295 60 60" align="Left Top" name="But_CalNormal">
+        <Property key="Enabled" value="false"/>
+    </Widget>
+    <Widget type="Button" skin="But_Reconstruction" position="15 365 60 60" align="Left Top" name="But_Reconstruction">
+        <Property key="Enabled" value="false"/>
+    </Widget>
+	<Widget type="Button" skin="But_Home" position="15 490 60 60" align="Left Top" name="But_BackToHomepage"/>
+	<Widget type="Button" skin="But_Contact" position="15 565 60 60" align="Left Top" name="But_Contact"/>
     </Widget>
 </MyGUI>

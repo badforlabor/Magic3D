@@ -5,10 +5,14 @@
 #include "../Common/ToolKit.h"
 #include "../Common/RenderSystem.h"
 #include "../Common/ViewTool.h"
+#include "AppManager.h"
+#include "MeshShopApp.h"
 #include "PointCloud.h"
 #include "Parser.h"
 #include "ErrorCodes.h"
 #include "ConsolidatePointCloud.h"
+#include "SamplePointCloud.h"
+#include "PoissonReconstructMesh.h"
 
 namespace MagicApp
 {
@@ -171,6 +175,81 @@ namespace MagicApp
             else
             {
                 InfoLog << "Error SmoothPointCloud: " << res << std::endl;
+            }
+        }
+    }
+
+    void PointShopApp::SamplePointCloud(void)
+    {
+        if (mpPointCloud != NULL)
+        {
+            int pointCount = mpPointCloud->GetPointCount();
+            int sampleCount = pointCount / 2;
+            int* sampleIndex = new int[sampleCount];
+            GPP::Int res = GPP::SamplePointCloud::UniformSample(mpPointCloud, sampleCount, sampleIndex);
+            if (res == GPP_NO_ERROR)
+            {
+                GPP::PointCloud* samplePointCloud = new GPP::PointCloud;
+                for (int sid = 0; sid < sampleCount; sid++)
+                {
+                    samplePointCloud->InsertPoint(mpPointCloud->GetPointCoord(sampleIndex[sid]), mpPointCloud->GetPointNormal(sampleIndex[sid]));
+                }
+                samplePointCloud->SetHasNormal(mpPointCloud->HasNormal());
+                delete mpPointCloud;
+                mpPointCloud = samplePointCloud;
+                UpdatePointCloudRendering();
+            }
+            else
+            {
+                InfoLog << "Error SamplePointCloud: " << res << std::endl;
+            }
+            if (sampleIndex != NULL)
+            {
+                delete []sampleIndex;
+                sampleIndex = NULL;
+            }
+        }
+    }
+
+    void PointShopApp::CalculatePointCloudNormal()
+    {
+        if (mpPointCloud != NULL)
+        {
+            GPP::Int res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloud);
+            if (res == GPP_NO_ERROR)
+            {
+                mpPointCloud->SetHasNormal(true);
+                UpdatePointCloudRendering();
+            }
+            else
+            {
+                InfoLog << "Error CalculatePointCloudNormal: " << res << std::endl;
+            }
+        }
+    }
+
+    void PointShopApp::ReconstructMesh()
+    {
+        if (mpPointCloud != NULL)
+        {
+            GPP::PoissonReconstructMesh reconstructTool;
+            GPP::Int res = reconstructTool.Init(mpPointCloud);
+            if (res == GPP_NO_ERROR)
+            {
+                GPP::TriMesh* triMesh = reconstructTool.ReconstructCloseMesh();
+                if (triMesh)
+                {
+                    AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
+                    MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
+                    if (meshShop)
+                    {
+                        meshShop->SetMesh(triMesh);
+                    }
+                }
+                else
+                {
+                    InfoLog << "PointShopApp::ReconstructMesh: result is NULL" << std::endl;
+                }
             }
         }
     }

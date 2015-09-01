@@ -29,6 +29,7 @@ namespace MagicApp
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
 
         bool ImportMesh(void);
+        void SetMesh(GPP::TriMesh* triMesh);
 
     private:
         void SetupScene(void);

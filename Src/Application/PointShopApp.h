@@ -31,6 +31,9 @@ namespace MagicApp
 
         bool ImportPointCloud(void);
         void SmoothPointCloud(void);
+        void SamplePointCloud(void);
+        void CalculatePointCloudNormal(void);
+        void ReconstructMesh(void);
 
     private:
         void InitViewTool(void);

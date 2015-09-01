@@ -9,7 +9,7 @@ namespace GPP
     public:
         GeneralMatrix();
         GeneralMatrix(Int nRow, Int nCol);
-        GeneralMatrix(Int nRow, Int nCol, const Real* values);
+        GeneralMatrix(Int nRow, Int nCol, const Real* values); //row first
         ~GeneralMatrix();
 
         Int GetRowCount() const;

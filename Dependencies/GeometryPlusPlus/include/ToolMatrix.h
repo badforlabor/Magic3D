@@ -1,6 +1,6 @@
 #pragma once
 #include "SparseMatrix.h"
-#include "VectorX.h"
+#include "GeneralMatrix.h"
 
 namespace GPP
 {
@@ -12,9 +12,28 @@ namespace GPP
         ~LinearSparseLUSolver();
 
         Int Factorize(const SparseMatrix& sparseMatrix);
-        Int Solve(const VectorX& vecB, VectorX* result);
+        Int Solve(const std::vector<Real>& vecB, std::vector<Real>* result);
 
     private:
         LinearSparseLUSolverImpl* mpImpl;
     };
+
+    class SelfAdjointEigenSolverImpl;
+    class GPP_EXPORT SelfAdjointEigenSolver
+    {
+    public:
+        SelfAdjointEigenSolver();
+        ~SelfAdjointEigenSolver();
+
+        Int Compute(const GeneralMatrix& generalMatrix);
+        
+        std::vector<Real> GetEigenVector(Int index) const;
+
+        //The eigenvalues are sorted in increasing order
+        Real GetEigenValue(Int index) const;
+
+    private:
+        SelfAdjointEigenSolverImpl* mpImpl;
+    };
+
 }
