@@ -30,10 +30,13 @@ namespace MagicApp
 
         bool ImportMesh(void);
         void SetMesh(GPP::TriMesh* triMesh);
+        void SmoothMesh(void);
+        void SubdivideMesh(void);
 
     private:
         void SetupScene(void);
         void ShutdownScene(void);
+        void ClearData(void);
 
     private:
         void InitViewTool(void);

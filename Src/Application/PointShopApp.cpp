@@ -67,6 +67,7 @@ namespace MagicApp
         {
             mpUI->Shutdown();
         }
+        ClearData();
         return true;
     }
 
@@ -136,7 +137,26 @@ namespace MagicApp
         if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
         {
             MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->resetToInitialState();
-        } 
+        }
+    }
+
+    void PointShopApp::ClearData(void)
+    {
+        if (mpUI != NULL)
+        {
+            delete mpUI;
+            mpUI = NULL;
+        }
+        if (mpPointCloud != NULL)
+        {
+            delete mpPointCloud;
+            mpPointCloud = NULL;
+        }
+        if (mpViewTool != NULL)
+        {
+            delete mpViewTool;
+            mpViewTool = NULL;
+        }
     }
 
     bool PointShopApp::ImportPointCloud()

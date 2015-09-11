@@ -51,6 +51,6 @@ namespace MagicApp
 
     void HomepageUI::Contact(MyGUI::Widget* pSender)
     {
-        MagicCore::ToolKit::OpenWebsite(std::string("https://github.com/threepark"));
+        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/geometryplusplus/about"));
     }
 }

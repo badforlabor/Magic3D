@@ -7,6 +7,9 @@
 #include "../Common/RenderSystem.h"
 #include "Mesh.h"
 #include "Parser.h"
+#include "ErrorCodes.h"
+#include "ConsolidateMesh.h"
+#include "SubdivideMesh.h"
 
 namespace MagicApp
 {
@@ -61,6 +64,7 @@ namespace MagicApp
         {
             mpUI->Shutdown();
         }
+        ClearData();
         return true;
     }
 
@@ -107,6 +111,18 @@ namespace MagicApp
 
     bool MeshShopApp::KeyPressed( const OIS::KeyEvent &arg )
     {
+        if (arg.key == OIS::KC_V && mpTriMesh !=NULL)
+        {
+            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_POINTS);
+        }
+        else if (arg.key == OIS::KC_E && mpTriMesh !=NULL)
+        {
+            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_WIREFRAME);
+        }
+        else if (arg.key == OIS::KC_F && mpTriMesh !=NULL)
+        {
+            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_SOLID);
+        }
         return true;
     }
 
@@ -131,6 +147,25 @@ namespace MagicApp
         {
             MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->resetToInitialState();
         } 
+    }
+
+    void MeshShopApp::ClearData()
+    {
+        if (mpUI != NULL)
+        {
+            delete mpUI;
+            mpUI = NULL;
+        }
+        if (mpTriMesh != NULL)
+        {
+            delete mpTriMesh;
+            mpTriMesh = NULL;
+        }
+        if (mpViewTool != NULL)
+        {
+            delete mpViewTool;
+            mpViewTool = NULL;
+        }
     }
 
     bool MeshShopApp::ImportMesh()
@@ -167,6 +202,30 @@ namespace MagicApp
         mpTriMesh = triMesh;
         InitViewTool();
         UpdateMeshRendering();
+    }
+
+    void MeshShopApp::SmoothMesh()
+    {
+        if (mpTriMesh)
+        {
+            GPP::Int res = GPP::ConsolidateMesh::LaplaceSmooth(mpTriMesh, 0.25, 5, true);
+            if (res == GPP_NO_ERROR)
+            {
+                UpdateMeshRendering();
+            }
+        }
+    }
+
+    void MeshShopApp::SubdivideMesh()
+    {
+        if (mpTriMesh)
+        {
+            GPP::Int res = GPP::SubdivideMesh::CCSubdivideMesh(mpTriMesh);
+            if (res == GPP_NO_ERROR)
+            {
+                UpdateMeshRendering();
+            }
+        }
     }
 
     void MeshShopApp::UpdateMeshRendering()

@@ -42,6 +42,7 @@ namespace MagicApp
     private:
         void SetupScene(void);
         void ShutdownScene(void);
+        void ClearData(void);
 
     private:
         PointShopAppUI* mpUI;

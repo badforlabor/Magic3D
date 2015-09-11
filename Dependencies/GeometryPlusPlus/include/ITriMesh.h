@@ -18,6 +18,7 @@ namespace GPP
         virtual int InsertTriangle(int vertexId0, int vertexId1, int vertexId2) = 0;
         virtual int InsertVertex(const Vector3& coord) = 0;
         virtual void UpdateNormal(void) = 0;
+        virtual void Clear(void) = 0;
 
         virtual ~ITriMesh(){};
     };

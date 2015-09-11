@@ -116,6 +116,7 @@ namespace GPP
         virtual int InsertVertex(const Vector3& coord);
         void InsertVertex(Vertex3D* vertex);     
         int InsertVertex(const Vector3& coord, const Vector3& normal);
+        virtual void Clear(void);
 
         Vector3 GetVertexColor(int vid) const;
         void SetVertexColor(int vid, const Vector3& color);
