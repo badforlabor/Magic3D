@@ -1,0 +1,1 @@
+This lib is built under VS2012 Release x64.
