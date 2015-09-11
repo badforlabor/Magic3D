@@ -51,7 +51,7 @@ namespace MagicCore
             SetupCameraDefaultParameter();
             // Create a viewport covering whole window
             Ogre::Viewport* viewPort = mpRenderWindow->addViewport(mpMainCamera);
-            viewPort->setBackgroundColour(Ogre::ColourValue(0.8627450980392157, 0.8627450980392157, 0.8627450980392157));
+            viewPort->setBackgroundColour(Ogre::ColourValue(0.8705882352941176, 0.8705882352941176, 0.8705882352941176));
             // Update the camera aspect ratio to that of the viewport
             mpMainCamera->setAspectRatio(Ogre::Real(viewPort->getActualWidth()) / Ogre::Real(viewPort->getActualHeight()));
 
