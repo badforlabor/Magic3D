@@ -32,6 +32,7 @@ namespace MagicApp
         void SetMesh(GPP::TriMesh* triMesh);
         void SmoothMesh(void);
         void SubdivideMesh(void);
+        void SimplifyMesh(void);
 
     private:
         void SetupScene(void);

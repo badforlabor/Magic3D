@@ -4,6 +4,8 @@ material CookTorrance
     {
         pass
         {
+            cull_hardware none
+            
             vertex_program_ref VCookTorrance
             {
                 param_named_auto worldViewProj    worldviewproj_matrix

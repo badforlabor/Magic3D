@@ -17,6 +17,7 @@ namespace MagicApp
         void ExportMesh(MyGUI::Widget* pSender);
         void SmoothMesh(MyGUI::Widget* pSender);
         void SubdivideMesh(MyGUI::Widget* pSender);
+        void SimplifyMesh(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
         void Contact(MyGUI::Widget* pSender);
 

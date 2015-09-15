@@ -25,5 +25,6 @@ Import
 Export
 Smooth
 Subdivision
+Simplification
 back home
 help

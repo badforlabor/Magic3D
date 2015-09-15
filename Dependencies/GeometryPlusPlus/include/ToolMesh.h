@@ -16,6 +16,6 @@ namespace GPP
     //Seperate two meshes
     extern GPP_EXPORT HalfMesh* CreateHalfMeshFromITriMesh(const ITriMesh* triMesh);
 
-    //triMesh needs to be initialized as a blank entiry
-    extern GPP_EXPORT void ConvertHalfMeshToITriMesh(HalfMesh* halfMesh, ITriMesh** triMesh);
+    //triMesh should not be null
+    extern GPP_EXPORT Int ConvertHalfMeshToITriMesh(HalfMesh* halfMesh, ITriMesh* triMesh);
 }

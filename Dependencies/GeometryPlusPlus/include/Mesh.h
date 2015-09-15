@@ -24,8 +24,9 @@ namespace GPP
         Edge3D* GetEdge();
         const Edge3D* GetEdge() const;
         void    SetEdge(Edge3D* edge);
-        int     GetId() const;
-        void    SetId(int id);
+        Int     GetId() const;
+        void    SetId(Int id);
+        Int     GetDegree(void) const;
 
         ~Vertex3D();
 
@@ -35,7 +36,7 @@ namespace GPP
         Vector3 mTexCoord;
         Vector3 mColor;
         Edge3D* mpEdge;
-        int     mId;
+        Int     mId;
     };
 
     class Face3D;
@@ -59,8 +60,8 @@ namespace GPP
         Face3D*   GetFace();
         const Face3D* GetFace() const;
         void      SetFace(Face3D* face);
-        int       GetId() const;
-        void      SetId(int id);
+        Int       GetId() const;
+        void      SetId(Int id);
 
         ~Edge3D();
 
@@ -70,7 +71,7 @@ namespace GPP
         Edge3D*   mpNext;
         Edge3D*   mpPre;
         Face3D*   mpFace;
-        int       mId;
+        Int       mId;
     };
 
     class GPP_EXPORT Face3D
@@ -83,20 +84,20 @@ namespace GPP
         void    SetEdge(Edge3D* edge);
         Vector3 GetNormal() const;
         void    SetNormal(const Vector3& normal);
-        int     GetId() const;
-        void    SetId(int id);
+        Int     GetId() const;
+        void    SetId(Int id);
 
         ~Face3D();
 
     private:
         Edge3D* mpEdge;
         Vector3 mNormal;
-        int     mId;
+        Int     mId;
     };
 
     struct GPP_EXPORT TriangleVertexIndex
     {
-        int mIndex[3];
+        Int mIndex[3];
     };
 
     class GPP_EXPORT TriMesh : public ITriMesh
@@ -104,26 +105,26 @@ namespace GPP
     public:
         TriMesh();
 
-        virtual int GetVertexCount() const;
-        virtual Vector3 GetVertexCoord(int vid) const;
-        virtual void SetVertexCoord(int vid, const Vector3& coord);
-        virtual Vector3 GetVertexNormal(int vid) const;
-        virtual void SetVertexNormal(int vid, const Vector3& normal);
-        virtual int GetTriangleCount() const;
-        virtual void GetTriangleVertexIds(int fid, int vertexIds[3]) const;
+        virtual Int GetVertexCount() const;
+        virtual Vector3 GetVertexCoord(Int vid) const;
+        virtual void SetVertexCoord(Int vid, const Vector3& coord);
+        virtual Vector3 GetVertexNormal(Int vid) const;
+        virtual void SetVertexNormal(Int vid, const Vector3& normal);
+        virtual Int GetTriangleCount() const;
+        virtual void GetTriangleVertexIds(Int fid, Int vertexIds[3]) const;
         virtual void UpdateNormal(void);
-        virtual int InsertTriangle(int vertexId0, int vertexId1, int vertexId2);
-        virtual int InsertVertex(const Vector3& coord);
+        virtual Int InsertTriangle(Int vertexId0, Int vertexId1, Int vertexId2);
+        virtual Int InsertVertex(const Vector3& coord);
         void InsertVertex(Vertex3D* vertex);     
-        int InsertVertex(const Vector3& coord, const Vector3& normal);
+        Int InsertVertex(const Vector3& coord, const Vector3& normal);
         virtual void Clear(void);
 
-        Vector3 GetVertexColor(int vid) const;
-        void SetVertexColor(int vid, const Vector3& color);
-        Vector3 GetVertexTexcoord(int vid) const;
-        void SetVertexTexcoord(int vid, const Vector3& texcoord);
-        Vertex3D* GetVertex(int vid);
-        const Vertex3D* GetVertex(int vid) const;  
+        Vector3 GetVertexColor(Int vid) const;
+        void SetVertexColor(Int vid, const Vector3& color);
+        Vector3 GetVertexTexcoord(Int vid) const;
+        void SetVertexTexcoord(Int vid, const Vector3& texcoord);
+        Vertex3D* GetVertex(Int vid);
+        const Vertex3D* GetVertex(Int vid) const;  
         
         void UnifyCoords(Real bboxSize);
 
@@ -139,15 +140,15 @@ namespace GPP
     public:
         HalfMesh();
         
-        Vertex3D* GetVertex(int vid);
-        const Vertex3D* GetVertex(int vid) const;
-        Edge3D* GetEdge(int eid);
-        const Edge3D* GetEdge(int eid) const;
-        Face3D* GetFace(int fid);
-        const Face3D* GetFace(int fid) const;
-        int GetVertexCount() const;
-        int GetEdgeCount() const;
-        int GetFaceCount() const;
+        Vertex3D* GetVertex(Int vid);
+        const Vertex3D* GetVertex(Int vid) const;
+        Edge3D* GetEdge(Int eid);
+        const Edge3D* GetEdge(Int eid) const;
+        Face3D* GetFace(Int fid);
+        const Face3D* GetFace(Int fid) const;
+        Int GetVertexCount() const;
+        Int GetEdgeCount() const;
+        Int GetFaceCount() const;
 
         void InsertVertex(Vertex3D* vertex);
         Vertex3D* InsertVertex(const Vector3& coord);
@@ -161,6 +162,8 @@ namespace GPP
         void UpdateVertexIndex();
         void UpdateEdgeIndex();
         void UpdateFaceIndex();
+
+        Int ContractInnerEdge(Int edgeId, bool updateEdgeMap);
 
         ~HalfMesh();
 

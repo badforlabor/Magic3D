@@ -5,6 +5,7 @@
         <Widget type="Button" skin="But_Save" position="15 90 60 60" align="Left Top" name="But_ExportMesh"></Widget>
         <Widget type="Button" skin="But_Smooth" position="15 165 60 60" align="Left Top" name="But_SmoothMesh"></Widget>
         <Widget type="Button" skin="But_Outlier" position="15 240 60 60" align="Left Top" name="But_SubdivideMesh"></Widget>
+        <Widget type="Button" skin="But_Sampling" position="15 315 60 60" align="Left Top" name="But_SimplifyMesh"></Widget>
         <Widget type="Button" skin="But_Home" position="15 390 60 60" align="Left Top" name="But_BackToHomepage"/>
         <Widget type="Button" skin="But_Contact" position="15 465 60 60" align="Left Top" name="But_Contact"/>
     </Widget>

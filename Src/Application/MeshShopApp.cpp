@@ -10,6 +10,7 @@
 #include "ErrorCodes.h"
 #include "ConsolidateMesh.h"
 #include "SubdivideMesh.h"
+#include "SimplifyMesh.h"
 
 namespace MagicApp
 {
@@ -221,6 +222,18 @@ namespace MagicApp
         if (mpTriMesh)
         {
             GPP::Int res = GPP::SubdivideMesh::CCSubdivideMesh(mpTriMesh);
+            if (res == GPP_NO_ERROR)
+            {
+                UpdateMeshRendering();
+            }
+        }
+    }
+
+    void MeshShopApp::SimplifyMesh()
+    {
+        if (mpTriMesh)
+        {
+            GPP::Int res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, mpTriMesh->GetVertexCount() / 2);
             if (res == GPP_NO_ERROR)
             {
                 UpdateMeshRendering();
