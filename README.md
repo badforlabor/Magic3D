@@ -11,20 +11,25 @@ Run:
 
 Commands:
 PointShop:
-import
-export
-smooth
-sampling to half point count
-calculate point cloud normal
-mesh reconstructiong(needs point cloud normal)
-back to home
-help
+Import
+Export
+Smooth
+Sampling
+Calculate point cloud normal
+Reverse point cloud normal
+Mesh reconstructiong(needs point cloud normal)
 
 MeshShop:
 Import
 Export
+Consolidate topology
+Reverse direction
+Consolidate geometry
 Smooth
-Subdivision
-Simplification
-back home
-help
+Sampling
+Loop Subdivision
+C-C Subdivision
+Refine Mesh
+Simplify Mesh
+Parameterization
+
