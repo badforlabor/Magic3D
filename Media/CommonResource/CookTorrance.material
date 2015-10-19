@@ -4,7 +4,7 @@ material CookTorrance
     {
         pass
         {
-            cull_hardware none
+            //cull_hardware none
             
             vertex_program_ref VCookTorrance
             {

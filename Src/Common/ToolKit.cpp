@@ -80,6 +80,60 @@ namespace MagicCore
         }
     }
 
+    GPP::Vector3 ToolKit::ColorCoding(double f)
+    {
+        GPP::Vector3 colorV;
+        if (f >= 0 && f < 0.2)
+        {
+            colorV[0] = f * 5.0;
+            colorV[1] = 0;
+            colorV[2] = 0;
+        }
+        else if (f >= 0.2 && f < 0.4)
+        {
+            colorV[0] = 1;
+            colorV[1] = (f - 0.2) * 5;
+            colorV[2] = 0;
+        }
+        else if (f >= 0.4 && f < 0.6)
+        {
+            colorV[0] = 1 - (f - 0.4) * 5;
+            colorV[1] = 1;
+            colorV[2] = 0;
+        }
+        else if (f >= 0.6 && f < 0.8)
+        {
+            colorV[0] = 0;
+            colorV[1] = 1;
+            colorV[2] = (f - 0.6) * 5;
+        }
+        else if (f >= 0.8 && f < 1)
+        {
+            colorV[0] = 0;
+            colorV[1] = 1 - (f - 0.8) * 5;
+            colorV[2] = 1;
+        }
+        else if (f >= 1 && f <= 1.2)
+        {
+            colorV[0] = (f - 1) * 5;
+            colorV[1] = 0; 
+            colorV[2] = 1;
+        }
+        else if (f > 1.2)
+        {
+            colorV[0] = 1;
+            colorV[1] = 0;
+            colorV[2] = 1;
+        }
+        else
+        {
+            colorV[0] = 0;
+            colorV[1] = 0;
+            colorV[2] = 0;
+        }
+        return colorV;
+    }
+
     bool ToolKit::IsAppRunning()
     {
         return mAppRunning;

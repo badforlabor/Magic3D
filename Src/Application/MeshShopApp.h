@@ -4,6 +4,7 @@
 namespace GPP
 {
     class TriMesh;
+    class PointCloud;
 }
 
 namespace MagicCore
@@ -29,10 +30,20 @@ namespace MagicApp
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
 
         bool ImportMesh(void);
-        void SetMesh(GPP::TriMesh* triMesh);
+        void ExportMesh(void);
+        void ConsolidateTopology(void);
+        void ReverseDirection(void);
+        void ConsolidateGeometry(void);
         void SmoothMesh(void);
-        void SubdivideMesh(void);
-        void SimplifyMesh(void);
+        void LoopSubdivide(void);
+        void CCSubdivide(void);
+        void RefineMesh(int targetVertexCount);
+        void SimplifyMesh(int targetVertexCount);
+        void ParameterizeMesh(void);
+        void SampleMesh(void);
+
+        void SetMesh(GPP::TriMesh* triMesh);
+        int GetMeshVertexCount(void);
 
     private:
         void SetupScene(void);

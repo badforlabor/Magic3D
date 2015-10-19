@@ -8,11 +8,13 @@ namespace GPP
     public:
         IPointCloud(){}
 
-        virtual int GetPointCount() const = 0;
-        virtual Vector3 GetPointCoord(int pid) const = 0;
-        virtual void SetPointCoord(int pid, const Vector3& coord) = 0;
-        virtual Vector3 GetPointNormal(int pid) const = 0;
-        virtual void SetPointNormal(int pid, const Vector3& normal) = 0;
+        virtual Int GetPointCount() const = 0;
+        virtual Vector3 GetPointCoord(Int pid) const = 0;
+        virtual void SetPointCoord(Int pid, const Vector3& coord) = 0;
+        virtual Vector3 GetPointNormal(Int pid) const = 0;
+        virtual void SetPointNormal(Int pid, const Vector3& normal) = 0;
+        virtual bool HasNormal() const = 0;
+        virtual void SetHasNormal(bool has) = 0;
 
         virtual ~IPointCloud(){};
     };

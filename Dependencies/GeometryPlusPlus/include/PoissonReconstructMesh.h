@@ -12,8 +12,7 @@ namespace GPP
         ~PoissonReconstructMesh();
 
         Int Init(IPointCloud* pointCloud);
-        TriMesh* ReconstructCloseMesh();
-        TriMesh* ReconstructOpenMesh();
+        TriMesh* ReconstructMesh();
         void Free(void);
 
     private:

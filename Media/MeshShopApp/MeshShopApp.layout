@@ -2,11 +2,54 @@
 <MyGUI type="Layout" version="3.2.0">
     <Widget type="Widget" skin="PanelEmpty" position="0 0 200 768" align="Left Top" layer="Back">
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportMesh"/>
+
         <Widget type="Button" skin="But_Save" position="15 90 60 60" align="Left Top" name="But_ExportMesh"></Widget>
-        <Widget type="Button" skin="But_Smooth" position="15 165 60 60" align="Left Top" name="But_SmoothMesh"></Widget>
-        <Widget type="Button" skin="But_Outlier" position="15 240 60 60" align="Left Top" name="But_SubdivideMesh"></Widget>
-        <Widget type="Button" skin="But_Sampling" position="15 315 60 60" align="Left Top" name="But_SimplifyMesh"></Widget>
-        <Widget type="Button" skin="But_Home" position="15 390 60 60" align="Left Top" name="But_BackToHomepage"/>
-        <Widget type="Button" skin="But_Contact" position="15 465 60 60" align="Left Top" name="But_Contact"/>
+
+        <Widget type="Button" skin="But_MeshTool" position="15 165 60 60" align="Left Top" name="But_ConsolidateMesh"></Widget>
+        <Widget type="Button" skin="But_Reconstruction" position="80 200 25 25" align="Left Top" name="But_ConsolidateTopology">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Flip" position="110 200 25 25" align="Left Top" name="But_ReverseDirection">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Reconstruction" position="140 200 25 25" align="Left Top" name="But_ConsolidateGeometry">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Smooth" position="170 200 25 25" align="Left Top" name="But_SmoothMesh">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Reconstruction" position="15 240 60 60" align="Left Top" name="But_SubdivideMesh"></Widget>
+        <Widget type="Button" skin="But_Reconstruction" position="80 275 25 25" align="Left Top" name="But_LoopSubdivide">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Reconstruction" position="110 275 25 25" align="Left Top" name="But_CCSubdivide">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Reconstruction" position="15 315 60 60" align="Left Top" name="But_RefineMesh"></Widget>
+        <Widget type="EditBox" skin="EditBox" position="80 350 70 25" align="Left Top" name="Edit_RefineTargetVertexCount">
+            <Property key="TextColour" value="0.286275 0.254902 0.4"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Reconstruction" position="155 350 25 25" align="Left Top" name="But_DoRefineMesh">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Reconstruction" position="15 390 60 60" align="Left Top" name="But_SimplifyMesh"></Widget>
+        <Widget type="EditBox" skin="EditBox" position="80 425 70 25" align="Left Top" name="Edit_SimplifyTargetVertexCount">
+            <Property key="TextColour" value="0.286275 0.254902 0.4"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Reconstruction" position="155 425 25 25" align="Left Top" name="But_DoSimplifyMesh">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Reconstruction" position="15 465 60 60" align="Left Top" name="But_ParameterizeMesh"/>
+
+        <Widget type="Button" skin="But_Sampling" position="15 540 60 60" align="Left Top" name="But_SampleMesh"/>
+
+        <Widget type="Button" skin="But_Home" position="15 615 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Contact" position="15 690 60 60" align="Left Top" name="But_Contact"/>
     </Widget>
 </MyGUI>

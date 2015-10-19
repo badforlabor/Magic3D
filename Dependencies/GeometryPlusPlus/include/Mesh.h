@@ -100,6 +100,12 @@ namespace GPP
         Int mIndex[3];
     };
 
+    enum MeshType
+    {
+        MT_NORMAL = 0,
+        MT_TRIANGLE_SOUP
+    };
+
     class GPP_EXPORT TriMesh : public ITriMesh
     {
     public:
@@ -112,6 +118,7 @@ namespace GPP
         virtual void SetVertexNormal(Int vid, const Vector3& normal);
         virtual Int GetTriangleCount() const;
         virtual void GetTriangleVertexIds(Int fid, Int vertexIds[3]) const;
+        virtual void SetTriangleVertexIds(Int fid, Int vertexId0, Int vertexId1, Int vertexId2);
         virtual void UpdateNormal(void);
         virtual Int InsertTriangle(Int vertexId0, Int vertexId1, Int vertexId2);
         virtual Int InsertVertex(const Vector3& coord);
@@ -119,18 +126,25 @@ namespace GPP
         Int InsertVertex(const Vector3& coord, const Vector3& normal);
         virtual void Clear(void);
 
+        void DeleteTriangles(const std::vector<int>& deleteTriangleIndex);
+        void FuseVertex(void);
+
+        void SetMeshType(MeshType meshType);
+        MeshType GetMeshType(void) const;
         Vector3 GetVertexColor(Int vid) const;
         void SetVertexColor(Int vid, const Vector3& color);
         Vector3 GetVertexTexcoord(Int vid) const;
         void SetVertexTexcoord(Int vid, const Vector3& texcoord);
         Vertex3D* GetVertex(Int vid);
-        const Vertex3D* GetVertex(Int vid) const;  
+        const Vertex3D* GetVertex(Int vid) const; 
+        void SetVertex(Int vid, Vertex3D* vertex);
         
         void UnifyCoords(Real bboxSize);
 
         virtual ~TriMesh();
 
     private:
+        MeshType mMeshType;
         std::vector<Vertex3D*> mVertexList;
         std::vector<TriangleVertexIndex> mTriangleList;
     };
@@ -142,6 +156,7 @@ namespace GPP
         
         Vertex3D* GetVertex(Int vid);
         const Vertex3D* GetVertex(Int vid) const;
+        void SetVertex(Int vid, Vertex3D* vertex);
         Edge3D* GetEdge(Int eid);
         const Edge3D* GetEdge(Int eid) const;
         Face3D* GetFace(Int fid);

@@ -1,39 +1,11 @@
 #pragma once
-#include "SparseMatrix.h"
-#include "GeneralMatrix.h"
+#include "GppDefines.h"
+#include <vector>
+#include <string>
 
 namespace GPP
 {
-    class LinearSparseLUSolverImpl;
-    class GPP_EXPORT LinearSparseLUSolver
-    {
-    public:
-        LinearSparseLUSolver();
-        ~LinearSparseLUSolver();
-
-        Int Factorize(const SparseMatrix& sparseMatrix);
-        Int Solve(const std::vector<Real>& vecB, std::vector<Real>* result);
-
-    private:
-        LinearSparseLUSolverImpl* mpImpl;
-    };
-
-    class SelfAdjointEigenSolverImpl;
-    class GPP_EXPORT SelfAdjointEigenSolver
-    {
-    public:
-        SelfAdjointEigenSolver();
-        ~SelfAdjointEigenSolver();
-
-        Int Compute(const GeneralMatrix& generalMatrix);
-        
-        std::vector<Real> GetEigenVector(Int index) const;
-
-        //The eigenvalues are sorted in increasing order
-        Real GetEigenValue(Int index) const;
-
-    private:
-        SelfAdjointEigenSolverImpl* mpImpl;
-    };
-
+    extern GPP_EXPORT Int AddVector(std::vector<Real>& originVector, const std::vector<Real>& refVector, Int refStartIndex);
+    extern GPP_EXPORT Int SubVector(std::vector<Real>& originVector, const std::vector<Real>& refVector, Int refStartIndex);
+    extern GPP_EXPORT void PrintVector(const std::vector<Real>& vec, std::string vecName);
 }

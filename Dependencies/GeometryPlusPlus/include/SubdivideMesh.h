@@ -11,5 +11,9 @@ namespace GPP
 
         // Catmull-Clark subdivision
         static Int CCSubdivideMesh(ITriMesh* triMesh);
+
+        static Int LoopSubdivideMesh(ITriMesh* triMesh);
+
+        static Int RefineMesh(ITriMesh* triMesh, Int targetVertexCount);
     };
 }

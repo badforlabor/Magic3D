@@ -1,16 +1,25 @@
 #include "stdafx.h"
 #include "MeshShopApp.h"
 #include "MeshShopAppUI.h"
+#include "PointShopApp.h"
+#include "AppManager.h"
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
 #include "../Common/RenderSystem.h"
 #include "Mesh.h"
+#include "PointCloud.h"
 #include "Parser.h"
 #include "ErrorCodes.h"
 #include "ConsolidateMesh.h"
 #include "SubdivideMesh.h"
 #include "SimplifyMesh.h"
+#include "ParameterizeMesh.h"
+#include "ToolMesh.h"
+#include "ToolAnn.h"
+#include "ToolLog.h"
+#include "SparseMatrix.h"
+#include "ToolMatrix.h"
 
 namespace MagicApp
 {
@@ -23,21 +32,9 @@ namespace MagicApp
 
     MeshShopApp::~MeshShopApp()
     {
-        if (mpUI != NULL)
-        {
-            delete mpUI;
-            mpUI = NULL;
-        }
-        if (mpTriMesh != NULL)
-        {
-            delete mpTriMesh;
-            mpTriMesh = NULL;
-        }
-        if (mpViewTool != NULL)
-        {
-            delete mpViewTool;
-            mpViewTool = NULL;
-        }
+        GPPFREEPOINTER(mpUI);
+        GPPFREEPOINTER(mpTriMesh);
+        GPPFREEPOINTER(mpViewTool);
     }
 
     bool MeshShopApp::Enter()
@@ -152,27 +149,15 @@ namespace MagicApp
 
     void MeshShopApp::ClearData()
     {
-        if (mpUI != NULL)
-        {
-            delete mpUI;
-            mpUI = NULL;
-        }
-        if (mpTriMesh != NULL)
-        {
-            delete mpTriMesh;
-            mpTriMesh = NULL;
-        }
-        if (mpViewTool != NULL)
-        {
-            delete mpViewTool;
-            mpViewTool = NULL;
-        }
+        GPPFREEPOINTER(mpUI);
+        GPPFREEPOINTER(mpTriMesh);
+        GPPFREEPOINTER(mpViewTool);
     }
 
     bool MeshShopApp::ImportMesh()
     {
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0Color Files(*.cps)\0*.cps\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             GPP::TriMesh* triMesh = GPP::Parser::ImportTriMesh(fileName);
@@ -194,6 +179,19 @@ namespace MagicApp
         return false;
     }
 
+    void MeshShopApp::ExportMesh()
+    {
+        if (mpTriMesh != NULL)
+        {
+            std::string fileName;
+            char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0Color Files(*.cps)\0*.cps\0";
+            if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
+            {
+                GPP::Parser::ExportTriMesh(fileName, mpTriMesh);
+            }
+        }
+    }
+
     void MeshShopApp::SetMesh(GPP::TriMesh* triMesh)
     {
         if (!mpTriMesh)
@@ -205,39 +203,262 @@ namespace MagicApp
         UpdateMeshRendering();
     }
 
+    void MeshShopApp::ConsolidateTopology()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
+        GPP::Int res = GPP::ConsolidateMesh::MakeTriMeshManifold(mpTriMesh);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::ReverseDirection()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        GPP::Int faceCount = mpTriMesh->GetTriangleCount();
+        GPP::Int vertexIds[3];
+        for (GPP::Int fid = 0; fid < faceCount; fid++)
+        {
+            mpTriMesh->GetTriangleVertexIds(fid, vertexIds);
+            mpTriMesh->SetTriangleVertexIds(fid, vertexIds[1], vertexIds[0], vertexIds[2]);
+        }
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::ConsolidateGeometry()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
+        int maxItrCount = 5;
+        for (int itr = 0; itr < maxItrCount; itr++)
+        {
+            int singlarVertexModified = 0;
+            GPP::Int res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, 0.0174532925199433 * 5.0, GPP::REAL_TOL, &singlarVertexModified);
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                return;
+            }
+            if (singlarVertexModified == 0)
+            {
+                break;
+            }
+        }
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
     void MeshShopApp::SmoothMesh()
     {
-        if (mpTriMesh)
+        if (mpTriMesh == NULL)
         {
-            GPP::Int res = GPP::ConsolidateMesh::LaplaceSmooth(mpTriMesh, 0.25, 5, true);
-            if (res == GPP_NO_ERROR)
-            {
-                UpdateMeshRendering();
-            }
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
+        GPP::Int res = GPP::ConsolidateMesh::LaplaceSmooth(mpTriMesh, 0.2, 5, true);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::LoopSubdivide()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
+        GPP::Int res = GPP::SubdivideMesh::LoopSubdivideMesh(mpTriMesh);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::CCSubdivide()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
+        GPP::Int res = GPP::SubdivideMesh::CCSubdivideMesh(mpTriMesh);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::RefineMesh(int targetVertexCount)
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
+        GPP::Int res = GPP::SubdivideMesh::RefineMesh(mpTriMesh, targetVertexCount);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::SimplifyMesh(int targetVertexCount)
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
+        GPP::Int res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::ParameterizeMesh()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
+        std::vector<GPP::Real> texCoords;
+        GPP::Int res = GPP::ParameterizeMesh::AnglePreservingParameterize(mpTriMesh, &texCoords);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            mpTriMesh->SetVertexCoord(vid, GPP::Vector3(texCoords.at(vid * 2), texCoords.at(vid * 2 + 1), 0));
+        }
+        mpTriMesh->UnifyCoords(2.0);
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::SampleMesh()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+        if (vertexCount < 3)
+        {
+            return;
+        }
+        GPP::PointCloud* pointCloud = new GPP::PointCloud;
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            pointCloud->InsertPoint(mpTriMesh->GetVertexCoord(vid), mpTriMesh->GetVertexNormal(vid));
+        }
+        pointCloud->SetHasNormal(true);
+        AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
+        PointShopApp* pointShop = dynamic_cast<PointShopApp*>(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop)
+        {
+            pointShop->SetPointCloud(pointCloud);
+        }
+        else
+        {
+            delete pointCloud;
+            pointCloud = NULL;
         }
     }
 
-    void MeshShopApp::SubdivideMesh()
+    int MeshShopApp::GetMeshVertexCount()
     {
-        if (mpTriMesh)
+        if (mpTriMesh != NULL)
         {
-            GPP::Int res = GPP::SubdivideMesh::CCSubdivideMesh(mpTriMesh);
-            if (res == GPP_NO_ERROR)
-            {
-                UpdateMeshRendering();
-            }
+            return mpTriMesh->GetVertexCount();
         }
-    }
-
-    void MeshShopApp::SimplifyMesh()
-    {
-        if (mpTriMesh)
+        else
         {
-            GPP::Int res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, mpTriMesh->GetVertexCount() / 2);
-            if (res == GPP_NO_ERROR)
-            {
-                UpdateMeshRendering();
-            }
+            return 0;
         }
     }
 

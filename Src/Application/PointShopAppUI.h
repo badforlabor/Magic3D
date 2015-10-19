@@ -17,7 +17,10 @@ namespace MagicApp
         void ExportPointCloud(MyGUI::Widget* pSender);
         void SmoothPointCloud(MyGUI::Widget* pSender);
         void SamplePointCloud(MyGUI::Widget* pSender);
+        void DoSamplePointCloud(MyGUI::Widget* pSender);
+        void PointCloudNormal(MyGUI::Widget* pSender);
         void CalculatePointCloudNormal(MyGUI::Widget* pSender);
+        void FlipPointCloudNormal(MyGUI::Widget* pSender);
         void ReconstructMesh(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
         void Contact(MyGUI::Widget* pSender);

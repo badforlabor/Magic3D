@@ -30,10 +30,15 @@ namespace MagicApp
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
 
         bool ImportPointCloud(void);
+        void ExportPointCloud(void);
         void SmoothPointCloud(void);
-        void SamplePointCloud(void);
+        void SamplePointCloud(int targetPointCount);
         void CalculatePointCloudNormal(void);
+        void FlipPointCloudNormal(void);
         void ReconstructMesh(void);
+
+        void SetPointCloud(GPP::PointCloud* pointCloud);
+        int GetPointCount(void);
 
     private:
         void InitViewTool(void);

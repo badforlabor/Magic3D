@@ -30,4 +30,5 @@ namespace GPP
     typedef unsigned long long ULongInt;
     static const Real REAL_TOL = 1.0e-15;
     static const Real REAL_LARGE = 1.7e+308;
+    extern bool IsLibraryAvailable(void);
 }

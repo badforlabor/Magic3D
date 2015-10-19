@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "Vector3.h"
 
 namespace MagicCore
 {
@@ -14,6 +15,7 @@ namespace MagicCore
         static bool FileOpenDlg(std::string& selectFileName, char* filterName);
         static bool FileSaveDlg(std::string& selectFileName, char* filterName);
         static void OpenWebsite(std::string& address);
+        static GPP::Vector3 ColorCoding(double f);
 
         bool IsAppRunning(void);
         void SetAppRunning(bool bRunning);

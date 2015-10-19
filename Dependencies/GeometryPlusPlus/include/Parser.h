@@ -6,6 +6,7 @@ namespace GPP
 {
     class PointCloud;
     class TriMesh;
+    class ITriMesh;
     class GPP_EXPORT Parser
     {
     public:
@@ -16,6 +17,6 @@ namespace GPP
         static TriMesh*    ImportTriMesh(std::string fileName);
 
         static void ExportPointCloud(std::string fileName, const PointCloud* pointCloud);
-        static void ExportTriMesh(std::string fileName, const TriMesh* triMesh);
+        static void ExportTriMesh(std::string fileName, const ITriMesh* triMesh);
     };
 }

@@ -162,7 +162,7 @@ namespace MagicApp
     bool PointShopApp::ImportPointCloud()
     {
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0Color Files(*.cps)\0*.cps\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
@@ -183,94 +183,162 @@ namespace MagicApp
         return false;
     }
 
-    void PointShopApp::SmoothPointCloud()
+    void PointShopApp::ExportPointCloud()
     {
-        if (mpPointCloud != NULL)
+        if (mpPointCloud == NULL)
         {
-            GPP::Int res = GPP::ConsolidatePointCloud::LaplaceSmooth(mpPointCloud, 0.1, 5);
-            if (res == GPP_NO_ERROR)
-            {
-                UpdatePointCloudRendering();
-            }
-            else
-            {
-                InfoLog << "Error SmoothPointCloud: " << res << std::endl;
-            }
+            return;
+        }
+        std::string fileName;
+        char filterName[] = "Support format(*.obj, *.ply)\0*.*\0";
+        if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
+        {
+            GPP::Parser::ExportPointCloud(fileName, mpPointCloud);
         }
     }
 
-    void PointShopApp::SamplePointCloud(void)
+    void PointShopApp::SmoothPointCloud()
     {
-        if (mpPointCloud != NULL)
+        if (mpPointCloud == NULL)
         {
-            int pointCount = mpPointCloud->GetPointCount();
-            int sampleCount = pointCount / 2;
-            int* sampleIndex = new int[sampleCount];
-            GPP::Int res = GPP::SamplePointCloud::UniformSample(mpPointCloud, sampleCount, sampleIndex);
-            if (res == GPP_NO_ERROR)
-            {
-                GPP::PointCloud* samplePointCloud = new GPP::PointCloud;
-                for (int sid = 0; sid < sampleCount; sid++)
-                {
-                    samplePointCloud->InsertPoint(mpPointCloud->GetPointCoord(sampleIndex[sid]), mpPointCloud->GetPointNormal(sampleIndex[sid]));
-                }
-                samplePointCloud->SetHasNormal(mpPointCloud->HasNormal());
-                delete mpPointCloud;
-                mpPointCloud = samplePointCloud;
-                UpdatePointCloudRendering();
-            }
-            else
-            {
-                InfoLog << "Error SamplePointCloud: " << res << std::endl;
-            }
+            return;
+        }
+        GPP::Int res = GPP::ConsolidatePointCloud::LaplaceSmooth(mpPointCloud, 0.2, 5);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        UpdatePointCloudRendering();
+    }
+
+    void PointShopApp::SamplePointCloud(int targetPointCount)
+    {
+        if (mpPointCloud == NULL)
+        {
+            return;
+        }
+        int* sampleIndex = new int[targetPointCount];
+        GPP::Int res = GPP::SamplePointCloud::UniformSample(mpPointCloud, targetPointCount, sampleIndex);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
             if (sampleIndex != NULL)
             {
                 delete []sampleIndex;
                 sampleIndex = NULL;
             }
+            return;
+        }
+        GPP::PointCloud* samplePointCloud = new GPP::PointCloud;
+        for (int sid = 0; sid < targetPointCount; sid++)
+        {
+            samplePointCloud->InsertPoint(mpPointCloud->GetPointCoord(sampleIndex[sid]), mpPointCloud->GetPointNormal(sampleIndex[sid]));
+        }
+        samplePointCloud->SetHasNormal(mpPointCloud->HasNormal());
+        delete mpPointCloud;
+        mpPointCloud = samplePointCloud;
+        UpdatePointCloudRendering();
+        if (sampleIndex != NULL)
+        {
+            delete []sampleIndex;
+            sampleIndex = NULL;
         }
     }
 
     void PointShopApp::CalculatePointCloudNormal()
     {
-        if (mpPointCloud != NULL)
+        if (mpPointCloud == NULL)
         {
-            GPP::Int res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloud);
-            if (res == GPP_NO_ERROR)
-            {
-                mpPointCloud->SetHasNormal(true);
-                UpdatePointCloudRendering();
-            }
-            else
-            {
-                InfoLog << "Error CalculatePointCloudNormal: " << res << std::endl;
-            }
+            return;
         }
+        GPP::Int res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloud, 0);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        mpPointCloud->SetHasNormal(true);
+        UpdatePointCloudRendering();
+    }
+
+    void PointShopApp::FlipPointCloudNormal()
+    {
+        if (mpPointCloud == NULL || mpPointCloud->HasNormal() == false)
+        {
+            return;
+        }
+        GPP::Int pointCount = mpPointCloud->GetPointCount();
+        for (GPP::Int pid = 0; pid < pointCount; pid++)
+        {
+            mpPointCloud->SetPointNormal(pid, mpPointCloud->GetPointNormal(pid) * -1.0);
+        }
+        UpdatePointCloudRendering();
     }
 
     void PointShopApp::ReconstructMesh()
     {
+        if (mpPointCloud == NULL)
+        {
+            return;
+        }
+        GPP::PoissonReconstructMesh reconstructTool;
+        GPP::Int res = reconstructTool.Init(mpPointCloud);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        GPP::TriMesh* triMesh = reconstructTool.ReconstructMesh();
+        if (!triMesh)
+        {
+            return;
+        }
+        AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop)
+        {
+            meshShop->SetMesh(triMesh);
+        }
+        else
+        {
+            delete triMesh;
+            triMesh = NULL;
+        }
+    }
+
+    void PointShopApp::SetPointCloud(GPP::PointCloud* pointCloud)
+    {
+        if (!mpPointCloud)
+        {
+            delete mpPointCloud;
+        }
+        mpPointCloud = pointCloud;
+        InitViewTool();
+        UpdatePointCloudRendering();
+    }
+
+    int PointShopApp::GetPointCount()
+    {
         if (mpPointCloud != NULL)
         {
-            GPP::PoissonReconstructMesh reconstructTool;
-            GPP::Int res = reconstructTool.Init(mpPointCloud);
-            if (res == GPP_NO_ERROR)
-            {
-                GPP::TriMesh* triMesh = reconstructTool.ReconstructCloseMesh();
-                if (triMesh)
-                {
-                    AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
-                    MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
-                    if (meshShop)
-                    {
-                        meshShop->SetMesh(triMesh);
-                    }
-                }
-                else
-                {
-                    InfoLog << "PointShopApp::ReconstructMesh: result is NULL" << std::endl;
-                }
-            }
+            return mpPointCloud->GetPointCount();
+        }
+        else
+        {
+            return 0;
         }
     }
 

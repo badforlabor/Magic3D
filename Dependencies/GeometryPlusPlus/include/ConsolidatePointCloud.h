@@ -11,6 +11,6 @@ namespace GPP
 
         static Int LaplaceSmooth(IPointCloud* pointCloud, Real percentage, Int times);
 
-        static Int CalculatePointCloudNormal(IPointCloud* pointCloud);
+        static Int CalculatePointCloudNormal(IPointCloud* pointCloud, Int quality = 0);
     };
 }

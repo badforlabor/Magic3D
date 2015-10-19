@@ -34,20 +34,21 @@ namespace GPP
     public:
         PointCloud();
 
-        virtual int GetPointCount() const;
-        virtual Vector3 GetPointCoord(int pid) const;
-        virtual void SetPointCoord(int pid, const Vector3& coord);
-        virtual Vector3 GetPointNormal(int pid) const;
-        virtual void SetPointNormal(int pid, const Vector3& normal);
+        virtual Int GetPointCount() const;
+        virtual Vector3 GetPointCoord(Int pid) const;
+        virtual void SetPointCoord(Int pid, const Vector3& coord);
+        virtual Vector3 GetPointNormal(Int pid) const;
+        virtual void SetPointNormal(Int pid, const Vector3& normal);
+        virtual bool HasNormal() const;
+        virtual void SetHasNormal(bool has);
 
-        Vector3 GetPointColor(int pid) const;
-        void SetPointColor(int pid, const Vector3& color);
-        int InsertPoint(const Vector3& coord);
-        int InsertPoint(const Vector3& coord, const Vector3& normal);
+        Vector3 GetPointColor(Int pid) const;
+        void SetPointColor(Int pid, const Vector3& color);
+        Int InsertPoint(const Vector3& coord);
+        Int InsertPoint(const Vector3& coord, const Vector3& normal);
         void UpdatePointId(void);
         void UnifyCoords(Real bboxSize);
-        bool HasNormal() const;
-        void SetHasNormal(bool has);
+        
 
         virtual ~PointCloud();
 
