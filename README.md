@@ -1,10 +1,7 @@
 # Magic3D
 Magic 3D Applications.
 
-Build:
-1. Configuration: VS2012 Release x64.
-
-Run:
+Run Software:
 
 1. run setbin.bat
 
@@ -12,17 +9,20 @@ Run:
 
 3. configure the rendering from the ogre dialog, then it will save the configuration in ogre.cfg. You can change the configuration by modifying ogre.cfg or just delete it and then configure from ogre dialog
 
+Build Code:
+1. Configuration: VS2012 Release x64.
+
 Commands:
 
 PointShop:
 
-Import
+Import: OBJ
 
-Export
+Export: OBJ, PLY
 
 Smooth
 
-Sampling
+Sampling: Uniform sampling
 
 Calculate point cloud normal
 
@@ -33,27 +33,26 @@ Mesh reconstructiong(needs point cloud normal)
 
 MeshShop:
 
-Import
+Import: OBJ, STL, OFF
 
-Export
+Export: OBJ, STL
 
-Consolidate topology
+Consolidate topology(Topo): Remove singlar vertex and non-manifold structure
 
 Reverse direction
 
-Consolidate geometry
+Consolidate geometry(Geo): Optimize degenerate and flipped triangles
 
 Smooth
 
+Loop Subdivision(Loop)
+
+C-C Subdivision(C-C)
+
+Refine Mesh(Refine): Add vertices on triangles
+
+Simplify Mesh(Sim)
+
+Parameterization(Flat): Angle preserving parameterization
+
 Sampling
-
-Loop Subdivision
-
-C-C Subdivision
-
-Refine Mesh
-
-Simplify Mesh
-
-Parameterization
-

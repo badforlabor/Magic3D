@@ -1,24 +1,24 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Widget" skin="PanelEmpty" position="0 0 200 768" align="Left Top" layer="Back">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 220 768" align="Left Top" layer="Back">
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportPointCloud"/>
         <Widget type="Button" skin="But_Save" position="15 85 60 60" align="Left Top" name="But_ExportPointCloud"/>
         <Widget type="Button" skin="But_Smooth" position="15 155 60 60" align="Left Top" name="But_SmoothPointCloud"/>
 
         <Widget type="Button" skin="But_Sampling" position="15 225 60 60" align="Left Top" name="But_SamplePointCloud"/>
-        <Widget type="EditBox" skin="EditBox" position="80 260 70 25" align="Left Top" name="Edit_SampleTargetPointCount">
+        <Widget type="EditBox" skin="EditBox" position="80 240 80 30" align="Left Top" name="Edit_SampleTargetPointCount">
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Sampling" position="155 260 25 25" align="Left Top" name="But_DoSamplePointCloud">
+        <Widget type="Button" skin="But_Sampling" position="165 235 40 40" align="Left Top" name="But_DoSamplePointCloud">
             <Property key="Visible" value="false"/>
         </Widget>
         
         <Widget type="Button" skin="But_Normal" position="15 295 60 60" align="Left Top" name="But_Normal"/>
-        <Widget type="Button" skin="But_Normal" position="80 330 25 25" align="Left Top" name="But_CalNormal">
+        <Widget type="Button" skin="But_Normal" position="80 305 40 40" align="Left Top" name="But_CalNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Flip" position="110 330 25 25" align="Left Top" name="But_FlipNormal">
+        <Widget type="Button" skin="But_Flip" position="125 305 40 40" align="Left Top" name="But_FlipNormal">
             <Property key="Visible" value="false"/>
         </Widget>
 
