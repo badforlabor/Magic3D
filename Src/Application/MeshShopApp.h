@@ -5,6 +5,7 @@ namespace GPP
 {
     class TriMesh;
     class PointCloud;
+    class DumpBase;
 }
 
 namespace MagicCore
@@ -44,6 +45,8 @@ namespace MagicApp
 
         void SetMesh(GPP::TriMesh* triMesh);
         int GetMeshVertexCount(void);
+        void SetDumpInfo(GPP::DumpBase* dumpInfo);
+        void RunDumpInfo(void);
 
     private:
         void SetupScene(void);
@@ -58,5 +61,6 @@ namespace MagicApp
         MeshShopAppUI* mpUI;
         GPP::TriMesh* mpTriMesh;
         MagicCore::ViewTool* mpViewTool;
+        GPP::DumpBase* mpDumpInfo;
     };
 }

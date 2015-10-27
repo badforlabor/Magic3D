@@ -28,8 +28,9 @@ namespace GPP
     {
     private:
         static LogSystem* mpLogSystem;
-        LogSystem(void);
+        LogSystem(std::string logFileName);
     public:
+        static void SetLogFileName(std::string logFileName);
         static LogSystem* Get(void);
         ~LogSystem(void);
         std::ofstream& GetOFStream();

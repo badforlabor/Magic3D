@@ -1,4 +1,5 @@
 #pragma once
+#include <fstream>
 
 #ifdef GPP_DLL_EXPORT
 #ifdef WIN32
@@ -28,7 +29,8 @@ namespace GPP
     typedef unsigned int UInt;
     typedef long long LongInt;
     typedef unsigned long long ULongInt;
-    static const Real REAL_TOL = 1.0e-15;
-    static const Real REAL_LARGE = 1.7e+308;
+    extern GPP_EXPORT const Real REAL_TOL;
+    extern GPP_EXPORT const Real REAL_LARGE;
+    
     extern bool IsLibraryAvailable(void);
 }

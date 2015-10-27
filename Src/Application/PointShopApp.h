@@ -4,6 +4,7 @@
 namespace GPP
 {
     class PointCloud;
+    class DumpBase;
 }
 
 namespace MagicCore
@@ -39,6 +40,8 @@ namespace MagicApp
 
         void SetPointCloud(GPP::PointCloud* pointCloud);
         int GetPointCount(void);
+        void SetDumpInfo(GPP::DumpBase* dumpInfo);
+        void RunDumpInfo(void);
 
     private:
         void InitViewTool(void);
@@ -53,5 +56,6 @@ namespace MagicApp
         PointShopAppUI* mpUI;
         GPP::PointCloud* mpPointCloud;
         MagicCore::ViewTool* mpViewTool;
+        GPP::DumpBase* mpDumpInfo;
     };
 }

@@ -20,13 +20,15 @@
 #include "ToolLog.h"
 #include "SparseMatrix.h"
 #include "ToolMatrix.h"
+#include "DumpInfo.h"
 
 namespace MagicApp
 {
     MeshShopApp::MeshShopApp() :
         mpUI(NULL),
         mpTriMesh(NULL),
-        mpViewTool(NULL)
+        mpViewTool(NULL),
+        mpDumpInfo(NULL)
     {
     }
 
@@ -35,6 +37,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpViewTool);
+        GPPFREEPOINTER(mpDumpInfo);
     }
 
     bool MeshShopApp::Enter()
@@ -121,6 +124,10 @@ namespace MagicApp
         {
             MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_SOLID);
         }
+        else if (arg.key == OIS::KC_D)
+        {
+            RunDumpInfo();
+        }
         return true;
     }
 
@@ -203,6 +210,41 @@ namespace MagicApp
         UpdateMeshRendering();
     }
 
+    void MeshShopApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
+    {
+        if (dumpInfo == NULL)
+        {
+            return;
+        }
+        GPPFREEPOINTER(mpDumpInfo);
+        mpDumpInfo = dumpInfo;
+        if (mpDumpInfo->GetTriMesh() == NULL)
+        {
+            return;
+        }
+        GPPFREEPOINTER(mpTriMesh);
+        mpTriMesh = CopyTriMesh(mpDumpInfo->GetTriMesh());
+        mpTriMesh->UpdateNormal();
+        InitViewTool();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::RunDumpInfo()
+    {
+        if (mpDumpInfo == NULL)
+        {
+            return;
+        }
+        mpDumpInfo->Run();
+        //Copy result
+        GPPFREEPOINTER(mpTriMesh);
+        mpTriMesh = CopyTriMesh(mpDumpInfo->GetTriMesh());
+        mpTriMesh->UnifyCoords(2.0);
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+        GPPFREEPOINTER(mpDumpInfo);
+    }
+
     void MeshShopApp::ConsolidateTopology()
     {
         if (mpTriMesh == NULL)
@@ -271,6 +313,7 @@ namespace MagicApp
                 break;
             }
         }
+        mpTriMesh->UnifyCoords(2.0);
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();
     }

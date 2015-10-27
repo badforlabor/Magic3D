@@ -1,6 +1,11 @@
 #include "Homepage.h"
 #include "HomepageUI.h"
+#include "AppManager.h"
+#include "PointShopApp.h"
+#include "MeshShopApp.h"
 #include "../Common/LogSystem.h"
+#include "../Common/ToolKit.h"
+#include "DumpInfo.h"
 
 namespace MagicApp
 {
@@ -42,5 +47,63 @@ namespace MagicApp
             mpUI->Shutdown();
         }
         return true;
+    }
+
+    bool Homepage::KeyPressed( const OIS::KeyEvent &arg )
+    {
+        if (arg.key == OIS::KC_D)
+        {
+            LoadDumpFile();
+        }
+        return true;
+    }
+
+    void Homepage::LoadDumpFile(void)
+    {
+        std::string fileName;
+        char filterName[] = "Dump Files(*.dump)\0*.dump\0";
+        if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
+        {
+            std::ifstream fin(fileName.c_str());
+            int dumpApiName;
+            fin >> dumpApiName;
+            fin.close();
+            GPP::DumpBase* dumpInfo = GPP::DumpManager::Get()->GetDumpInstance(dumpApiName);
+            if (dumpInfo == NULL)
+            {
+                return;
+            }
+            dumpInfo->LoadDumpFile(fileName);
+            if (dumpInfo->GetPointCloud() != NULL)
+            {
+                AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
+                PointShopApp* pointShop = dynamic_cast<PointShopApp*>(AppManager::Get()->GetApp("PointShopApp"));
+                if (pointShop)
+                {
+                    pointShop->SetDumpInfo(dumpInfo);
+                }
+                else
+                {
+                    GPPFREEPOINTER(dumpInfo);
+                }
+            }
+            else if (dumpInfo->GetTriMesh() != NULL)
+            {
+                AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
+                MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
+                if (meshShop)
+                {
+                    meshShop->SetDumpInfo(dumpInfo);
+                }
+                else
+                {
+                    GPPFREEPOINTER(dumpInfo);
+                }
+            }
+            else
+            {
+                GPPFREEPOINTER(dumpInfo);
+            }
+        }
     }
 }

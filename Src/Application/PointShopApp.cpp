@@ -7,39 +7,34 @@
 #include "../Common/ViewTool.h"
 #include "AppManager.h"
 #include "MeshShopApp.h"
+#include "GPPDefines.h"
 #include "PointCloud.h"
 #include "Parser.h"
 #include "ErrorCodes.h"
 #include "ConsolidatePointCloud.h"
 #include "SamplePointCloud.h"
 #include "PoissonReconstructMesh.h"
+#include "Mesh.h"
+#include "ToolPointCloud.h"
+#include "ToolMesh.h"
+#include "DumpInfo.h"
 
 namespace MagicApp
 {
     PointShopApp::PointShopApp() :
         mpUI(NULL),
         mpPointCloud(NULL),
-        mpViewTool(NULL)
+        mpViewTool(NULL),
+        mpDumpInfo(NULL)
     {
     }
 
     PointShopApp::~PointShopApp()
     {
-        if (mpUI != NULL)
-        {
-            delete mpUI;
-            mpUI = NULL;
-        }
-        if (mpPointCloud != NULL)
-        {
-            delete mpPointCloud;
-            mpPointCloud = NULL;
-        }
-        if (mpViewTool != NULL)
-        {
-            delete mpViewTool;
-            mpViewTool = NULL;
-        }
+        GPPFREEPOINTER(mpUI);
+        GPPFREEPOINTER(mpPointCloud);
+        GPPFREEPOINTER(mpViewTool);
+        GPPFREEPOINTER(mpDumpInfo);
     }
 
     bool PointShopApp::Enter(void)
@@ -114,6 +109,10 @@ namespace MagicApp
 
     bool PointShopApp::KeyPressed( const OIS::KeyEvent &arg )
     {
+        if (arg.key == OIS::KC_D)
+        {
+            RunDumpInfo();
+        }
         return true;
     }
 
@@ -267,7 +266,6 @@ namespace MagicApp
         {
             return;
         }
-        mpPointCloud->SetHasNormal(true);
         UpdatePointCloudRendering();
     }
 
@@ -292,16 +290,17 @@ namespace MagicApp
             return;
         }
         GPP::PoissonReconstructMesh reconstructTool;
-        GPP::Int res = reconstructTool.Init(mpPointCloud);
+        GPP::TriMesh* triMesh = new GPP::TriMesh;
+        GPP::Int res = reconstructTool.Reconstruct(mpPointCloud, triMesh);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
         }
         if (res != GPP_NO_ERROR)
         {
+            GPPFREEPOINTER(triMesh);
             return;
         }
-        GPP::TriMesh* triMesh = reconstructTool.ReconstructMesh();
         if (!triMesh)
         {
             return;
@@ -310,6 +309,7 @@ namespace MagicApp
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
         if (meshShop)
         {
+            triMesh->UpdateNormal();
             meshShop->SetMesh(triMesh);
         }
         else
@@ -339,6 +339,59 @@ namespace MagicApp
         else
         {
             return 0;
+        }
+    }
+
+    void PointShopApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
+    {
+        if (dumpInfo == NULL)
+        {
+            return;
+        }
+        GPPFREEPOINTER(mpDumpInfo);
+        mpDumpInfo = dumpInfo;
+        if (mpDumpInfo->GetPointCloud() == NULL)
+        {
+            return;
+        }
+        GPPFREEPOINTER(mpPointCloud);
+        mpPointCloud = CopyPointCloud(mpDumpInfo->GetPointCloud());
+        InitViewTool();
+        UpdatePointCloudRendering();
+    }
+
+    void PointShopApp::RunDumpInfo()
+    {
+        if (mpDumpInfo == NULL)
+        {
+            return;
+        }
+        mpDumpInfo->Run();
+        if (mpDumpInfo->GetTriMesh() != NULL)
+        {
+            GPP::TriMesh* triMesh = CopyTriMesh(mpDumpInfo->GetTriMesh());         
+            if (!triMesh)
+            {
+                return;
+            }
+            AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
+            MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
+            if (meshShop)
+            {
+                triMesh->UpdateNormal();
+                meshShop->SetMesh(triMesh);
+            }
+            else
+            {
+                GPPFREEPOINTER(triMesh);
+            }
+        }
+        else
+        {
+            GPPFREEPOINTER(mpPointCloud);
+            mpPointCloud = CopyPointCloud(mpDumpInfo->GetPointCloud());
+            UpdatePointCloudRendering();
+            GPPFREEPOINTER(mpDumpInfo);
         }
     }
 
