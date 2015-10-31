@@ -14,7 +14,7 @@ namespace GPP
         ~DumpPointCloudPoissonReconstructMesh();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual TriMesh* GetTriMesh(void);
         virtual PointCloud* GetPointCloud(void);
 

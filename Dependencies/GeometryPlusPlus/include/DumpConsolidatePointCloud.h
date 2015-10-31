@@ -13,7 +13,7 @@ namespace GPP
         ~DumpPointCloudConsolidationLaplaceSmooth();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual PointCloud* GetPointCloud(void);
 
         void DumpApiInfo(const IPointCloud* pointCloud, Real percentage, Int times);
@@ -34,7 +34,7 @@ namespace GPP
         ~DumpPointCloudConsolidationNormalCalculation();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual PointCloud* GetPointCloud(void);
 
         void DumpApiInfo(const IPointCloud* pointCloud, Int quality);

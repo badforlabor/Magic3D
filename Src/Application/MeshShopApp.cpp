@@ -235,7 +235,14 @@ namespace MagicApp
         {
             return;
         }
-        mpDumpInfo->Run();
+        GPP::Int res = mpDumpInfo->Run();
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
+        }
         //Copy result
         GPPFREEPOINTER(mpTriMesh);
         mpTriMesh = CopyTriMesh(mpDumpInfo->GetTriMesh());
@@ -243,6 +250,7 @@ namespace MagicApp
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();
         GPPFREEPOINTER(mpDumpInfo);
+        
     }
 
     void MeshShopApp::ConsolidateTopology()
@@ -262,6 +270,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             return;
         }
         mpTriMesh->UpdateNormal();
@@ -295,7 +306,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        int maxItrCount = 5;
+        int maxItrCount = 1;
         for (int itr = 0; itr < maxItrCount; itr++)
         {
             int singlarVertexModified = 0;
@@ -306,6 +317,9 @@ namespace MagicApp
             }
             if (res != GPP_NO_ERROR)
             {
+#if STOPFAILEDCOMMAND
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
                 return;
             }
             if (singlarVertexModified == 0)
@@ -335,6 +349,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             return;
         }
         mpTriMesh->UpdateNormal();
@@ -358,6 +375,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             return;
         }
         mpTriMesh->UpdateNormal();
@@ -381,6 +401,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             return;
         }
         mpTriMesh->UpdateNormal();
@@ -404,6 +427,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             return;
         }
         mpTriMesh->UpdateNormal();
@@ -427,6 +453,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             return;
         }
         mpTriMesh->UpdateNormal();
@@ -451,6 +480,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             return;
         }
         GPP::Int vertexCount = mpTriMesh->GetVertexCount();

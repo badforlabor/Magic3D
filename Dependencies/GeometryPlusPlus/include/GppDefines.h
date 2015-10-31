@@ -19,8 +19,8 @@
 #define NULL 0
 #endif
 
-#define GPPFREEPOINTER(pointer) if (pointer != NULL) { delete pointer; pointer = NULL; }
-#define GPPFREEARRAY(pointer) if (pointer != NULL) { delete []pointer; pointer = NULL; }
+#define GPPFREEPOINTER(pointer) if ((pointer) != NULL) { delete (pointer); (pointer) = NULL; }
+#define GPPFREEARRAY(pointer) if ((pointer) != NULL) { delete [](pointer); (pointer) = NULL; }
 
 namespace GPP
 {

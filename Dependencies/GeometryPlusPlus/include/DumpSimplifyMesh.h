@@ -12,7 +12,7 @@ namespace GPP
         ~DumpMeshSimplificationQuadric();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual TriMesh* GetTriMesh(void);
 
         void DumpApiInfo(const ITriMesh* triMesh, Int targetVertexCount);

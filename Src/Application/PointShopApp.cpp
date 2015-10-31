@@ -209,6 +209,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             return;
         }
         UpdatePointCloudRendering();
@@ -228,6 +231,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             if (sampleIndex != NULL)
             {
                 delete []sampleIndex;
@@ -264,6 +270,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             return;
         }
         UpdatePointCloudRendering();
@@ -298,6 +307,9 @@ namespace MagicApp
         }
         if (res != GPP_NO_ERROR)
         {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
             GPPFREEPOINTER(triMesh);
             return;
         }
@@ -366,7 +378,14 @@ namespace MagicApp
         {
             return;
         }
-        mpDumpInfo->Run();
+        GPP::Int res = mpDumpInfo->Run();
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
+        }
         if (mpDumpInfo->GetTriMesh() != NULL)
         {
             GPP::TriMesh* triMesh = CopyTriMesh(mpDumpInfo->GetTriMesh());         

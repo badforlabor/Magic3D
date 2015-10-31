@@ -1,6 +1,8 @@
 #pragma once
 #include "OIS.h"
 
+#define STOPFAILEDCOMMAND 0
+
 namespace Ogre
 {
     class RenderWindow;

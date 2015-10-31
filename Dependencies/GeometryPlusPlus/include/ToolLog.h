@@ -9,7 +9,6 @@ namespace GPP
     {
         LOGLEVEL_DEBUG = 0,
         LOGLEVEL_INFO,
-        LOGLEVEL_WARN,
         LOGLEVEL_ERROR,
         LOGLEVEL_OFF
     };
@@ -21,7 +20,6 @@ namespace GPP
     else GPP::LogSystem::Get()->GetOFStream() 
 #define GPPDebug GPPLog(GPP::LOGLEVEL_DEBUG)
 #define GPPInfo GPPLog(GPP::LOGLEVEL_INFO)
-#define GPPWarn GPPLog(GPP::LOGLEVEL_WARN)
 #define GPPError GPPLog(GPP::LOGLEVEL_ERROR)
 
     class GPP_EXPORT LogSystem

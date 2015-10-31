@@ -12,7 +12,7 @@ namespace GPP
         ~DumpMeshConsolidationLaplaceSmooth();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual TriMesh* GetTriMesh(void);
 
         void DumpApiInfo(const ITriMesh* triMesh, Real percentage, Int times, bool keepBoundary);
@@ -34,7 +34,7 @@ namespace GPP
         ~DumpMeshConsolidationMakeManifold();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual TriMesh* GetTriMesh(void);
 
         void DumpApiInfo(const ITriMesh* triMesh);
@@ -53,7 +53,7 @@ namespace GPP
         ~DumpMeshConsolidationGeometry();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual TriMesh* GetTriMesh(void);
 
         void DumpApiInfo(const ITriMesh* triMesh, Real angleTol, Real edgeLengthTol);

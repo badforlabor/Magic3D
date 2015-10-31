@@ -12,7 +12,7 @@ namespace GPP
         ~DumpMeshSubdivisionLoop();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual TriMesh* GetTriMesh(void);
 
         void DumpApiInfo(const ITriMesh* triMesh);
@@ -31,7 +31,7 @@ namespace GPP
         ~DumpMeshSubdivisionCC();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual TriMesh* GetTriMesh(void);
 
         void DumpApiInfo(const ITriMesh* triMesh);
@@ -50,7 +50,7 @@ namespace GPP
         ~DumpMeshSubdivisionRefine();
 
         virtual void LoadDumpFile(const std::string& fileName);
-        virtual void Run(void);
+        virtual Int Run(void);
         virtual TriMesh* GetTriMesh(void);
 
         void DumpApiInfo(const ITriMesh* triMesh, Int targetVertexCount);

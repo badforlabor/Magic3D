@@ -36,7 +36,7 @@ namespace GPP
         ~DumpBase();
 
         virtual void LoadDumpFile(const std::string& fileName) = 0;
-        virtual void Run(void) = 0;
+        virtual Int Run(void) = 0;
         virtual TriMesh* GetTriMesh(void);
         virtual PointCloud* GetPointCloud(void);
 
