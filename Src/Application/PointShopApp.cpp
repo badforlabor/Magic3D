@@ -298,9 +298,8 @@ namespace MagicApp
         {
             return;
         }
-        GPP::PoissonReconstructMesh reconstructTool;
         GPP::TriMesh* triMesh = new GPP::TriMesh;
-        GPP::Int res = reconstructTool.Reconstruct(mpPointCloud, triMesh);
+        GPP::Int res = GPP::PoissonReconstructMesh::Reconstruct(mpPointCloud, triMesh);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);

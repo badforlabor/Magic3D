@@ -191,7 +191,7 @@ namespace MagicApp
         if (mpTriMesh != NULL)
         {
             std::string fileName;
-            char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0Color Files(*.cps)\0*.cps\0";
+            char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0";
             if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
             {
                 GPP::Parser::ExportTriMesh(fileName, mpTriMesh);
