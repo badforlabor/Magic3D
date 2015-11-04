@@ -20,6 +20,7 @@ namespace MagicApp
         void ReverseDirection(MyGUI::Widget* pSender);
         void ConsolidateGeometry(MyGUI::Widget* pSender);
         void SmoothMesh(MyGUI::Widget* pSender);
+        void EnhanceMeshDetail(MyGUI::Widget* pSender);
         void SubdivideMesh(MyGUI::Widget* pSender);
         void LoopSubdivide(MyGUI::Widget* pSender);
         void CCSubdivide(MyGUI::Widget* pSender);

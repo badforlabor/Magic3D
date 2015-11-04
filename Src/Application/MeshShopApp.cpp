@@ -12,6 +12,7 @@
 #include "Parser.h"
 #include "ErrorCodes.h"
 #include "ConsolidateMesh.h"
+#include "DecomposeMesh.h"
 #include "SubdivideMesh.h"
 #include "SimplifyMesh.h"
 #include "ParameterizeMesh.h"
@@ -353,6 +354,42 @@ namespace MagicApp
             MagicCore::ToolKit::Get()->SetAppRunning(false);
 #endif
             return;
+        }
+        mpTriMesh->UpdateNormal();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::EnhanceMeshDetail()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
+        std::vector<GPP::Real> heightField;
+        std::vector<GPP::Vector3> baseMeshCoords;
+        std::vector<GPP::Vector3> baseMeshNormals;
+        GPP::Int res = GPP::DecomposeMesh::DecomposeHeightField(mpTriMesh, &heightField, &baseMeshCoords, &baseMeshNormals);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
+        }
+        GPP::Real enhanceFactor = 2.0;
+        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            mpTriMesh->SetVertexCoord(vid, baseMeshCoords.at(vid) + baseMeshNormals.at(vid) * (heightField.at(vid) * enhanceFactor));
+            //mpTriMesh->SetVertexCoord(vid, baseMeshCoords.at(vid));
         }
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();

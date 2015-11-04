@@ -45,6 +45,8 @@ Consolidate geometry(Geo): Optimize degenerate and flipped triangles
 
 Smooth
 
+Enhance mesh detail
+
 Loop Subdivision(Loop)
 
 C-C Subdivision(C-C)

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Widget" skin="PanelEmpty" position="0 0 260 768" align="Left Top" layer="Back">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 310 768" align="Left Top" layer="Back">
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportMesh"/>
 
         <Widget type="Button" skin="But_Save" position="15 90 60 60" align="Left Top" name="But_ExportMesh"></Widget>
@@ -16,6 +16,9 @@
             <Property key="Visible" value="false"/>
         </Widget>
         <Widget type="Button" skin="But_Smooth" position="215 175 40 40" align="Left Top" name="But_SmoothMesh">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Outlier" position="260 175 40 40" align="Left Top" name="But_EnhanceMeshDetail">
             <Property key="Visible" value="false"/>
         </Widget>
 

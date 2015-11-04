@@ -26,6 +26,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ReverseDirection")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ReverseDirection);
         mRoot.at(0)->findWidget("But_ConsolidateGeometry")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateGeometry);
         mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SmoothMesh);
+        mRoot.at(0)->findWidget("But_EnhanceMeshDetail")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnhanceMeshDetail);
         mRoot.at(0)->findWidget("But_SubdivideMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SubdivideMesh);
         mRoot.at(0)->findWidget("But_LoopSubdivide")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::LoopSubdivide);
         mRoot.at(0)->findWidget("But_CCSubdivide")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::CCSubdivide);
@@ -71,6 +72,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ReverseDirection")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_ConsolidateGeometry")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_EnhanceMeshDetail")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
     void MeshShopAppUI::ConsolidateTopology(MyGUI::Widget* pSender)
@@ -106,6 +108,15 @@ namespace MagicApp
         if (meshShop != NULL)
         {
             meshShop->SmoothMesh();
+        }
+    }
+
+    void MeshShopAppUI::EnhanceMeshDetail(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->EnhanceMeshDetail();
         }
     }
 

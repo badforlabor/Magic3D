@@ -36,6 +36,7 @@ namespace MagicApp
         void ReverseDirection(void);
         void ConsolidateGeometry(void);
         void SmoothMesh(void);
+        void EnhanceMeshDetail(void);
         void LoopSubdivide(void);
         void CCSubdivide(void);
         void RefineMesh(int targetVertexCount);
