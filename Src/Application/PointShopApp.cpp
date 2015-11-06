@@ -223,7 +223,7 @@ namespace MagicApp
         {
             return;
         }
-        int* sampleIndex = new int[targetPointCount];
+        GPP::Int* sampleIndex = new int[targetPointCount];
         GPP::Int res = GPP::SamplePointCloud::UniformSample(mpPointCloud, targetPointCount, sampleIndex);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
@@ -234,15 +234,11 @@ namespace MagicApp
 #if STOPFAILEDCOMMAND
             MagicCore::ToolKit::Get()->SetAppRunning(false);
 #endif
-            if (sampleIndex != NULL)
-            {
-                delete []sampleIndex;
-                sampleIndex = NULL;
-            }
+            GPPFREEARRAY(sampleIndex);
             return;
         }
         GPP::PointCloud* samplePointCloud = new GPP::PointCloud;
-        for (int sid = 0; sid < targetPointCount; sid++)
+        for (GPP::Int sid = 0; sid < targetPointCount; sid++)
         {
             samplePointCloud->InsertPoint(mpPointCloud->GetPointCoord(sampleIndex[sid]), mpPointCloud->GetPointNormal(sampleIndex[sid]));
         }
