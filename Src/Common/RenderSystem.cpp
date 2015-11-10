@@ -3,7 +3,7 @@
 #include "../Common/LogSystem.h"
 #include "MagicListener.h"
 #include "PointCloud.h"
-#include "Mesh.h"
+#include "TriMesh.h"
 
 namespace MagicCore
 {

@@ -14,7 +14,7 @@
 #include "ConsolidatePointCloud.h"
 #include "SamplePointCloud.h"
 #include "PoissonReconstructMesh.h"
-#include "Mesh.h"
+#include "TriMesh.h"
 #include "ToolPointCloud.h"
 #include "ToolMesh.h"
 #include "DumpInfo.h"
