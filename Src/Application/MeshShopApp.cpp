@@ -7,7 +7,7 @@
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
 #include "../Common/RenderSystem.h"
-#include "Mesh.h"
+#include "TriMesh.h"
 #include "PointCloud.h"
 #include "Parser.h"
 #include "ErrorCodes.h"
@@ -276,6 +276,14 @@ namespace MagicApp
 #endif
             return;
         }
+#if STOPFAILEDCOMMAND
+        bool isManifold = GPP::ConsolidateMesh::IsTriMeshManifold(mpTriMesh);
+        if (!isManifold)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+            return;
+        }
+#endif
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();
     }
@@ -307,26 +315,17 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        int maxItrCount = 1;
-        for (int itr = 0; itr < maxItrCount; itr++)
+        GPP::Int res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, 0.0174532925199433 * 5.0, GPP::REAL_TOL, 0.0174532925199433 * 170.0);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
         {
-            int singlarVertexModified = 0;
-            GPP::Int res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, 0.0174532925199433 * 5.0, GPP::REAL_TOL, &singlarVertexModified);
-            if (res == GPP_API_IS_NOT_AVAILABLE)
-            {
-                MagicCore::ToolKit::Get()->SetAppRunning(false);
-            }
-            if (res != GPP_NO_ERROR)
-            {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
 #if STOPFAILEDCOMMAND
-                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
 #endif
-                return;
-            }
-            if (singlarVertexModified == 0)
-            {
-                break;
-            }
+            return;
         }
         mpTriMesh->UnifyCoords(2.0);
         mpTriMesh->UpdateNormal();

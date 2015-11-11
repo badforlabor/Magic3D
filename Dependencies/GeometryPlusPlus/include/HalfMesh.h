@@ -1,5 +1,5 @@
 #pragma once
-#include "ITriMesh.h"
+#include "Vector3.h"
 #include <vector>
 #include <map>
 
@@ -17,26 +17,23 @@ namespace GPP
         void    SetCoord(const Vector3& coord);
         Vector3 GetNormal() const;
         void    SetNormal(const Vector3& normal);
-        Vector3 GetTexcoord() const;
-        void    SetTexcoord(const Vector3& texCoord);
-        Vector3 GetColor() const;
-        void    SetColor(const Vector3& color);
         Edge3D* GetEdge();
         const Edge3D* GetEdge() const;
         void    SetEdge(Edge3D* edge);
         Int     GetId() const;
         void    SetId(Int id);
+        Int     GetEdgeMapId(void) const;
+        void    SetEdgeMapId(Int id);
         Int     GetDegree(void) const;
 
         ~Vertex3D();
 
     private:
-        Vector3 mCoord;
-        Vector3 mNormal;
-        Vector3 mTexCoord;
-        Vector3 mColor;
-        Edge3D* mpEdge;
         Int     mId;
+        Int     mEdgeMapId;
+        Edge3D* mpEdge;
+        Vector3 mCoord;
+        Vector3 mNormal;  
     };
 
     class Face3D;
@@ -66,12 +63,12 @@ namespace GPP
         ~Edge3D();
 
     private:
+        Int       mId;
         Vertex3D* mpVertex;
         Edge3D*   mpPair;
         Edge3D*   mpNext;
         Edge3D*   mpPre;
         Face3D*   mpFace;
-        Int       mId;
     };
 
     class GPP_EXPORT Face3D
@@ -90,63 +87,9 @@ namespace GPP
         ~Face3D();
 
     private:
+        Int     mId;
         Edge3D* mpEdge;
         Vector3 mNormal;
-        Int     mId;
-    };
-
-    struct GPP_EXPORT TriangleVertexIndex
-    {
-        Int mIndex[3];
-    };
-
-    enum MeshType
-    {
-        MT_NORMAL = 0,
-        MT_TRIANGLE_SOUP
-    };
-
-    class GPP_EXPORT TriMesh : public ITriMesh
-    {
-    public:
-        TriMesh();
-
-        virtual Int GetVertexCount() const;
-        virtual Vector3 GetVertexCoord(Int vid) const;
-        virtual void SetVertexCoord(Int vid, const Vector3& coord);
-        virtual Vector3 GetVertexNormal(Int vid) const;
-        virtual void SetVertexNormal(Int vid, const Vector3& normal);
-        virtual Int GetTriangleCount() const;
-        virtual void GetTriangleVertexIds(Int fid, Int vertexIds[3]) const;
-        virtual void SetTriangleVertexIds(Int fid, Int vertexId0, Int vertexId1, Int vertexId2);
-        virtual void UpdateNormal(void);
-        virtual Int InsertTriangle(Int vertexId0, Int vertexId1, Int vertexId2);
-        virtual Int InsertVertex(const Vector3& coord);
-        void InsertVertex(Vertex3D* vertex);     
-        Int InsertVertex(const Vector3& coord, const Vector3& normal);
-        virtual void Clear(void);
-
-        void DeleteTriangles(const std::vector<int>& deleteTriangleIndex);
-        void FuseVertex(void);
-
-        void SetMeshType(MeshType meshType);
-        MeshType GetMeshType(void) const;
-        Vector3 GetVertexColor(Int vid) const;
-        void SetVertexColor(Int vid, const Vector3& color);
-        Vector3 GetVertexTexcoord(Int vid) const;
-        void SetVertexTexcoord(Int vid, const Vector3& texcoord);
-        Vertex3D* GetVertex(Int vid);
-        const Vertex3D* GetVertex(Int vid) const; 
-        void SetVertex(Int vid, Vertex3D* vertex);
-        
-        void UnifyCoords(Real bboxSize);
-
-        virtual ~TriMesh();
-
-    private:
-        MeshType mMeshType;
-        std::vector<Vertex3D*> mVertexList;
-        std::vector<TriangleVertexIndex> mTriangleList;
     };
 
     class GPP_EXPORT HalfMesh
@@ -156,7 +99,6 @@ namespace GPP
         
         Vertex3D* GetVertex(Int vid);
         const Vertex3D* GetVertex(Int vid) const;
-        void SetVertex(Int vid, Vertex3D* vertex);
         Edge3D* GetEdge(Int eid);
         const Edge3D* GetEdge(Int eid) const;
         Face3D* GetFace(Int fid);
@@ -166,15 +108,19 @@ namespace GPP
         Int GetFaceCount() const;
 
         void ReserveVertex(Int vertexCount);
-        void InsertVertex(Vertex3D* vertex);
+        void ReserveEdge(Int edgeCount);
+        void ReserveFace(Int faceCount);
         Vertex3D* InsertVertex(const Vector3& coord);
+        Vertex3D* InsertVertex(const Vector3& coord, const Vector3& normal);
         Edge3D*   InsertEdge(Vertex3D* vertexStart, Vertex3D* vertexEnd);
         Face3D*   InsertFace(const std::vector<Vertex3D* >& vertexList);
 
         void UnifyCoords(Real bboxSize);
-        void UpdateNormal();
+        void UpdateNormal(bool onlyFaceNormal = false);
         void ValidateTopology();
+        void SetBoundaryVertexEdge();
         void RemoveEdgeFromEdgeMap(Edge3D* edge);
+        void ClearEdgeMap(void);
         void UpdateVertexIndex();
         void UpdateEdgeIndex();
         void UpdateFaceIndex();
@@ -187,6 +133,7 @@ namespace GPP
         std::vector<Vertex3D* > mVertexList;
         std::vector<Edge3D* >   mEdgeList;
         std::vector<Face3D* >   mFaceList;
-        std::map<std::pair<Vertex3D*, Vertex3D*>, Edge3D* > mEdgeMap; //Only used in construct mesh
+        std::vector<std::map<Int, Edge3D*> > mEdgeMap;
+        Int mEdgeMapNewVertexId;
     };
 }
