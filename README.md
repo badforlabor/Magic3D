@@ -37,7 +37,7 @@ Import: OBJ, STL, OFF
 
 Export: OBJ, STL
 
-Consolidate topology(Topo): Remove singlar vertex and non-manifold structure
+Consolidate topology(Topo): Remove singular vertex and non-manifold structure
 
 Reverse direction
 
@@ -57,4 +57,5 @@ Simplify Mesh(Sim)
 
 Parameterization(Flat): Angle preserving parameterization
 
-Sampling
+Sampling: Sample vertex to point cloud format
+
