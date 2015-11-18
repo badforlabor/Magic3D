@@ -161,7 +161,7 @@ namespace MagicApp
     bool PointShopApp::ImportPointCloud()
     {
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0ASC Files(*.asc)\0*.asc\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
