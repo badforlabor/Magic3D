@@ -1,6 +1,8 @@
 # Magic3D
 Magic 3D Applications.
 
+Online document: http://threepark.net/magic3d
+
 Run Software:
 
 1. run setbin.bat
