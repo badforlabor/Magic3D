@@ -3,6 +3,7 @@
 #include "AppManager.h"
 #include "PointShopApp.h"
 #include "MeshShopApp.h"
+#include "RegistrationApp.h"
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "DumpInfo.h"
@@ -74,7 +75,20 @@ namespace MagicApp
                 return;
             }
             dumpInfo->LoadDumpFile(fileName);
-            if (dumpInfo->GetPointCloud() != NULL)
+            if (dumpApiName == GPP::POINT_REGISTRATION_ALIGNPOINTPAIR || dumpApiName == GPP::POINT_REGISTRATION_ICP)
+            {
+                AppManager::Get()->EnterApp(new RegistrationApp, "RegistrationApp");
+                RegistrationApp* registrationApp = dynamic_cast<RegistrationApp*>(AppManager::Get()->GetApp("RegistrationApp"));
+                if (registrationApp)
+                {
+                    registrationApp->SetDumpInfo(dumpInfo);
+                }
+                else
+                {
+                    GPPFREEPOINTER(dumpInfo);
+                }
+            }
+            else if (dumpInfo->GetPointCloud() != NULL)
             {
                 AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
                 PointShopApp* pointShop = dynamic_cast<PointShopApp*>(AppManager::Get()->GetApp("PointShopApp"));

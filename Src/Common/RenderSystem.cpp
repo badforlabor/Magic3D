@@ -179,6 +179,40 @@ namespace MagicCore
         }
     }
 
+    void RenderSystem::RenderPointList(std::string pointListName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& pointCoords)
+    {
+        if (mpSceneManager == NULL)
+        {
+            InfoLog << "Error: RenderSystem::mpSceneMagager is NULL when RenderPointList" << std::endl;
+            return;
+        }
+        Ogre::ManualObject* manualObj = NULL;
+        if (mpSceneManager->hasManualObject(pointListName))
+        {
+            manualObj = mpSceneManager->getManualObject(pointListName);
+            manualObj->clear();
+        }
+        else
+        {
+            manualObj = mpSceneManager->createManualObject(pointListName);
+            if (mpSceneManager->hasSceneNode("ModelNode"))
+            {
+                mpSceneManager->getSceneNode("ModelNode")->attachObject(manualObj);
+            }
+            else
+            {
+                mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNode")->attachObject(manualObj);
+            }
+        }
+        manualObj->begin(materialName, Ogre::RenderOperation::OT_POINT_LIST);
+        for (std::vector<GPP::Vector3>::const_iterator itr = pointCoords.begin(); itr != pointCoords.end(); ++itr)
+        {
+            manualObj->position((*itr)[0], (*itr)[1], (*itr)[2]);
+            manualObj->colour(color[0], color[1], color[2]);
+        }
+        manualObj->end();
+    }
+
     void RenderSystem::RenderMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh)
     {
         Ogre::ManualObject* manualObj = NULL;
@@ -216,6 +250,42 @@ namespace MagicCore
             int vertexIds[3];
             mesh->GetTriangleVertexIds(fid, vertexIds);
             manualObj->triangle(vertexIds[0], vertexIds[1], vertexIds[2]);
+        }
+        manualObj->end();
+    }
+
+    void RenderSystem::RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords)
+    {
+        Ogre::ManualObject* manualObj = NULL;
+        if (mpSceneManager->hasManualObject(lineName))
+        {
+            manualObj = mpSceneManager->getManualObject(lineName);
+            manualObj->clear();
+        }
+        else
+        {
+            manualObj = mpSceneManager->createManualObject(lineName);
+            if (mpSceneManager->hasSceneNode("ModelNode"))
+            {
+                mpSceneManager->getSceneNode("ModelNode")->attachObject(manualObj);
+            }
+            else
+            {
+                mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNode")->attachObject(manualObj);
+            }
+        }
+        manualObj->begin(materialName, Ogre::RenderOperation::OT_LINE_LIST);
+        int lineCount = startCoords.size();
+        if (lineCount > endCoords.size())
+        {
+            lineCount = endCoords.size();
+        }
+        for (int lineId = 0; lineId < lineCount; lineId++)
+        {
+            GPP::Vector3 start = startCoords.at(lineId);
+            GPP::Vector3 end = endCoords.at(lineId);
+            manualObj->position(start[0], start[1], start[2]);
+            manualObj->position(end[0], end[1], end[2]);
         }
         manualObj->end();
     }

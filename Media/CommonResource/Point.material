@@ -23,14 +23,27 @@ material SimplePointSize2
     }
 }
 
+material SimplePoint_Large
+{
+    technique
+    {
+        pass
+        {
+            lighting off
+            point_size 15
+        }
+    }
+}
+
 material SimplePoint_Red
 {
     technique
     {
         pass
         {
-            diffuse 1 0 0
-            point_size 2
+            lighting off
+            color 1 0 0
+            point_size 15
         }
     }
 }
@@ -41,8 +54,9 @@ material SimplePoint_Green
     {
         pass
         {
-            diffuse 0 1 0
-            point_size 2
+            lighting off
+            color 0 1 0
+            point_size 15
         }
     }
 }
@@ -53,8 +67,9 @@ material SimplePoint_Blue
     {
         pass
         {
-            diffuse 0 0 1
-            point_size 2
+            lighting off
+            color 0 0 1
+            point_size 15
         }
     }
 }

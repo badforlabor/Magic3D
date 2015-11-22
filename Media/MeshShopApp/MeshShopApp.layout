@@ -48,11 +48,9 @@
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Flat" position="15 465 60 60" align="Left Top" name="But_ParameterizeMesh"/>
+        <Widget type="Button" skin="But_Sampling" position="15 465 60 60" align="Left Top" name="But_SampleMesh"/>
 
-        <Widget type="Button" skin="But_Sampling" position="15 540 60 60" align="Left Top" name="But_SampleMesh"/>
-
-        <Widget type="Button" skin="But_Home" position="15 615 60 60" align="Left Top" name="But_BackToHomepage"/>
-        <Widget type="Button" skin="But_Contact" position="15 690 60 60" align="Left Top" name="But_Contact"/>
+        <Widget type="Button" skin="But_Home" position="15 540 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Contact" position="15 615 60 60" align="Left Top" name="But_Contact"/>
     </Widget>
 </MyGUI>

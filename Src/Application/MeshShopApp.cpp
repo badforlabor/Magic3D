@@ -10,7 +10,6 @@
 #include "TriMesh.h"
 #include "PointCloud.h"
 #include "Parser.h"
-#include "ErrorCodes.h"
 #include "ConsolidateMesh.h"
 #include "DecomposeMesh.h"
 #include "SubdivideMesh.h"
@@ -160,6 +159,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpViewTool);
+        GPPFREEPOINTER(mpDumpInfo);
     }
 
     bool MeshShopApp::ImportMesh()
@@ -236,7 +236,7 @@ namespace MagicApp
         {
             return;
         }
-        GPP::Int res = mpDumpInfo->Run();
+        GPP::ErrorCode res = mpDumpInfo->Run();
         if (res != GPP_NO_ERROR)
         {
 #if STOPFAILEDCOMMAND
@@ -264,7 +264,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::Int res = GPP::ConsolidateMesh::MakeTriMeshManifold(mpTriMesh);
+        GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(mpTriMesh);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -315,7 +315,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::Int res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, 0.0174532925199433 * 5.0, GPP::REAL_TOL, 0.0174532925199433 * 170.0);
+        GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, 0.0174532925199433 * 5.0, GPP::REAL_TOL, 0.0174532925199433 * 170.0);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -342,7 +342,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::Int res = GPP::ConsolidateMesh::LaplaceSmooth(mpTriMesh, 0.2, 5, true);
+        GPP::ErrorCode res = GPP::ConsolidateMesh::LaplaceSmooth(mpTriMesh, 0.2, 5, true);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -371,7 +371,7 @@ namespace MagicApp
         std::vector<GPP::Real> heightField;
         std::vector<GPP::Vector3> baseMeshCoords;
         std::vector<GPP::Vector3> baseMeshNormals;
-        GPP::Int res = GPP::DecomposeMesh::DecomposeHeightField(mpTriMesh, &heightField, &baseMeshCoords, &baseMeshNormals);
+        GPP::ErrorCode res = GPP::DecomposeMesh::DecomposeHeightField(mpTriMesh, &heightField, &baseMeshCoords, &baseMeshNormals);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -404,7 +404,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::Int res = GPP::SubdivideMesh::LoopSubdivideMesh(mpTriMesh);
+        GPP::ErrorCode res = GPP::SubdivideMesh::LoopSubdivideMesh(mpTriMesh);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -430,7 +430,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::Int res = GPP::SubdivideMesh::CCSubdivideMesh(mpTriMesh);
+        GPP::ErrorCode res = GPP::SubdivideMesh::CCSubdivideMesh(mpTriMesh);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -456,7 +456,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::Int res = GPP::SubdivideMesh::RefineMesh(mpTriMesh, targetVertexCount);
+        GPP::ErrorCode res = GPP::SubdivideMesh::RefineMesh(mpTriMesh, targetVertexCount);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -482,7 +482,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::Int res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount);
+        GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -494,39 +494,6 @@ namespace MagicApp
 #endif
             return;
         }
-        mpTriMesh->UpdateNormal();
-        UpdateMeshRendering();
-    }
-
-    void MeshShopApp::ParameterizeMesh()
-    {
-        if (mpTriMesh == NULL)
-        {
-            return;
-        }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-        {
-            mpTriMesh->FuseVertex();
-        }
-        std::vector<GPP::Real> texCoords;
-        GPP::Int res = GPP::ParameterizeMesh::AnglePreservingParameterize(mpTriMesh, &texCoords);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
-        {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-        }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
-        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
-        for (GPP::Int vid = 0; vid < vertexCount; vid++)
-        {
-            mpTriMesh->SetVertexCoord(vid, GPP::Vector3(texCoords.at(vid * 2), texCoords.at(vid * 2 + 1), 0));
-        }
-        mpTriMesh->UnifyCoords(2.0);
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();
     }

@@ -34,7 +34,6 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_DoRefineMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoRefineMesh);
         mRoot.at(0)->findWidget("But_SimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SimplifyMesh);
         mRoot.at(0)->findWidget("But_DoSimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoSimplifyMesh);
-        mRoot.at(0)->findWidget("But_ParameterizeMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ParameterizeMesh);
         mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SampleMesh);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::BackToHomepage);
         mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::Contact);
@@ -235,15 +234,6 @@ namespace MagicApp
         }
     }
 
-    void MeshShopAppUI::ParameterizeMesh(MyGUI::Widget* pSender)
-    {
-        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
-        if (meshShop != NULL)
-        {
-            meshShop->ParameterizeMesh();
-        }
-    }
-
     void MeshShopAppUI::SampleMesh(MyGUI::Widget* pSender)
     {
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
@@ -260,6 +250,6 @@ namespace MagicApp
 
     void MeshShopAppUI::Contact(MyGUI::Widget* pSender)
     {
-        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/geometryplusplus/about"));
+        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/magic3d"));
     }
 }

@@ -41,7 +41,6 @@ namespace MagicApp
         void CCSubdivide(void);
         void RefineMesh(int targetVertexCount);
         void SimplifyMesh(int targetVertexCount);
-        void ParameterizeMesh(void);
         void SampleMesh(void);
 
         void SetMesh(GPP::TriMesh* triMesh);

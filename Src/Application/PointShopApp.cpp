@@ -10,7 +10,6 @@
 #include "GPPDefines.h"
 #include "PointCloud.h"
 #include "Parser.h"
-#include "ErrorCodes.h"
 #include "ConsolidatePointCloud.h"
 #include "SamplePointCloud.h"
 #include "PoissonReconstructMesh.h"
@@ -141,21 +140,10 @@ namespace MagicApp
 
     void PointShopApp::ClearData(void)
     {
-        if (mpUI != NULL)
-        {
-            delete mpUI;
-            mpUI = NULL;
-        }
-        if (mpPointCloud != NULL)
-        {
-            delete mpPointCloud;
-            mpPointCloud = NULL;
-        }
-        if (mpViewTool != NULL)
-        {
-            delete mpViewTool;
-            mpViewTool = NULL;
-        }
+        GPPFREEPOINTER(mpUI);
+        GPPFREEPOINTER(mpPointCloud);
+        GPPFREEPOINTER(mpViewTool);
+        GPPFREEPOINTER(mpDumpInfo);
     }
 
     bool PointShopApp::ImportPointCloud()
@@ -202,7 +190,7 @@ namespace MagicApp
         {
             return;
         }
-        GPP::Int res = GPP::ConsolidatePointCloud::LaplaceSmooth(mpPointCloud, 0.2, 5);
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::LaplaceSmooth(mpPointCloud, 0.2, 5);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -223,8 +211,8 @@ namespace MagicApp
         {
             return;
         }
-        GPP::Int* sampleIndex = new int[targetPointCount];
-        GPP::Int res = GPP::SamplePointCloud::UniformSample(mpPointCloud, targetPointCount, sampleIndex);
+        GPP::Int* sampleIndex = new GPP::Int[targetPointCount];
+        GPP::ErrorCode res = GPP::SamplePointCloud::UniformSample(mpPointCloud, targetPointCount, sampleIndex);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -246,11 +234,7 @@ namespace MagicApp
         delete mpPointCloud;
         mpPointCloud = samplePointCloud;
         UpdatePointCloudRendering();
-        if (sampleIndex != NULL)
-        {
-            delete []sampleIndex;
-            sampleIndex = NULL;
-        }
+        GPPFREEARRAY(sampleIndex);
     }
 
     void PointShopApp::CalculatePointCloudNormal()
@@ -259,7 +243,7 @@ namespace MagicApp
         {
             return;
         }
-        GPP::Int res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloud, 0);
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloud, 0);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -295,7 +279,7 @@ namespace MagicApp
             return;
         }
         GPP::TriMesh* triMesh = new GPP::TriMesh;
-        GPP::Int res = GPP::PoissonReconstructMesh::Reconstruct(mpPointCloud, triMesh);
+        GPP::ErrorCode res = GPP::PoissonReconstructMesh::Reconstruct(mpPointCloud, triMesh);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -373,7 +357,7 @@ namespace MagicApp
         {
             return;
         }
-        GPP::Int res = mpDumpInfo->Run();
+        GPP::ErrorCode res = mpDumpInfo->Run();
         if (res != GPP_NO_ERROR)
         {
 #if STOPFAILEDCOMMAND

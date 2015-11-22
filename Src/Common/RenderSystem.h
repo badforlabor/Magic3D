@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <vector>
+#include "Vector3.h"
 
 namespace Ogre
 {
@@ -37,7 +39,9 @@ namespace MagicCore
 
         //Rendering tools
         void RenderPointCloud(std::string pointCloudName, std::string materialName, const GPP::PointCloud* pointCloud);
+        void RenderPointList(std::string pointListName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& pointCoords);
         void RenderMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh);
+        void RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords);
         void HideRenderingObject(std::string objName);
 
         virtual ~RenderSystem(void);

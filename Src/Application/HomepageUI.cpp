@@ -5,6 +5,7 @@
 #include "AppManager.h"
 #include "PointShopApp.h"
 #include "MeshShopApp.h"
+#include "RegistrationApp.h"
 
 namespace MagicApp
 {
@@ -29,6 +30,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("Title")->castType<MyGUI::ImageBox>()->setSize(406, 110);
         mRoot.at(0)->findWidget("But_PointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterPointShopApp);
         mRoot.at(0)->findWidget("But_MeshShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterMeshShopApp);
+        mRoot.at(0)->findWidget("But_RegistrationApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterRegistrationApp);
         mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::Contact);
     }
 
@@ -42,6 +44,11 @@ namespace MagicApp
         AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
     }
 
+    void HomepageUI::EnterRegistrationApp(MyGUI::Widget* pSender)
+    {
+        AppManager::Get()->EnterApp(new RegistrationApp, "RegistrationApp");
+    }
+
     void HomepageUI::Shutdown()
     {
         MyGUI::LayoutManager::getInstance().unloadLayout(mRoot);
@@ -51,6 +58,6 @@ namespace MagicApp
 
     void HomepageUI::Contact(MyGUI::Widget* pSender)
     {
-        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/geometryplusplus/about"));
+        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/magic3d"));
     }
 }

@@ -28,7 +28,6 @@ namespace MagicApp
         void DoRefineMesh(MyGUI::Widget* pSender);
         void SimplifyMesh(MyGUI::Widget* pSender);
         void DoSimplifyMesh(MyGUI::Widget* pSender);
-        void ParameterizeMesh(MyGUI::Widget* pSender);
         void SampleMesh(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
         void Contact(MyGUI::Widget* pSender);

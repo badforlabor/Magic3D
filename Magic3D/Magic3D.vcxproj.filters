@@ -31,6 +31,9 @@
     <Filter Include="Application\PointShopApp">
       <UniqueIdentifier>{0e06b2e9-62f9-4cc1-b328-4861a5198548}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Application\RegistrationApp">
+      <UniqueIdentifier>{9e4048f8-e8f8-43ea-94cb-a8d69c69d0e0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -93,6 +96,15 @@
     <ClInclude Include="..\Src\Common\ViewTool.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\Src\Application\RegistrationApp.h">
+      <Filter>Application\RegistrationApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\RegistrationAppUI.h">
+      <Filter>Application\RegistrationApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Common\PickTool.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -150,6 +162,15 @@
       <Filter>Application\PointShopApp</Filter>
     </ClCompile>
     <ClCompile Include="..\Src\Common\ViewTool.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\RegistrationApp.cpp">
+      <Filter>Application\RegistrationApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\RegistrationAppUI.cpp">
+      <Filter>Application\RegistrationApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\PickTool.cpp">
       <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
