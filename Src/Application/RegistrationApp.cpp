@@ -6,6 +6,7 @@
 #include "../Common/RenderSystem.h"
 #include "../Common/ViewTool.h"
 #include "../Common/PickTool.h"
+#include "PointShopApp.h"
 #include "AppManager.h"
 #include "GPPDefines.h"
 #include "PointCloud.h"
@@ -15,6 +16,7 @@
 #include "ConsolidatePointCloud.h"
 #include "RegistratePointCloud.h"
 #include "DumpRegistratePointCloud.h"
+#include "FusePointCloud.h"
 #include <algorithm>
 
 namespace MagicApp
@@ -27,6 +29,7 @@ namespace MagicApp
         mpDumpInfo(NULL),
         mpPointCloudRef(NULL),
         mpPointCloudFrom(NULL),
+        mpFusePointCloud(NULL),
         mObjCenterCoord(),
         mScaleValue(0),
         mPickedPointsRef(),
@@ -42,6 +45,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpDumpInfo);
         GPPFREEPOINTER(mpPointCloudRef);
         GPPFREEPOINTER(mpPointCloudFrom);
+        GPPFREEPOINTER(mpFusePointCloud);
     }
 
     bool RegistrationApp::Enter(void)
@@ -182,6 +186,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpDumpInfo);
         GPPFREEPOINTER(mpPointCloudRef);
         GPPFREEPOINTER(mpPointCloudFrom);
+        GPPFREEPOINTER(mpFusePointCloud);
     }
 
     bool RegistrationApp::ImportPointCloudRef()
@@ -208,6 +213,8 @@ namespace MagicApp
                     GPPFREEPOINTER(mpPointCloudFrom);
                     MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
                 }
+
+                GPPFREEPOINTER(mpFusePointCloud);
 
                 ModelView();
                 return true;
@@ -270,10 +277,50 @@ namespace MagicApp
         UpdatePointPairsRendering();
     }
 
-    /*void RegistrationApp::FuseRef()
+    void RegistrationApp::FuseRef()
     {
+        if (mpPointCloudRef == NULL || mpPointCloudFrom == NULL)
+        {
+            return;
+        }
+        GPP::ErrorCode res = GPP_NO_ERROR;
+        if (mpFusePointCloud == NULL)
+        {
+            mpFusePointCloud = new GPP::FusePointCloud(1024, 1024, 1024, GPP::Vector3(-1.5, -1.5, -1.5), GPP::Vector3(1.5, 1.5, 1.5));
+            res = mpFusePointCloud->UpdateFuseFunction(mpPointCloudRef, NULL);
+            if (res != GPP_NO_ERROR)
+            {
+                GPPFREEPOINTER(mpFusePointCloud);
+                return;
+            }
+        }
+        res = mpFusePointCloud->UpdateFuseFunction(mpPointCloudFrom, NULL);
+        if (res != GPP_NO_ERROR)
+        {
+            GPPFREEPOINTER(mpFusePointCloud);
+            return;
+        }
+        GPP::PointCloud* extractPointCloud = new GPP::PointCloud;
+        res = mpFusePointCloud->ExtractPointCloud(extractPointCloud);
+        if (res != GPP_NO_ERROR)
+        {
+            GPPFREEPOINTER(extractPointCloud);
+            GPPFREEPOINTER(mpFusePointCloud);
+            return;
+        }
+        GPPFREEPOINTER(mpPointCloudRef);
+        mpPointCloudRef = extractPointCloud;
+        UpdatePointCloudRefRendering();
 
-    }*/
+        mPickedPointsRef.clear();
+        mPickedPointsFrom.clear();
+        UpdatePointPairsRendering();
+
+        GPPFREEPOINTER(mpPointCloudFrom);
+        MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
+
+        ModelView();
+    }
 
     bool RegistrationApp::ImportPointCloudFrom()
     {
@@ -432,6 +479,12 @@ namespace MagicApp
         //
         UpdatePointCloudFromRendering();
         UpdatePointPairsRendering();
+
+        mPickedPointsRef.clear();
+        mPickedPointsFrom.clear();
+        UpdatePointPairsRendering();
+
+        ModelView();
     }
 
     void RegistrationApp::ModelView()
@@ -452,6 +505,26 @@ namespace MagicApp
         for (GPP::Int pid = 0; pid < pointCount; pid++)
         {
             pointCloud->SetPointColor(pid, color);
+        }
+    }
+
+    void RegistrationApp::EnterPointShop()
+    {
+        if (mpPointCloudRef == NULL)
+        {
+            return;
+        }
+        GPP::PointCloud* copiedPointCloud = GPP::CopyPointCloud(mpPointCloudRef);
+        AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
+        PointShopApp* pointShop = dynamic_cast<PointShopApp*>(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop)
+        {
+            pointShop->SetPointCloud(copiedPointCloud);
+        }
+        else
+        {
+            delete copiedPointCloud;
+            copiedPointCloud = NULL;
         }
     }
 
@@ -506,6 +579,25 @@ namespace MagicApp
             UpdatePointCloudRefRendering();
             UpdatePointCloudFromRendering();
         }
+        else if (mpDumpInfo->GetApiName() == GPP::POINT_FUSION_UPDATE)
+        {
+            if (mpDumpInfo->GetPointCloud(1) == NULL)
+            {
+                return;
+            }
+            GPPFREEPOINTER(mpPointCloudRef);
+            mpPointCloudRef = mpDumpInfo->GetPointCloud(0);
+            GPPFREEPOINTER(mpPointCloudFrom);
+            mpPointCloudFrom = CopyPointCloud(mpDumpInfo->GetPointCloud(1));
+            SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0.86, 0, 0));
+            UpdatePointCloudRefRendering();
+            UpdatePointCloudFromRendering();
+
+            mPickedPointsRef.clear();
+            mPickedPointsFrom.clear();
+            UpdatePointPairsRendering();
+        }
+
         InitViewTool();
     }
 
@@ -542,6 +634,28 @@ namespace MagicApp
             mpPointCloudFrom = CopyPointCloud(mpDumpInfo->GetPointCloud(1));
             SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0.86, 0, 0));
             UpdatePointCloudFromRendering();
+        }
+        else if (mpDumpInfo->GetApiName() == GPP::POINT_FUSION_UPDATE)
+        {
+            GPPFREEPOINTER(mpPointCloudRef);
+            mpPointCloudRef = mpDumpInfo->GetPointCloud(0);
+            UpdatePointCloudRefRendering();
+            if (mpPointCloudFrom)
+            {
+                GPPFREEPOINTER(mpPointCloudFrom);
+                MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
+            }
+        }
+        else if (mpDumpInfo->GetApiName() == GPP::POINT_FUSION_EXTRACT)
+        {
+            GPPFREEPOINTER(mpPointCloudRef);
+            mpPointCloudRef = mpDumpInfo->GetPointCloud();
+            UpdatePointCloudRefRendering();
+            if (mpPointCloudFrom)
+            {
+                GPPFREEPOINTER(mpPointCloudFrom);
+                MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
+            }
         }
         GPPFREEPOINTER(mpDumpInfo);
     }

@@ -22,6 +22,8 @@
             <Property key="Visible" value="false"/>
         </Widget>
 
+        <Widget type="Button" skin="But_Clustering" position="15 225 60 60" align="Left Top" name="But_FusePointCloudRef"/>
+
         <Widget type="Button" skin="But_Open" position="15 295 60 60" align="Left Top" name="But_ImportPointCloudFrom"/>
         
         <Widget type="Button" skin="But_Normal" position="15 365 60 60" align="Left Top" name="But_FromNormal"/>
@@ -45,7 +47,8 @@
 
         <Widget type="Button" skin="But_Align" position="15 505 60 60" align="Left Top" name="But_AlignPointCloudFrom"/>
 
-    	<Widget type="Button" skin="But_Home" position="15 575 60 60" align="Left Top" name="But_BackToHomepage"/>
-    	<Widget type="Button" skin="But_Contact" position="15 645 60 60" align="Left Top" name="But_Contact"/>
+        <Widget type="Button" skin="But_PointShop" position="15 575 60 60" align="Left Top" name="But_EnterPointShop"/>
+
+    	<Widget type="Button" skin="But_Home" position="15 645 60 60" align="Left Top" name="But_BackToHomepage"/>
     </Widget>
 </MyGUI>

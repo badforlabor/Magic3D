@@ -21,7 +21,7 @@ namespace MagicApp
         void PushRef(MyGUI::Widget* pSender);
         void PopRef(MyGUI::Widget* pSender);
         void ViewRef(MyGUI::Widget* pSender);
-        //void FuseRef(MyGUI::Widget* pSender);
+        void FuseRef(MyGUI::Widget* pSender);
 
         void ImportPointCloudFrom(MyGUI::Widget* pSender);
         void FromNormal(MyGUI::Widget* pSender);
@@ -33,8 +33,8 @@ namespace MagicApp
         void ViewFrom(MyGUI::Widget* pSender);
         void AlignFrom(MyGUI::Widget* pSender);
 
+        void EnterPointShop(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
-        void Contact(MyGUI::Widget* pSender);
 
     private:
         MyGUI::VectorWidgetPtr mRoot;

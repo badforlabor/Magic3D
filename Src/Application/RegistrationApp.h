@@ -7,6 +7,7 @@ namespace GPP
 {
     class PointCloud;
     class DumpBase;
+    class FusePointCloud;
 }
 
 namespace MagicCore
@@ -44,7 +45,7 @@ namespace MagicApp
         void FlipRefNormal(void);
         void PushRef(void);
         void PopRef(void);
-        //void FuseRef(void);
+        void FuseRef(void);
         bool ImportPointCloudFrom(void);
         void CalculateFromNormal(void);
         void FlipFromNormal(void);
@@ -52,6 +53,8 @@ namespace MagicApp
         void PopFrom(void);
         void AlignFrom(void);
         void ModelView(void);
+
+        void EnterPointShop(void);
 
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
@@ -77,6 +80,7 @@ namespace MagicApp
         GPP::DumpBase* mpDumpInfo;
         GPP::PointCloud* mpPointCloudRef;
         GPP::PointCloud* mpPointCloudFrom;
+        GPP::FusePointCloud* mpFusePointCloud;
         GPP::Vector3 mObjCenterCoord;
         GPP::Real mScaleValue;
         std::vector<GPP::Vector3> mPickedPointsRef;

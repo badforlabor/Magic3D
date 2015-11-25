@@ -27,7 +27,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_PushRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::PushRef);
         mRoot.at(0)->findWidget("But_PopRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::PopRef);
         mRoot.at(0)->findWidget("But_RefView")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ViewRef);
-        //mRoot.at(0)->findWidget("But_FusePointCloudRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseRef);
+        mRoot.at(0)->findWidget("But_FusePointCloudRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseRef);
         mRoot.at(0)->findWidget("But_ImportPointCloudFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ImportPointCloudFrom);
         mRoot.at(0)->findWidget("But_FromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FromNormal);
         mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateFromNormal);
@@ -37,8 +37,8 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_PopFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::PopFrom);
         mRoot.at(0)->findWidget("But_FromView")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ViewFrom);
         mRoot.at(0)->findWidget("But_AlignPointCloudFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignFrom);
+        mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::EnterPointShop);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::BackToHomepage);
-        mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::Contact);
     }
 
     void RegistrationAppUI::Shutdown()
@@ -117,14 +117,14 @@ namespace MagicApp
         }
     }
 
-    /*void RegistrationAppUI::FuseRef(MyGUI::Widget* pSender)
+    void RegistrationAppUI::FuseRef(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
             registrationApp->FuseRef();
         }
-    }*/
+    }
 
     void RegistrationAppUI::ImportPointCloudFrom(MyGUI::Widget* pSender)
     {
@@ -204,13 +204,18 @@ namespace MagicApp
         }
     }
 
+    void RegistrationAppUI::EnterPointShop(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->EnterPointShop();
+        }
+    }
+
     void RegistrationAppUI::BackToHomepage(MyGUI::Widget* pSender)
     {
         AppManager::Get()->SwitchCurrentApp("Homepage");
     }
 
-    void RegistrationAppUI::Contact(MyGUI::Widget* pSender)
-    {
-        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/magic3d"));
-    }
 }

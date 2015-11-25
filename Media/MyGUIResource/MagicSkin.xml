@@ -398,4 +398,20 @@
             <State name="pushed" offset="603 958 86 86"/>
         </BasisSkin>
     </Resource>
+    <Resource type="ResourceSkin" name="But_Smo" size="86 84" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 84" align="Stretch">
+            <State name="disabled" offset="775 699 86 84"/>
+            <State name="normal" offset="775 786 86 84"/>
+            <State name="highlighted" offset="775 873 86 84"/>
+            <State name="pushed" offset="775 960 86 84"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Fill" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="disabled" offset="689 697 86 86"/>
+            <State name="normal" offset="689 784 86 86"/>
+            <State name="highlighted" offset="689 871 86 86"/>
+            <State name="pushed" offset="689 958 86 86"/>
+        </BasisSkin>
+    </Resource>
 </MyGUI>

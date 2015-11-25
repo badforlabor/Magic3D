@@ -75,7 +75,8 @@ namespace MagicApp
                 return;
             }
             dumpInfo->LoadDumpFile(fileName);
-            if (dumpApiName == GPP::POINT_REGISTRATION_ALIGNPOINTPAIR || dumpApiName == GPP::POINT_REGISTRATION_ICP)
+            if (dumpApiName == GPP::POINT_REGISTRATION_ALIGNPOINTPAIR || dumpApiName == GPP::POINT_REGISTRATION_ICP || 
+                dumpApiName == GPP::POINT_FUSION_UPDATE || dumpApiName == GPP::POINT_FUSION_EXTRACT)
             {
                 AppManager::Get()->EnterApp(new RegistrationApp, "RegistrationApp");
                 RegistrationApp* registrationApp = dynamic_cast<RegistrationApp*>(AppManager::Get()->GetApp("RegistrationApp"));
