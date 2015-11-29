@@ -25,11 +25,10 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ConsolidateTopology")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateTopology);
         mRoot.at(0)->findWidget("But_ReverseDirection")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ReverseDirection);
         mRoot.at(0)->findWidget("But_ConsolidateGeometry")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateGeometry);
+		mRoot.at(0)->findWidget("But_FilterMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::FilterMesh);
         mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SmoothMesh);
         mRoot.at(0)->findWidget("But_EnhanceMeshDetail")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnhanceMeshDetail);
         mRoot.at(0)->findWidget("But_SubdivideMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SubdivideMesh);
-        mRoot.at(0)->findWidget("But_LoopSubdivide")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::LoopSubdivide);
-        mRoot.at(0)->findWidget("But_CCSubdivide")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::CCSubdivide);
         mRoot.at(0)->findWidget("But_RefineMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::RefineMesh);
         mRoot.at(0)->findWidget("But_DoRefineMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoRefineMesh);
         mRoot.at(0)->findWidget("But_SimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SimplifyMesh);
@@ -70,8 +69,6 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ConsolidateTopology")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_ReverseDirection")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_ConsolidateGeometry")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_EnhanceMeshDetail")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
     void MeshShopAppUI::ConsolidateTopology(MyGUI::Widget* pSender)
@@ -101,6 +98,13 @@ namespace MagicApp
         }
     }
 
+	void MeshShopAppUI::FilterMesh(MyGUI::Widget* pSender)
+	{
+		bool isVisible = mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_EnhanceMeshDetail")->castType<MyGUI::Button>()->setVisible(!isVisible);
+	}
+
     void MeshShopAppUI::SmoothMesh(MyGUI::Widget* pSender)
     {
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
@@ -121,27 +125,11 @@ namespace MagicApp
 
     void MeshShopAppUI::SubdivideMesh(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_LoopSubdivide")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_LoopSubdivide")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_CCSubdivide")->castType<MyGUI::Button>()->setVisible(!isVisible);        
-    }
-
-    void MeshShopAppUI::LoopSubdivide(MyGUI::Widget* pSender)
-    {
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
         if (meshShop != NULL)
         {
             meshShop->LoopSubdivide();
-        }
-    }
-
-    void MeshShopAppUI::CCSubdivide(MyGUI::Widget* pSender)
-    {
-        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
-        if (meshShop != NULL)
-        {
-            meshShop->CCSubdivide();
-        }
+        }        
     }
 
     void MeshShopAppUI::RefineMesh(MyGUI::Widget* pSender)

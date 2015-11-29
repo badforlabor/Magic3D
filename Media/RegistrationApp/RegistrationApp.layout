@@ -3,49 +3,49 @@
     <Widget type="Widget" skin="PanelEmpty" position="0 0 220 768" align="Left Top" layer="Back">
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportPointCloudRef"/>
         
-        <Widget type="Button" skin="But_Normal" position="15 85 60 60" align="Left Top" name="But_RefNormal"/>
-        <Widget type="Button" skin="But_Normal" position="80 95 40 40" align="Left Top" name="But_CalRefNormal">
+        <Widget type="Button" skin="But_Normal_CN" position="15 85 60 60" align="Left Top" name="But_RefNormal"/>
+        <Widget type="Button" skin="But_Calculate_CN" position="75 95 43 43" align="Left Top" name="But_CalRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Flip" position="125 95 40 40" align="Left Top" name="But_FlipRefNormal">
+        <Widget type="Button" skin="But_Flip_CN" position="118 95 43 43" align="Left Top" name="But_FlipRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
         
-        <Widget type="Button" skin="But_Select" position="15 155 60 60" align="Left Top" name="But_SelectRef"/>
-        <Widget type="Button" skin="But_Select" position="80 165 40 40" align="Left Top" name="But_PushRef">
+        <Widget type="Button" skin="But_FeaturePoint_CN" position="15 155 60 60" align="Left Top" name="But_SelectRef"/>
+        <Widget type="Button" skin="But_Mark_CN" position="75 165 43 43" align="Left Top" name="But_PushRef">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Erase" position="125 165 40 40" align="Left Top" name="But_PopRef">
+        <Widget type="Button" skin="But_Delete_CN" position="118 165 43 43" align="Left Top" name="But_PopRef">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Viewer" position="170 165 40 40" align="Left Top" name="But_RefView">
+        <Widget type="Button" skin="But_View_CN" position="161 165 43 43" align="Left Top" name="But_RefView">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Clustering" position="15 225 60 60" align="Left Top" name="But_FusePointCloudRef"/>
+        <Widget type="Button" skin="But_Fuse_CN" position="15 225 60 60" align="Left Top" name="But_FusePointCloudRef"/>
 
         <Widget type="Button" skin="But_Open" position="15 295 60 60" align="Left Top" name="But_ImportPointCloudFrom"/>
         
-        <Widget type="Button" skin="But_Normal" position="15 365 60 60" align="Left Top" name="But_FromNormal"/>
-        <Widget type="Button" skin="But_Normal" position="80 375 40 40" align="Left Top" name="But_CalFromNormal">
+        <Widget type="Button" skin="But_Normal_CN" position="15 365 60 60" align="Left Top" name="But_FromNormal"/>
+        <Widget type="Button" skin="But_Calculate_CN" position="75 375 43 43" align="Left Top" name="But_CalFromNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Flip" position="125 375 40 40" align="Left Top" name="But_FlipFromNormal">
+        <Widget type="Button" skin="But_Flip_CN" position="118 375 43 43" align="Left Top" name="But_FlipFromNormal">
             <Property key="Visible" value="false"/>
         </Widget>
         
-        <Widget type="Button" skin="But_Select" position="15 435 60 60" align="Left Top" name="But_SelectFrom"/>
-        <Widget type="Button" skin="But_Select" position="80 445 40 40" align="Left Top" name="But_PushFrom">
+        <Widget type="Button" skin="But_FeaturePoint_CN" position="15 435 60 60" align="Left Top" name="But_SelectFrom"/>
+        <Widget type="Button" skin="But_Mark_CN" position="75 445 43 43" align="Left Top" name="But_PushFrom">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Erase" position="125 445 40 40" align="Left Top" name="But_PopFrom">
+        <Widget type="Button" skin="But_Delete_CN" position="118 445 43 43" align="Left Top" name="But_PopFrom">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Viewer" position="170 445 40 40" align="Left Top" name="But_FromView">
+        <Widget type="Button" skin="But_View_CN" position="161 445 43 43" align="Left Top" name="But_FromView">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Align" position="15 505 60 60" align="Left Top" name="But_AlignPointCloudFrom"/>
+        <Widget type="Button" skin="But_Align_CN" position="15 505 60 60" align="Left Top" name="But_AlignPointCloudFrom"/>
 
         <Widget type="Button" skin="But_PointShop" position="15 575 60 60" align="Left Top" name="But_EnterPointShop"/>
 

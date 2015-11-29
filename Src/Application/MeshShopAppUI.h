@@ -17,13 +17,12 @@ namespace MagicApp
         void ExportMesh(MyGUI::Widget* pSender);
         void ConsolidateMesh(MyGUI::Widget* pSender);
         void ConsolidateTopology(MyGUI::Widget* pSender);
+		void ConsolidateGeometry(MyGUI::Widget* pSender);
         void ReverseDirection(MyGUI::Widget* pSender);
-        void ConsolidateGeometry(MyGUI::Widget* pSender);
+		void FilterMesh(MyGUI::Widget* pSender);
         void SmoothMesh(MyGUI::Widget* pSender);
         void EnhanceMeshDetail(MyGUI::Widget* pSender);
         void SubdivideMesh(MyGUI::Widget* pSender);
-        void LoopSubdivide(MyGUI::Widget* pSender);
-        void CCSubdivide(MyGUI::Widget* pSender);
         void RefineMesh(MyGUI::Widget* pSender);
         void DoRefineMesh(MyGUI::Widget* pSender);
         void SimplifyMesh(MyGUI::Widget* pSender);
