@@ -7,20 +7,9 @@
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
 #include "../Common/RenderSystem.h"
-#include "TriMesh.h"
-#include "PointCloud.h"
-#include "Parser.h"
-#include "ConsolidateMesh.h"
-#include "DecomposeMesh.h"
-#include "SubdivideMesh.h"
-#include "SimplifyMesh.h"
-#include "ParameterizeMesh.h"
-#include "ToolMesh.h"
-#include "ToolAnn.h"
-#include "ToolLog.h"
-#include "SparseMatrix.h"
-#include "ToolMatrix.h"
+#include "GPP.h"
 #include "DumpInfo.h"
+#include "DumpFillMeshHole.h"
 
 namespace MagicApp
 {
@@ -148,6 +137,8 @@ namespace MagicApp
         sceneManager->destroyLight("MeshShop_SimpleLight");
         MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
         MagicCore::RenderSystem::Get()->HideRenderingObject("Mesh_MeshShop");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("MeshShop_Holes");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("MeshShop_HoleSeeds");
         if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
         {
             MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->resetToInitialState();
@@ -160,6 +151,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpDumpInfo);
+        mShowHoleLoopIds.clear();
     }
 
     bool MeshShopApp::ImportMesh()
@@ -171,6 +163,7 @@ namespace MagicApp
             GPP::TriMesh* triMesh = GPP::Parser::ImportTriMesh(fileName);
             if (triMesh != NULL)
             { 
+                mShowHoleLoopIds.clear();
                 triMesh->UnifyCoords(2.0);
                 triMesh->UpdateNormal();
                 if (mpTriMesh != NULL)
@@ -180,6 +173,7 @@ namespace MagicApp
                 mpTriMesh = triMesh;
                 InfoLog << "Import Mesh,  vertex: " << mpTriMesh->GetVertexCount() << " triangles: " << triMesh->GetTriangleCount() << std::endl;
                 InitViewTool();
+                UpdateHoleRendering();
                 UpdateMeshRendering();
                 return true;
             }
@@ -227,6 +221,15 @@ namespace MagicApp
         mpTriMesh = CopyTriMesh(mpDumpInfo->GetTriMesh());
         mpTriMesh->UpdateNormal();
         InitViewTool();
+        if (mpDumpInfo->GetApiName() == GPP::ApiName::MESH_FILLHOLE_FILL)
+        {
+            GPP::DumpFillMeshHole* dumpDetail = dynamic_cast<GPP::DumpFillMeshHole*>(mpDumpInfo);
+            if (dumpDetail)
+            {
+                SetBoundarySeedIds(dumpDetail->GetBoundarySeedIds());
+                UpdateHoleRendering();
+            }
+        }
         UpdateMeshRendering();
     }
 
@@ -244,11 +247,34 @@ namespace MagicApp
 #endif
             return;
         }
+
         //Copy result
         GPPFREEPOINTER(mpTriMesh);
         mpTriMesh = CopyTriMesh(mpDumpInfo->GetTriMesh());
         mpTriMesh->UnifyCoords(2.0);
         mpTriMesh->UpdateNormal();
+
+        // update hole rendering
+        if (mpDumpInfo->GetApiName() == GPP::ApiName::MESH_FILLHOLE_FIND)
+        {
+            GPP::DumpFindMeshHole* dumpDetails = dynamic_cast<GPP::DumpFindMeshHole*>(mpDumpInfo);
+            if (dumpDetails)
+            {
+                SetToShowHoleLoopVrtIds(dumpDetails->GetBoundaryLoopVrtIds());
+                SetBoundarySeedIds(std::vector<GPP::Int>());
+                UpdateHoleRendering();
+            }
+        }
+        else if (mpDumpInfo->GetApiName() == GPP::ApiName::MESH_FILLHOLE_FILL)
+        {
+            GPP::DumpFillMeshHole* dumpDetails = dynamic_cast<GPP::DumpFillMeshHole*>(mpDumpInfo);
+            if (dumpDetails)
+            {
+                SetToShowHoleLoopVrtIds(std::vector<std::vector<GPP::Int> >());
+                SetBoundarySeedIds(std::vector<GPP::Int>());
+                UpdateHoleRendering();
+            }
+        }
         UpdateMeshRendering();
         GPPFREEPOINTER(mpDumpInfo);
         
@@ -528,6 +554,84 @@ namespace MagicApp
         }
     }
 
+    void MeshShopApp::FindHole(bool isShowHoles)
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        } 
+        std::vector<std::vector<GPP::Int> > holeIds;
+        if (!isShowHoles)
+        {
+            // clear the holes
+            SetToShowHoleLoopVrtIds(holeIds);
+            SetBoundarySeedIds(std::vector<GPP::Int>());
+            UpdateHoleRendering();
+            UpdateMeshRendering();
+            return;
+        }
+
+        GPP::ErrorCode res = GPP::FillMeshHole::FindHoles(mpTriMesh, &holeIds);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
+        }
+        SetToShowHoleLoopVrtIds(holeIds);
+        SetBoundarySeedIds(std::vector<GPP::Int>());
+
+        mpTriMesh->UnifyCoords(2.0);
+        mpTriMesh->UpdateNormal();
+        UpdateHoleRendering();
+        UpdateMeshRendering();
+    }
+
+    void MeshShopApp::FillHole(bool isFillFlat)
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        } 
+
+        std::vector<GPP::Int> holeSeeds;
+        for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
+        {
+            holeSeeds.insert(holeSeeds.end(), mShowHoleLoopIds[vLoop].begin(), mShowHoleLoopIds[vLoop].end());
+        }
+        GPP::ErrorCode res = GPP::FillMeshHole::FillHoles(mpTriMesh, holeSeeds, isFillFlat ? GPP::FILL_MESH_HOLE_FLAT : GPP::FILL_MESH_HOLE_SMOOTH);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
+        }
+        SetToShowHoleLoopVrtIds(std::vector<std::vector<GPP::Int> >());
+        SetBoundarySeedIds(std::vector<GPP::Int>());
+        mpTriMesh->UnifyCoords(2.0);
+        mpTriMesh->UpdateNormal();
+        UpdateHoleRendering();
+        UpdateMeshRendering();
+    }
+
     int MeshShopApp::GetMeshVertexCount()
     {
         if (mpTriMesh != NULL)
@@ -547,6 +651,52 @@ namespace MagicApp
             return;
         }
         MagicCore::RenderSystem::Get()->RenderMesh("Mesh_MeshShop", "CookTorrance", mpTriMesh);
+    }
+
+    void MeshShopApp::UpdateHoleRendering()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        // reset the render object
+        MagicCore::RenderSystem::Get()->RenderPolyline("MeshShop_Holes", "SimpleLine", GPP::Vector3(1.0,0.0,0.0), std::vector<GPP::Vector3>(), true);
+        // append each polyline to the render object
+        for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
+        {
+            int vSize = mShowHoleLoopIds.at(vLoop).size();
+            std::vector<GPP::Vector3> positions(vSize + 1);
+            for (GPP::Int vId = 0; vId < vSize; ++vId)
+            {
+                positions.at(vId) = mpTriMesh->GetVertexCoord(mShowHoleLoopIds[vLoop][vId]);
+            }
+            positions.at(vSize) = mpTriMesh->GetVertexCoord(mShowHoleLoopIds[vLoop][0]);
+            MagicCore::RenderSystem::Get()->RenderPolyline("MeshShop_Holes", "SimpleLine", GPP::Vector3(1.0,0.0,0.0), positions, false);
+        }
+        // show seeds
+        GPP::Int boundarySeedSize = mBoundarySeedIds.size();
+        std::vector<GPP::Vector3> holeSeeds(boundarySeedSize, GPP::Vector3());
+        for (GPP::Int vId = 0; vId < boundarySeedSize; ++vId)
+        {
+            holeSeeds.at(vId) = mpTriMesh->GetVertexCoord(mBoundarySeedIds[vId]);
+        }
+        MagicCore::RenderSystem::Get()->RenderPointList("MeshShop_HoleSeeds", "SimplePoint", GPP::Vector3(1.0, 0.0, 0.0), holeSeeds);
+    }
+
+    void MeshShopApp::SetToShowHoleLoopVrtIds(const std::vector<std::vector<GPP::Int> >& toShowHoleLoopVrtIds)
+    {
+        if (mpTriMesh == NULL || toShowHoleLoopVrtIds.empty())
+        {
+            mShowHoleLoopIds.clear();
+            return;
+        }
+
+        mShowHoleLoopIds = toShowHoleLoopVrtIds;
+    }
+
+    void MeshShopApp::SetBoundarySeedIds(const std::vector<GPP::Int>& holeSeedIds)
+    {
+        mBoundarySeedIds = holeSeedIds;
     }
 
     void MeshShopApp::InitViewTool()

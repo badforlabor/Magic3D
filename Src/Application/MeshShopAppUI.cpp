@@ -25,7 +25,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ConsolidateTopology")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateTopology);
         mRoot.at(0)->findWidget("But_ReverseDirection")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ReverseDirection);
         mRoot.at(0)->findWidget("But_ConsolidateGeometry")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateGeometry);
-		mRoot.at(0)->findWidget("But_FilterMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::FilterMesh);
+        mRoot.at(0)->findWidget("But_FilterMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::FilterMesh);
         mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SmoothMesh);
         mRoot.at(0)->findWidget("But_EnhanceMeshDetail")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnhanceMeshDetail);
         mRoot.at(0)->findWidget("But_SubdivideMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SubdivideMesh);
@@ -33,6 +33,10 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_DoRefineMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoRefineMesh);
         mRoot.at(0)->findWidget("But_SimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SimplifyMesh);
         mRoot.at(0)->findWidget("But_DoSimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoSimplifyMesh);
+        //mRoot.at(0)->findWidget("But_ParameterizeMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ParameterizeMesh);
+        mRoot.at(0)->findWidget("But_FillHole")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::FillHole);
+        mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleFlat);
+        mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleSmooth);
         mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SampleMesh);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::BackToHomepage);
         mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::Contact);
@@ -98,12 +102,12 @@ namespace MagicApp
         }
     }
 
-	void MeshShopAppUI::FilterMesh(MyGUI::Widget* pSender)
-	{
-		bool isVisible = mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->isVisible();
+    void MeshShopAppUI::FilterMesh(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_EnhanceMeshDetail")->castType<MyGUI::Button>()->setVisible(!isVisible);
-	}
+    }
 
     void MeshShopAppUI::SmoothMesh(MyGUI::Widget* pSender)
     {
@@ -228,6 +232,37 @@ namespace MagicApp
         if (meshShop != NULL)
         {
             meshShop->SampleMesh();
+        }
+    }
+
+    void MeshShopAppUI::FillHole(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->getVisible();
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->setVisible(isVisible);
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->FindHole(isVisible);
+        }
+    }
+
+    void MeshShopAppUI::DoFillHoleFlat(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->FillHole(true);
+        }
+    }
+
+    void MeshShopAppUI::DoFillHoleSmooth(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->FillHole(false);
         }
     }
 

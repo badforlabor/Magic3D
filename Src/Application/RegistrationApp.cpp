@@ -8,15 +8,8 @@
 #include "../Common/PickTool.h"
 #include "PointShopApp.h"
 #include "AppManager.h"
-#include "GPPDefines.h"
-#include "PointCloud.h"
-#include "Parser.h"
-#include "ToolPointCloud.h"
-#include "DumpInfo.h"
-#include "ConsolidatePointCloud.h"
-#include "RegistratePointCloud.h"
+#include "GPP.h"
 #include "DumpRegistratePointCloud.h"
-#include "FusePointCloud.h"
 #include <algorithm>
 
 namespace MagicApp

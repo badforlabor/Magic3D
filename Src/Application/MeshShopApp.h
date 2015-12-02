@@ -1,5 +1,7 @@
 #pragma once
 #include "AppBase.h"
+#include "Vector3.h"
+#include <vector>
 
 namespace GPP
 {
@@ -42,6 +44,8 @@ namespace MagicApp
         void RefineMesh(int targetVertexCount);
         void SimplifyMesh(int targetVertexCount);
         void SampleMesh(void);
+        void FindHole(bool isShowHole);
+        void FillHole(bool isFillFlat);
 
         void SetMesh(GPP::TriMesh* triMesh);
         int GetMeshVertexCount(void);
@@ -56,11 +60,17 @@ namespace MagicApp
     private:
         void InitViewTool(void);
         void UpdateMeshRendering(void);
+        void SetToShowHoleLoopVrtIds(const std::vector<std::vector<GPP::Int> >& toShowHoleLoopIds);
+        void SetBoundarySeedIds(const std::vector<GPP::Int>& bounarySeedIds);
+        void UpdateHoleRendering(void);
 
     private:
         MeshShopAppUI* mpUI;
         GPP::TriMesh* mpTriMesh;
         MagicCore::ViewTool* mpViewTool;
         GPP::DumpBase* mpDumpInfo;
+
+        std::vector<std::vector<GPP::Int> > mShowHoleLoopIds;
+        std::vector<GPP::Int> mBoundarySeedIds;
     };
 }

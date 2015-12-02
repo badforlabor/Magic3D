@@ -42,6 +42,7 @@ namespace MagicCore
         void RenderPointList(std::string pointListName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& pointCoords);
         void RenderMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh);
         void RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords);
+        void RenderPolyline(std::string polylineName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& polylineCoords, bool appendNewPolyline = false);
         void HideRenderingObject(std::string objName);
 
         virtual ~RenderSystem(void);

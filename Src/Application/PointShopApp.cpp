@@ -7,16 +7,9 @@
 #include "../Common/ViewTool.h"
 #include "AppManager.h"
 #include "MeshShopApp.h"
-#include "GPPDefines.h"
-#include "PointCloud.h"
-#include "Parser.h"
-#include "ConsolidatePointCloud.h"
-#include "SamplePointCloud.h"
-#include "PoissonReconstructMesh.h"
-#include "TriMesh.h"
-#include "ToolPointCloud.h"
-#include "ToolMesh.h"
+#include "GPP.h"
 #include "DumpInfo.h"
+#include <algorithm>
 
 namespace MagicApp
 {
@@ -205,6 +198,61 @@ namespace MagicApp
         UpdatePointCloudRendering();
     }
 
+    void PointShopApp::RemovePointCloudOutlier(void)
+    {
+        if (mpPointCloud == NULL || mpPointCloud->HasNormal() == false)
+        {
+            return;
+        }
+        GPP::Int pointCount = mpPointCloud->GetPointCount();
+        if (pointCount < 1)
+        {
+            return;
+        }
+        GPP::Real* isolation = new GPP::Real[pointCount];
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(mpPointCloud, isolation);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            GPPFREEARRAY(isolation);
+            return;
+        }
+        /*for (GPP::Int pid = 0; pid < pointCount; pid++)
+        {
+            mpPointCloud->SetPointColor(pid, MagicCore::ToolKit::ColorCoding(0.2 + isolation[pid]));
+        }
+        mpPointCloud->SetHasNormal(false);*/
+
+        GPP::Real cutValue = 0.05;
+        std::vector<GPP::Int> deleteIndex;
+        for (GPP::Int pid = 0; pid < pointCount; pid++)
+        {
+            if (isolation[pid] < cutValue)
+            {
+                deleteIndex.push_back(pid);
+            }
+        }
+        res = DeletePointCloudElements(mpPointCloud, deleteIndex);
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            GPPFREEARRAY(isolation);
+            return;
+        }
+
+        GPPFREEARRAY(isolation);
+        UpdatePointCloudRendering();
+        //mpPointCloud->SetHasNormal(true);
+    }
+
     void PointShopApp::SamplePointCloud(int targetPointCount)
     {
         if (mpPointCloud == NULL)
@@ -229,7 +277,7 @@ namespace MagicApp
         for (GPP::Int sid = 0; sid < targetPointCount; sid++)
         {
             samplePointCloud->InsertPoint(mpPointCloud->GetPointCoord(sampleIndex[sid]), mpPointCloud->GetPointNormal(sampleIndex[sid]));
-			samplePointCloud->SetPointColor(sid, mpPointCloud->GetPointColor(sampleIndex[sid]));
+            samplePointCloud->SetPointColor(sid, mpPointCloud->GetPointColor(sampleIndex[sid]));
         }
         samplePointCloud->SetHasNormal(mpPointCloud->HasNormal());
         delete mpPointCloud;
@@ -279,17 +327,17 @@ namespace MagicApp
         {
             return;
         }
-		GPP::Int pointCount = mpPointCloud->GetPointCount();
-		std::vector<GPP::Real> pointColorFields(pointCount * 3);
-		for (GPP::Int pid = 0; pid < pointCount; pid++)
-		{
-			GPP::Vector3 color = mpPointCloud->GetPointColor(pid);
-			GPP::Int baseId = pid * 3;
-			pointColorFields.at(baseId) = color[0];
-			pointColorFields.at(baseId + 1) = color[1];
-			pointColorFields.at(baseId + 2) = color[2];
-		}
-		std::vector<GPP::Real> vertexColorField;
+        GPP::Int pointCount = mpPointCloud->GetPointCount();
+        std::vector<GPP::Real> pointColorFields(pointCount * 3);
+        for (GPP::Int pid = 0; pid < pointCount; pid++)
+        {
+            GPP::Vector3 color = mpPointCloud->GetPointColor(pid);
+            GPP::Int baseId = pid * 3;
+            pointColorFields.at(baseId) = color[0];
+            pointColorFields.at(baseId + 1) = color[1];
+            pointColorFields.at(baseId + 2) = color[2];
+        }
+        std::vector<GPP::Real> vertexColorField;
         GPP::TriMesh* triMesh = new GPP::TriMesh;
         GPP::ErrorCode res = GPP::PoissonReconstructMesh::Reconstruct(mpPointCloud, triMesh, GPP::RQ_MEDIUM, &pointColorFields, &vertexColorField);
         if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -308,12 +356,12 @@ namespace MagicApp
         {
             return;
         }
-		GPP::Int vertexCount = triMesh->GetVertexCount();
-		for (GPP::Int vid = 0; vid < vertexCount; vid++)
-		{
-			GPP::Int baseId = vid * 3;
-			triMesh->SetVertexColor(vid, GPP::Vector3(vertexColorField.at(baseId), vertexColorField.at(baseId + 1), vertexColorField.at(baseId + 2)));
-		}
+        GPP::Int vertexCount = triMesh->GetVertexCount();
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            GPP::Int baseId = vid * 3;
+            triMesh->SetVertexColor(vid, GPP::Vector3(vertexColorField.at(baseId), vertexColorField.at(baseId + 1), vertexColorField.at(baseId + 2)));
+        }
         AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
         if (meshShop)

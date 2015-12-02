@@ -43,10 +43,18 @@
         <Widget type="Button" skin="But_OK_CN" position="155 415 43 43" align="Left Top" name="But_DoSimplifyMesh">
             <Property key="Visible" value="false"/>
         </Widget>
+        
+        <Widget type="Button" skin="But_FillHole_CN" position="15 470 60 60" align="Left Top" name="But_FillHole"/>
+        <Widget type="Button" skin="But_Flat_CN" position="75 480 43 43" align="Left Top" name="But_FillHoleFlat">
+            <Property key="Visible" value="false"/>
+        </Widget>/>
+        <Widget type="Button" skin="But_Curvature_CN" position="118 480 43 43" align="Left Top" name="But_FillHoleSmooth">
+            <Property key="Visible" value="false"/>
+        </Widget>/>
 
-        <Widget type="Button" skin="But_Sampling_CN" position="15 470 60 60" align="Left Top" name="But_SampleMesh"/>
+        <Widget type="Button" skin="But_Sampling_CN" position="15 535 60 60" align="Left Top" name="But_SampleMesh"/>
 
-        <Widget type="Button" skin="But_Home" position="15 535 60 60" align="Left Top" name="But_BackToHomepage"/>
-        <Widget type="Button" skin="But_Contact" position="15 600 60 60" align="Left Top" name="But_Contact"/>
+        <Widget type="Button" skin="But_Home" position="15 600 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Contact" position="15 665 60 60" align="Left Top" name="But_Contact"/>
     </Widget>
 </MyGUI>

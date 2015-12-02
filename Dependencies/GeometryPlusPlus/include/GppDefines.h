@@ -30,6 +30,7 @@
 #define GPP_NOT_ENOUGH_INPUT  -4
 #define GPP_NOT_INITIALIZED   -5
 #define GPP_API_IS_NOT_AVAILABLE -6
+#define GPP_DATA_IS_CORRUPT   -7
 
 namespace GPP
 {

@@ -21,7 +21,7 @@ namespace MagicApp
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("PointShopApp.layout");
         mRoot.at(0)->findWidget("But_ImportPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ImportPointCloud);
         mRoot.at(0)->findWidget("But_ExportPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ExportPointCloud);
-        mRoot.at(0)->findWidget("But_SmoothPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SmoothPointCloud);
+        mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::RemovePointCloudOutlier);
         mRoot.at(0)->findWidget("But_SamplePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SamplePointCloud);
         mRoot.at(0)->findWidget("But_DoSamplePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoSamplePointCloud);
         mRoot.at(0)->findWidget("But_Normal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::PointCloudNormal);
@@ -57,12 +57,12 @@ namespace MagicApp
         }
     }
 
-    void PointShopAppUI::SmoothPointCloud(MyGUI::Widget* pSender)
+    void PointShopAppUI::RemovePointCloudOutlier(MyGUI::Widget* pSender)
     {
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->SmoothPointCloud();
+            pointShop->RemovePointCloudOutlier();
         }
     }
 

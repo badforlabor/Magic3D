@@ -7,9 +7,9 @@
 
 namespace MagicCore
 {
-	RenderSystem* RenderSystem::mpRenderSystem = NULL;
+    RenderSystem* RenderSystem::mpRenderSystem = NULL;
 
-	RenderSystem::RenderSystem(void) : 
+    RenderSystem::RenderSystem(void) : 
         mpRoot(NULL), 
         mpMainCamera(NULL), 
         mpRenderWindow(NULL), 
@@ -286,6 +286,40 @@ namespace MagicCore
             GPP::Vector3 end = endCoords.at(lineId);
             manualObj->position(start[0], start[1], start[2]);
             manualObj->position(end[0], end[1], end[2]);
+        }
+        manualObj->end();
+    }
+
+    void RenderSystem::RenderPolyline(std::string lineName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& polylineCoords, bool appendNewPolyline)
+    {
+        Ogre::ManualObject* manualObj = NULL;
+        if (mpSceneManager->hasManualObject(lineName))
+        {
+            manualObj = mpSceneManager->getManualObject(lineName);
+            if (appendNewPolyline)
+            {
+                manualObj->clear();
+            }
+        }
+        else
+        {
+            manualObj = mpSceneManager->createManualObject(lineName);
+            if (mpSceneManager->hasSceneNode("ModelNode"))
+            {
+                mpSceneManager->getSceneNode("ModelNode")->attachObject(manualObj);
+            }
+            else
+            {
+                mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNode")->attachObject(manualObj);
+            }
+        }
+        manualObj->begin(materialName, Ogre::RenderOperation::OT_LINE_STRIP);
+        int pointSize = polylineCoords.size();
+        for (int pointId = 0; pointId < pointSize; ++pointId)
+        {
+            GPP::Vector3 pt = polylineCoords.at(pointId);
+            manualObj->position(pt[0], pt[1], pt[2]);
+            manualObj->colour(color[0], color[1], color[2]);
         }
         manualObj->end();
     }

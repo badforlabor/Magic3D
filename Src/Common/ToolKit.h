@@ -28,6 +28,6 @@ namespace MagicCore
         bool mAppRunning;
         bool mIsONIInitialized;
         bool mMousePressLocked; //this is just a hack
-	};
+    };
 }
 
