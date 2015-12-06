@@ -71,6 +71,6 @@ namespace MagicApp
         GPP::DumpBase* mpDumpInfo;
 
         std::vector<std::vector<GPP::Int> > mShowHoleLoopIds;
-        std::vector<GPP::Int> mBoundarySeedIds;
+        std::vector<GPP::Int>               mBoundarySeedIds;
     };
 }

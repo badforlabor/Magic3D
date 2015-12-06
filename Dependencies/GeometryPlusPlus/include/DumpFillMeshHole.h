@@ -19,13 +19,15 @@ namespace GPP
         virtual ErrorCode Run(void);
         virtual TriMesh* GetTriMesh(Int id = 0);
 
-        void DumpApiInfo(const ITriMesh* triMesh, const std::vector<Int>& brdSeedIds, Int fillHoleMethod);
+        void DumpApiInfo(const ITriMesh* triMesh, const std::vector<Int>* brdSeedIds, Int fillHoleMethod,
+            const std::vector<Real> *vertexFields);
         std::vector<Int> GetBoundarySeedIds()const;
 
     private:
         TriMesh*         mpTriMesh;
         std::vector<Int> mBoundarySeeds;
         Int              mFillHoleMethod;
+        std::vector<Real> mVertexFields;
     };
 
     class GPP_EXPORT DumpFindMeshHole : public DumpBase

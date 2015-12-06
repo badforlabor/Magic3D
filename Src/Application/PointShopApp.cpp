@@ -260,7 +260,7 @@ namespace MagicApp
             return;
         }
         GPP::Int* sampleIndex = new GPP::Int[targetPointCount];
-        GPP::ErrorCode res = GPP::SamplePointCloud::UniformSample(mpPointCloud, targetPointCount, sampleIndex);
+        GPP::ErrorCode res = GPP::SamplePointCloud::UniformSample(mpPointCloud, targetPointCount, sampleIndex, 0);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -339,7 +339,7 @@ namespace MagicApp
         }
         std::vector<GPP::Real> vertexColorField;
         GPP::TriMesh* triMesh = new GPP::TriMesh;
-        GPP::ErrorCode res = GPP::PoissonReconstructMesh::Reconstruct(mpPointCloud, triMesh, GPP::RQ_MEDIUM, &pointColorFields, &vertexColorField);
+        GPP::ErrorCode res = GPP::PoissonReconstructMesh::Reconstruct(mpPointCloud, triMesh, GPP::RECONSTRUCT_QUALITY_MEDIUM, &pointColorFields, &vertexColorField);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);

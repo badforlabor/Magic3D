@@ -205,6 +205,39 @@ namespace MagicApp
         UpdateMeshRendering();
     }
 
+    static void CollectTriMeshVerticesColorFields(const GPP::TriMesh* triMesh, std::vector<GPP::Real> *vertexColorFields)
+    {
+        if (triMesh == NULL || vertexColorFields == NULL)
+        {
+            return;
+        }
+        GPP::Int verticeSize = triMesh->GetVertexCount();
+        GPP::Int dim = 3;
+        vertexColorFields->resize(verticeSize * dim, 0.0);
+        for (GPP::Int vid = 0; vid < verticeSize; ++vid)
+        {
+            GPP::Vector3 color = triMesh->GetVertexColor(vid);
+            GPP::Int offset = vid * 3;
+            vertexColorFields->at(offset) = color[0];
+            vertexColorFields->at(offset+1) = color[1];
+            vertexColorFields->at(offset+2) = color[2];
+        }
+    }
+
+    static void UpdateTriMeshVertexColors(GPP::TriMesh *triMesh, const std::vector<GPP::Real>& newVertexColors)
+    {
+        if (triMesh == NULL || newVertexColors.empty())
+        {
+            return;
+        }
+        GPP::Int verticeSize = triMesh->GetVertexCount();
+        for (GPP::Int vid = 0; vid < verticeSize; ++vid)
+        {
+            GPP::Vector3 color(newVertexColors[vid * 3 + 0], newVertexColors[vid * 3 + 1], newVertexColors[vid * 3 + 2]);
+            triMesh->SetVertexColor(vid, color);
+        }
+    }
+
     void MeshShopApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
     {
         if (dumpInfo == NULL)
@@ -341,7 +374,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, 0.0174532925199433 * 5.0, GPP::REAL_TOL, 0.0174532925199433 * 170.0);
+        GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, GPP::ONE_RADIAN * 5.0, GPP::REAL_TOL, 0.0174532925199433 * 170.0);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -368,7 +401,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::ErrorCode res = GPP::ConsolidateMesh::LaplaceSmooth(mpTriMesh, 0.2, 5, true);
+        GPP::ErrorCode res = GPP::FilterMesh::LaplaceSmooth(mpTriMesh);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -394,10 +427,7 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        std::vector<GPP::Real> heightField;
-        std::vector<GPP::Vector3> baseMeshCoords;
-        std::vector<GPP::Vector3> baseMeshNormals;
-        GPP::ErrorCode res = GPP::DecomposeMesh::DecomposeHeightField(mpTriMesh, &heightField, &baseMeshCoords, &baseMeshNormals);
+        GPP::ErrorCode res = GPP::FilterMesh::EnhanceDetail(mpTriMesh);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -408,13 +438,6 @@ namespace MagicApp
             MagicCore::ToolKit::Get()->SetAppRunning(false);
 #endif
             return;
-        }
-        GPP::Real enhanceFactor = 2.0;
-        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
-        for (GPP::Int vid = 0; vid < vertexCount; vid++)
-        {
-            mpTriMesh->SetVertexCoord(vid, baseMeshCoords.at(vid) + baseMeshNormals.at(vid) * (heightField.at(vid) * enhanceFactor));
-            //mpTriMesh->SetVertexCoord(vid, baseMeshCoords.at(vid));
         }
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();
@@ -430,7 +453,18 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::ErrorCode res = GPP::SubdivideMesh::LoopSubdivideMesh(mpTriMesh);
+        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+        std::vector<GPP::Real> vertexFields(vertexCount * 3);
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            GPP::Vector3 color = mpTriMesh->GetVertexColor(vid);
+            GPP::Int baseId = vid * 3;
+            vertexFields.at(baseId) = color[0];
+            vertexFields.at(baseId + 1) = color[1];
+            vertexFields.at(baseId + 2) = color[2];
+        }
+        std::vector<GPP::Real> insertedVertexFields;
+        GPP::ErrorCode res = GPP::SubdivideMesh::LoopSubdivideMesh(mpTriMesh, &vertexFields, &insertedVertexFields);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -441,6 +475,12 @@ namespace MagicApp
             MagicCore::ToolKit::Get()->SetAppRunning(false);
 #endif
             return;
+        }
+        GPP::Int insertedVertexCount = mpTriMesh->GetVertexCount() - vertexCount;
+        for (GPP::Int vid = 0; vid < insertedVertexCount; vid++)
+        {
+            GPP::Int baseId = vid * 3;
+            mpTriMesh->SetVertexColor(vertexCount + vid, GPP::Vector3(insertedVertexFields.at(baseId), insertedVertexFields.at(baseId + 1), insertedVertexFields.at(baseId + 2)));
         }
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();
@@ -482,7 +522,18 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::ErrorCode res = GPP::SubdivideMesh::RefineMesh(mpTriMesh, targetVertexCount);
+        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+        std::vector<GPP::Real> vertexFields(vertexCount * 3);
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            GPP::Vector3 color = mpTriMesh->GetVertexColor(vid);
+            GPP::Int baseId = vid * 3;
+            vertexFields.at(baseId) = color[0];
+            vertexFields.at(baseId + 1) = color[1];
+            vertexFields.at(baseId + 2) = color[2];
+        }
+        std::vector<GPP::Real> insertedVertexFields;
+        GPP::ErrorCode res = GPP::SubdivideMesh::RefineMesh(mpTriMesh, targetVertexCount, &vertexFields, &insertedVertexFields);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -493,6 +544,12 @@ namespace MagicApp
             MagicCore::ToolKit::Get()->SetAppRunning(false);
 #endif
             return;
+        }
+        GPP::Int insertedVertexCount = mpTriMesh->GetVertexCount() - vertexCount;
+        for (GPP::Int vid = 0; vid < insertedVertexCount; vid++)
+        {
+            GPP::Int baseId = vid * 3;
+            mpTriMesh->SetVertexColor(vertexCount + vid, GPP::Vector3(insertedVertexFields.at(baseId), insertedVertexFields.at(baseId + 1), insertedVertexFields.at(baseId + 2)));
         }
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();
@@ -612,7 +669,12 @@ namespace MagicApp
         {
             holeSeeds.insert(holeSeeds.end(), mShowHoleLoopIds[vLoop].begin(), mShowHoleLoopIds[vLoop].end());
         }
-        GPP::ErrorCode res = GPP::FillMeshHole::FillHoles(mpTriMesh, holeSeeds, isFillFlat ? GPP::FILL_MESH_HOLE_FLAT : GPP::FILL_MESH_HOLE_SMOOTH);
+
+        std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
+        CollectTriMeshVerticesColorFields(mpTriMesh, &vertexScaleFields);
+
+        GPP::ErrorCode res = GPP::FillMeshHole::FillHoles(mpTriMesh, &holeSeeds, isFillFlat ? GPP::FILL_MESH_HOLE_FLAT : GPP::FILL_MESH_HOLE_SMOOTH,
+            &vertexScaleFields, &outputScaleFields);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -624,6 +686,8 @@ namespace MagicApp
 #endif
             return;
         }
+
+        UpdateTriMeshVertexColors(mpTriMesh, outputScaleFields);
         SetToShowHoleLoopVrtIds(std::vector<std::vector<GPP::Int> >());
         SetBoundarySeedIds(std::vector<GPP::Int>());
         mpTriMesh->UnifyCoords(2.0);
