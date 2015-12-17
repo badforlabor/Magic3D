@@ -5,7 +5,6 @@
 #include "../Common/ToolKit.h"
 #include "../Common/RenderSystem.h"
 #include "../Common/ViewTool.h"
-#include "../Common/PickTool.h"
 #include "PointShopApp.h"
 #include "AppManager.h"
 #include "GPP.h"
@@ -16,17 +15,13 @@ namespace MagicApp
 {
     RegistrationApp::RegistrationApp() :
         mpUI(NULL),
-        mMouseMode(MM_VIEW),
         mpViewTool(NULL),
-        mpPickTool(NULL),
         mpDumpInfo(NULL),
         mpPointCloudRef(NULL),
         mpPointCloudFrom(NULL),
         mpFusePointCloud(NULL),
         mObjCenterCoord(),
-        mScaleValue(0),
-        mPickedPointsRef(),
-        mPickedPointsFrom()
+        mScaleValue(0)
     {
     }
 
@@ -34,7 +29,6 @@ namespace MagicApp
     {
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpViewTool);
-        GPPFREEPOINTER(mpPickTool);
         GPPFREEPOINTER(mpDumpInfo);
         GPPFREEPOINTER(mpPointCloudRef);
         GPPFREEPOINTER(mpPointCloudFrom);
@@ -72,7 +66,7 @@ namespace MagicApp
 
     bool RegistrationApp::MouseMoved( const OIS::MouseEvent &arg )
     {
-        if (mMouseMode == MM_VIEW && mpViewTool != NULL)
+        if (mpViewTool != NULL)
         {
             MagicCore::ViewTool::MouseMode mm;
             if (arg.state.buttonDown(OIS::MB_Left))
@@ -99,39 +93,15 @@ namespace MagicApp
 
     bool RegistrationApp::MousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        if (mMouseMode == MM_VIEW && mpViewTool != NULL)
+        if (mpViewTool != NULL)
         {
             mpViewTool->MousePressed(arg.state.X.abs, arg.state.Y.abs);
-        }
-        else if ((mMouseMode == MM_PICK_POINT_REF || mMouseMode == MM_PICK_POINT_FROM) && mpPickTool != NULL)
-        {
-            mpPickTool->MousePressed(arg.state.X.abs, arg.state.Y.abs);
         }
         return true;
     }
 
     bool RegistrationApp::MouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        if ((mMouseMode == MM_PICK_POINT_REF || mMouseMode == MM_PICK_POINT_FROM) && mpPickTool != NULL)
-        {
-            mpPickTool->MouseReleased(arg.state.X.abs, arg.state.Y.abs);
-            GPP::Int pickedId = mpPickTool->GetPickPointId();
-            mpPickTool->ClearPickedIds();
-            if (pickedId == -1)
-            {
-                return true;
-            }
-            if (mMouseMode == MM_PICK_POINT_REF)
-            {
-                mPickedPointsRef.push_back(mpPointCloudRef->GetPointCoord(pickedId));
-                UpdatePointPairsRendering();
-            }
-            else if (mMouseMode == MM_PICK_POINT_FROM)
-            {
-                mPickedPointsFrom.push_back(mpPointCloudFrom->GetPointCoord(pickedId));
-                UpdatePointPairsRendering();
-            }
-        }
         return true;
     }
 
@@ -162,9 +132,6 @@ namespace MagicApp
         MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
         MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
         MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_RegistrationApp");
-        MagicCore::RenderSystem::Get()->HideRenderingObject("PickedRefPoint_RegistrationApp");
-        MagicCore::RenderSystem::Get()->HideRenderingObject("PickedFromPoint_RegistrationApp");
-        MagicCore::RenderSystem::Get()->HideRenderingObject("PickedPointPairLines_RegistrationApp"); 
         if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
         {
             MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->resetToInitialState();
@@ -175,7 +142,6 @@ namespace MagicApp
     {
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpViewTool);
-        GPPFREEPOINTER(mpPickTool);
         GPPFREEPOINTER(mpDumpInfo);
         GPPFREEPOINTER(mpPointCloudRef);
         GPPFREEPOINTER(mpPointCloudFrom);
@@ -185,7 +151,7 @@ namespace MagicApp
     bool RegistrationApp::ImportPointCloudRef()
     {
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0ASC Files(*.asc)\0*.asc\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
@@ -198,18 +164,12 @@ namespace MagicApp
                 InitViewTool();
                 UpdatePointCloudRefRendering();
                 
-                mPickedPointsRef.clear();
-                mPickedPointsFrom.clear();
-                UpdatePointPairsRendering();
                 if (mpPointCloudFrom)
                 {
                     GPPFREEPOINTER(mpPointCloudFrom);
                     MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
                 }
-
                 GPPFREEPOINTER(mpFusePointCloud);
-
-                ModelView();
                 return true;
             }
         }
@@ -251,25 +211,6 @@ namespace MagicApp
         UpdatePointCloudRefRendering();
     }
 
-    void RegistrationApp::PushRef()
-    {
-        if (mpPointCloudRef == NULL || mpPointCloudRef->HasNormal() == false)
-        {
-            return;
-        }
-        mMouseMode = MM_PICK_POINT_REF;
-        InitPickTool();
-        mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, mpPointCloudRef, NULL);
-        MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
-        UpdatePointCloudRefRendering();
-    }
-
-    void RegistrationApp::PopRef()
-    {
-        mPickedPointsRef.pop_back();
-        UpdatePointPairsRendering();
-    }
-
     void RegistrationApp::FuseRef()
     {
         if (mpPointCloudRef == NULL || mpPointCloudFrom == NULL)
@@ -304,15 +245,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpPointCloudRef);
         mpPointCloudRef = extractPointCloud;
         UpdatePointCloudRefRendering();
-
-        mPickedPointsRef.clear();
-        mPickedPointsFrom.clear();
-        UpdatePointPairsRendering();
-
         GPPFREEPOINTER(mpPointCloudFrom);
         MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
 
-        ModelView();
     }
 
     bool RegistrationApp::ImportPointCloudFrom()
@@ -323,7 +258,7 @@ namespace MagicApp
             return false;
         }
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0ASC Files(*.asc)\0*.asc\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
@@ -336,11 +271,6 @@ namespace MagicApp
                 InfoLog << "Import Point Cloud From: " << mpPointCloudFrom->GetPointCount() << " points" << std::endl;
                 InitViewTool();
                 UpdatePointCloudFromRendering();
-
-                mPickedPointsFrom.clear();
-                UpdatePointPairsRendering();
-                
-                ModelView();
                 return true;
             }
         }
@@ -381,81 +311,22 @@ namespace MagicApp
         }
         UpdatePointCloudFromRendering();
     }
-
-    void RegistrationApp::PushFrom()
-    {
-        if (mpPointCloudFrom == NULL || mpPointCloudFrom->HasNormal() == false)
-        {
-            return;
-        }
-        mMouseMode = MM_PICK_POINT_FROM;
-        InitPickTool();
-        mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, mpPointCloudFrom, NULL);
-        MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_RegistrationApp");
-        UpdatePointCloudFromRendering();
-    }
-
-    void RegistrationApp::PopFrom()
-    {
-        mPickedPointsFrom.pop_back();
-        UpdatePointPairsRendering();
-    }
-
-    void RegistrationApp::AlignFrom()
+        
+    void RegistrationApp::AlignFast()
     {
         if (mpPointCloudFrom == NULL || mpPointCloudRef == NULL)
         {
             return;
         }
-        std::vector<GPP::Vector3> pickedRefPointCoords;
-        pickedRefPointCoords.reserve(mPickedPointsRef.size());
-        for (std::vector<GPP::Vector3>::iterator itr = mPickedPointsRef.begin(); itr != mPickedPointsRef.end(); ++itr)
-        {
-            pickedRefPointCoords.push_back(*itr);
-        }
-        std::vector<GPP::Vector3> pickedFromPointCoords;
-        pickedFromPointCoords.reserve(mPickedPointsFrom.size());
-        for (std::vector<GPP::Vector3>::iterator itr = mPickedPointsFrom.begin(); itr != mPickedPointsFrom.end(); ++itr)
-        {
-            pickedFromPointCoords.push_back(*itr);
-        }
-        int pickedRefPointCount = pickedRefPointCoords.size();
-        int pickedFromPointCount = pickedFromPointCoords.size();
-        if (pickedRefPointCount < pickedFromPointCount)
-        {
-            pickedFromPointCoords.erase(pickedFromPointCoords.begin() + pickedRefPointCount, pickedFromPointCoords.end());
-        }
-        else if (pickedRefPointCount > pickedFromPointCount)
-        {
-            pickedRefPointCoords.erase(pickedRefPointCoords.begin() + pickedFromPointCount, pickedRefPointCoords.end());
-        }
-        GPP::Matrix4x4* initTransform = NULL;
-        if (pickedRefPointCoords.size() > 0)
-        {
-            initTransform = new GPP::Matrix4x4;
-            GPP::ErrorCode res = GPP::RegistratePointCloud::AlignByPointPairs(pickedRefPointCoords, pickedFromPointCoords, initTransform);
-            if (res != GPP_NO_ERROR)
-            {
-                GPPFREEPOINTER(initTransform);
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-                return;
-            }
-        }
         GPP::Matrix4x4 resultTransform;
-        GPP::ErrorCode res = GPP::RegistratePointCloud::ICPRegistrate(mpPointCloudRef, mpPointCloudFrom, &resultTransform, initTransform);
+        //GPP::DumpOnce();
+        GPP::ErrorCode res = GPP::RegistratePointCloud::GlobalRegistrate(mpPointCloudRef, mpPointCloudFrom, &resultTransform, GPP::REGISTRATE_QUALITY_LOW);
         if (res != GPP_NO_ERROR)
         {
-            GPPFREEPOINTER(initTransform);
 #if STOPFAILEDCOMMAND
             MagicCore::ToolKit::Get()->SetAppRunning(false);
 #endif
             return;
-        }
-        if (initTransform != NULL)
-        {
-            resultTransform *= (*initTransform);
         }
         //Update mpPointCloudFrom
         GPP::Int fromPointCount = mpPointCloudFrom->GetPointCount();
@@ -463,29 +334,58 @@ namespace MagicApp
         {
             mpPointCloudFrom->SetPointCoord(pid, resultTransform.TransformPoint(mpPointCloudFrom->GetPointCoord(pid)));
             mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
-        }
-        //Update mark points
-        for (std::vector<GPP::Vector3>::iterator itr = mPickedPointsFrom.begin(); itr != mPickedPointsFrom.end(); ++itr)
-        {
-            (*itr) = resultTransform.TransformPoint(*itr);
-        }
-        //
+        }     
         UpdatePointCloudFromRendering();
-        UpdatePointPairsRendering();
-
-        mPickedPointsRef.clear();
-        mPickedPointsFrom.clear();
-        UpdatePointPairsRendering();
-
-        ModelView();
     }
 
-    void RegistrationApp::ModelView()
+    void RegistrationApp::AlignPrecise()
     {
-        mMouseMode = MM_VIEW;
+        if (mpPointCloudFrom == NULL || mpPointCloudRef == NULL)
+        {
+            return;
+        }
+        GPP::Matrix4x4 resultTransform;
+        GPP::ErrorCode res = GPP::RegistratePointCloud::GlobalRegistrate(mpPointCloudRef, mpPointCloudFrom, &resultTransform, GPP::REGISTRATE_QUALITY_HIGH);
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
+        }
+        //Update mpPointCloudFrom
+        GPP::Int fromPointCount = mpPointCloudFrom->GetPointCount();
+        for (GPP::Int pid = 0; pid < fromPointCount; pid++)
+        {
+            mpPointCloudFrom->SetPointCoord(pid, resultTransform.TransformPoint(mpPointCloudFrom->GetPointCoord(pid)));
+            mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
+        }     
         UpdatePointCloudFromRendering();
-        UpdatePointCloudRefRendering();
-        UpdatePointPairsRendering();
+    }
+
+    void RegistrationApp::AlignICP()
+    {
+        if (mpPointCloudFrom == NULL || mpPointCloudRef == NULL)
+        {
+            return;
+        }
+        GPP::Matrix4x4 resultTransform;
+        GPP::ErrorCode res = GPP::RegistratePointCloud::ICPRegistrate(mpPointCloudRef, mpPointCloudFrom, &resultTransform);
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
+        }
+        //Update mpPointCloudFrom
+        GPP::Int fromPointCount = mpPointCloudFrom->GetPointCount();
+        for (GPP::Int pid = 0; pid < fromPointCount; pid++)
+        {
+            mpPointCloudFrom->SetPointCoord(pid, resultTransform.TransformPoint(mpPointCloudFrom->GetPointCoord(pid)));
+            mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
+        }     
+        UpdatePointCloudFromRendering();
     }
 
     void RegistrationApp::SetPointCloudColor(GPP::PointCloud* pointCloud, const GPP::Vector3& color)
@@ -529,25 +429,7 @@ namespace MagicApp
         }
         GPPFREEPOINTER(mpDumpInfo);
         mpDumpInfo = dumpInfo;
-        if (mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_ALIGNPOINTPAIR)
-        {
-            GPP::DumpPointCloudRegistrationAlignPointPair* dumpDetail = dynamic_cast<GPP::DumpPointCloudRegistrationAlignPointPair*>(mpDumpInfo);
-            if (dumpDetail != NULL)
-            {
-                mPickedPointsRef = dumpDetail->GetPointsRef();
-                mPickedPointsFrom = dumpDetail->GetPointsFrom();
-                const GPP::Matrix4x4* initTransform = dumpDetail->GetInitTransform();
-                if (initTransform != NULL)
-                {
-                    for (std::vector<GPP::Vector3>::iterator itr = mPickedPointsFrom.begin(); itr != mPickedPointsFrom.end(); ++itr)
-                    {
-                        (*itr) = initTransform->TransformPoint(*itr);
-                    }
-                }
-                UpdatePointPairsRendering();
-            }
-        }
-        else if (mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_ICP)
+        if (mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_ICP || mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_GLOBAL)
         {
             if (mpDumpInfo->GetPointCloud(0) == NULL || mpDumpInfo->GetPointCloud(1) == NULL)
             {
@@ -585,10 +467,6 @@ namespace MagicApp
             SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0.86, 0, 0));
             UpdatePointCloudRefRendering();
             UpdatePointCloudFromRendering();
-
-            mPickedPointsRef.clear();
-            mPickedPointsFrom.clear();
-            UpdatePointPairsRendering();
         }
 
         InitViewTool();
@@ -608,16 +486,7 @@ namespace MagicApp
 #endif
             return;
         }
-        if (mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_ALIGNPOINTPAIR)
-        {
-            GPP::DumpPointCloudRegistrationAlignPointPair* dumpDetail = dynamic_cast<GPP::DumpPointCloudRegistrationAlignPointPair*>(mpDumpInfo);
-            if (dumpDetail != NULL)
-            {
-                mPickedPointsFrom = dumpDetail->GetPointsFrom();
-                UpdatePointPairsRendering();
-            }
-        }
-        else if (mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_ICP)
+        if (mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_ICP || mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_GLOBAL)
         {
             if (mpDumpInfo->GetPointCloud(1) == NULL)
             {
@@ -685,27 +554,11 @@ namespace MagicApp
         }
     }
 
-    void RegistrationApp::UpdatePointPairsRendering()
-    {
-        MagicCore::RenderSystem::Get()->RenderPointList("PickedRefPoint_RegistrationApp", "SimplePoint_Large", GPP::Vector3(0, 0, 1), mPickedPointsRef);
-        MagicCore::RenderSystem::Get()->RenderPointList("PickedFromPoint_RegistrationApp", "SimplePoint_Large", GPP::Vector3(1, 0, 0), mPickedPointsFrom);
-        MagicCore::RenderSystem::Get()->RenderLineSegments("PickedPointPairLines_RegistrationApp", "SimpleLine", mPickedPointsRef, mPickedPointsFrom);
-    }
-
     void RegistrationApp::InitViewTool()
     {
         if (mpViewTool == NULL)
         {
             mpViewTool = new MagicCore::ViewTool;
         }
-    }
-
-    void RegistrationApp::InitPickTool()
-    {
-        if (mpPickTool == NULL)
-        {
-            mpPickTool = new MagicCore::PickTool;
-        }
-        mpPickTool->Reset();
     }
 }

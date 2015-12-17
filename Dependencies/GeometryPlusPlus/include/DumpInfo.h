@@ -27,6 +27,7 @@ namespace GPP
         POINT_SAMPLING_UNIFORM,
         POINT_REGISTRATION_ALIGNPOINTPAIR,
         POINT_REGISTRATION_ICP,
+        POINT_REGISTRATION_GLOBAL,
         POINT_FUSION_UPDATE,
         POINT_FUSION_EXTRACT
     };
@@ -75,5 +76,7 @@ namespace GPP
 
     extern GPP_EXPORT void RegisterDumpInfo(void);
 
-    extern const bool GppDumpApi;
+    extern bool GppDumpApiOnce;
+
+    extern GPP_EXPORT void DumpOnce(void);
 }

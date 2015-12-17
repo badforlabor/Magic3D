@@ -8,7 +8,6 @@
 #include "../Common/ViewTool.h"
 #include "../Common/RenderSystem.h"
 #include "GPP.h"
-#include "DumpInfo.h"
 #include "DumpFillMeshHole.h"
 
 namespace MagicApp
@@ -157,7 +156,7 @@ namespace MagicApp
     bool MeshShopApp::ImportMesh()
     {
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             GPP::TriMesh* triMesh = GPP::Parser::ImportTriMesh(fileName);
@@ -186,7 +185,7 @@ namespace MagicApp
         if (mpTriMesh != NULL)
         {
             std::string fileName;
-            char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0";
+            char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0PLY Files(*.ply)\0*.ply\0";
             if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
             {
                 GPP::Parser::ExportTriMesh(fileName, mpTriMesh);
@@ -224,17 +223,23 @@ namespace MagicApp
         }
     }
 
-    static void UpdateTriMeshVertexColors(GPP::TriMesh *triMesh, const std::vector<GPP::Real>& newVertexColors)
+    static void UpdateTriMeshVertexColors(GPP::TriMesh *triMesh, GPP::Int oldTriMeshVertexSize, const std::vector<GPP::Real>& insertedVertexFields)
     {
-        if (triMesh == NULL || newVertexColors.empty())
+        if (triMesh == NULL || insertedVertexFields.empty())
         {
             return;
         }
         GPP::Int verticeSize = triMesh->GetVertexCount();
-        for (GPP::Int vid = 0; vid < verticeSize; ++vid)
+        GPP::Int insertedVertexSize = (triMesh->GetVertexCount() - oldTriMeshVertexSize);
+        if (insertedVertexFields.size() != insertedVertexSize * 3)
         {
-            GPP::Vector3 color(newVertexColors[vid * 3 + 0], newVertexColors[vid * 3 + 1], newVertexColors[vid * 3 + 2]);
-            triMesh->SetVertexColor(vid, color);
+            return;
+        }
+        for (GPP::Int vid = 0; vid < insertedVertexSize; ++vid)
+        {
+            GPP::Int newVertexId = vid + oldTriMeshVertexSize;
+            GPP::Vector3 color(insertedVertexFields[vid * 3 + 0], insertedVertexFields[vid * 3 + 1], insertedVertexFields[vid * 3 + 2]);
+            triMesh->SetVertexColor(newVertexId, color);
         }
     }
 
@@ -672,6 +677,7 @@ namespace MagicApp
 
         std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
         CollectTriMeshVerticesColorFields(mpTriMesh, &vertexScaleFields);
+        GPP::Int oldTriMeshVertexSize = mpTriMesh->GetVertexCount();
 
         GPP::ErrorCode res = GPP::FillMeshHole::FillHoles(mpTriMesh, &holeSeeds, isFillFlat ? GPP::FILL_MESH_HOLE_FLAT : GPP::FILL_MESH_HOLE_SMOOTH,
             &vertexScaleFields, &outputScaleFields);
@@ -687,7 +693,7 @@ namespace MagicApp
             return;
         }
 
-        UpdateTriMeshVertexColors(mpTriMesh, outputScaleFields);
+        UpdateTriMeshVertexColors(mpTriMesh, oldTriMeshVertexSize, outputScaleFields);
         SetToShowHoleLoopVrtIds(std::vector<std::vector<GPP::Int> >());
         SetBoundarySeedIds(std::vector<GPP::Int>());
         mpTriMesh->UnifyCoords(2.0);

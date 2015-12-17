@@ -52,4 +52,26 @@ namespace GPP
         PointCloud* mpPointCloudFrom;
         Matrix4x4* mpInitTransform;
     }; 
+
+    extern GPP_EXPORT DumpBase* CreateDumpPointCloudRegistrationGlobal(void);
+
+    class GPP_EXPORT DumpPointCloudRegistrationGlobal : public DumpBase
+    {
+    public:
+        DumpPointCloudRegistrationGlobal();
+        ~DumpPointCloudRegistrationGlobal();
+
+        virtual ApiName GetApiName(void);
+        virtual void LoadDumpFile(const std::string& fileName);
+        virtual ErrorCode Run(void);
+        virtual PointCloud* GetPointCloud(Int id = 0);
+
+        void DumpApiInfo(const IPointCloud* pointCloudRef, const IPointCloud* pointCloudFrom, Int quality, Real overlapRatio);
+
+    private:
+        PointCloud* mpPointCloudRef;
+        PointCloud* mpPointCloudFrom;
+        Int mQuality;
+        Real mOverlapRatio;
+    }; 
 }

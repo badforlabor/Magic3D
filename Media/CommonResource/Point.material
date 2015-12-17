@@ -30,7 +30,7 @@ material SimplePoint_Large
         pass
         {
             lighting off
-            point_size 15
+            point_size 7
         }
     }
 }

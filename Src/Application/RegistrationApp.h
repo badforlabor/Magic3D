@@ -13,7 +13,6 @@ namespace GPP
 namespace MagicCore
 {
     class ViewTool;
-    class PickTool;
 }
 
 namespace MagicApp
@@ -22,13 +21,6 @@ namespace MagicApp
     class RegistrationApp : public AppBase
     {
     public:
-        enum MouseMode
-        {
-            MM_VIEW = 0,
-            MM_PICK_POINT_REF,
-            MM_PICK_POINT_FROM
-        };
-
         RegistrationApp();
         ~RegistrationApp();
 
@@ -43,16 +35,13 @@ namespace MagicApp
         bool ImportPointCloudRef(void);
         void CalculateRefNormal(void);
         void FlipRefNormal(void);
-        void PushRef(void);
-        void PopRef(void);
         void FuseRef(void);
         bool ImportPointCloudFrom(void);
         void CalculateFromNormal(void);
         void FlipFromNormal(void);
-        void PushFrom(void);
-        void PopFrom(void);
-        void AlignFrom(void);
-        void ModelView(void);
+        void AlignFast(void);
+        void AlignPrecise(void);
+        void AlignICP(void);
 
         void EnterPointShop(void);
 
@@ -61,10 +50,8 @@ namespace MagicApp
 
     private:
         void InitViewTool(void);
-        void InitPickTool(void);
         void UpdatePointCloudFromRendering(void);
         void UpdatePointCloudRefRendering(void);
-        void UpdatePointPairsRendering(void);
         void SetPointCloudColor(GPP::PointCloud* pointCloud, const GPP::Vector3& color);
 
     private:
@@ -74,16 +61,12 @@ namespace MagicApp
 
     private:
         RegistrationAppUI* mpUI;
-        MouseMode mMouseMode;
         MagicCore::ViewTool* mpViewTool;
-        MagicCore::PickTool* mpPickTool;
         GPP::DumpBase* mpDumpInfo;
         GPP::PointCloud* mpPointCloudRef;
         GPP::PointCloud* mpPointCloudFrom;
         GPP::FusePointCloud* mpFusePointCloud;
         GPP::Vector3 mObjCenterCoord;
         GPP::Real mScaleValue;
-        std::vector<GPP::Vector3> mPickedPointsRef;
-        std::vector<GPP::Vector3> mPickedPointsFrom;
     };
 }

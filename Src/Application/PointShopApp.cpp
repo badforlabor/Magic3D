@@ -8,7 +8,6 @@
 #include "AppManager.h"
 #include "MeshShopApp.h"
 #include "GPP.h"
-#include "DumpInfo.h"
 #include <algorithm>
 
 namespace MagicApp
