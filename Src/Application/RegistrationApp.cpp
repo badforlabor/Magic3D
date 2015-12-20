@@ -182,7 +182,7 @@ namespace MagicApp
         {
             return;
         }
-        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloudRef, 0);
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloudRef, GPP::NORMAL_QUALITY_LOW);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -207,6 +207,27 @@ namespace MagicApp
         for (GPP::Int pid = 0; pid < pointCount; pid++)
         {
             mpPointCloudRef->SetPointNormal(pid, mpPointCloudRef->GetPointNormal(pid) * -1.0);
+        }
+        UpdatePointCloudRefRendering();
+    }
+
+    void RegistrationApp::SmoothRefNormal()
+    {
+        if (mpPointCloudRef == NULL || mpPointCloudRef->HasNormal() == false)
+        {
+            return;
+        }
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(mpPointCloudRef, 1.0);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
         }
         UpdatePointCloudRefRendering();
     }
@@ -283,7 +304,7 @@ namespace MagicApp
         {
             return;
         }
-        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloudFrom, 0);
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloudFrom, GPP::NORMAL_QUALITY_LOW);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -308,6 +329,27 @@ namespace MagicApp
         for (GPP::Int pid = 0; pid < pointCount; pid++)
         {
             mpPointCloudFrom->SetPointNormal(pid, mpPointCloudFrom->GetPointNormal(pid) * -1.0);
+        }
+        UpdatePointCloudFromRendering();
+    }
+
+    void RegistrationApp::SmoothFromNormal()
+    {
+        if (mpPointCloudFrom == NULL || mpPointCloudFrom->HasNormal() == false)
+        {
+            return;
+        }
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(mpPointCloudFrom, 1.0);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
         }
         UpdatePointCloudFromRendering();
     }

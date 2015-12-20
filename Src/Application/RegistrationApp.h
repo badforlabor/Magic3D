@@ -35,10 +35,12 @@ namespace MagicApp
         bool ImportPointCloudRef(void);
         void CalculateRefNormal(void);
         void FlipRefNormal(void);
+        void SmoothRefNormal(void);
         void FuseRef(void);
         bool ImportPointCloudFrom(void);
         void CalculateFromNormal(void);
         void FlipFromNormal(void);
+        void SmoothFromNormal(void);
         void AlignFast(void);
         void AlignPrecise(void);
         void AlignICP(void);

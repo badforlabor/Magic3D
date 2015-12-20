@@ -10,6 +10,9 @@
         <Widget type="Button" skin="But_Flip_CN" position="118 95 43 43" align="Left Top" name="But_FlipRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="161 95 43 43" align="Left Top" name="But_SmoothRefNormal">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
         <Widget type="Button" skin="But_Open" position="15 155 60 60" align="Left Top" name="But_ImportPointCloudFrom"/>
         
@@ -18,6 +21,9 @@
             <Property key="Visible" value="false"/>
         </Widget>
         <Widget type="Button" skin="But_Flip_CN" position="118 235 43 43" align="Left Top" name="But_FlipFromNormal">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="161 235 43 43" align="Left Top" name="But_SmoothFromNormal">
             <Property key="Visible" value="false"/>
         </Widget>
 

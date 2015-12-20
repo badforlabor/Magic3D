@@ -176,13 +176,13 @@ namespace MagicApp
         }
     }
 
-    void PointShopApp::SmoothPointCloud()
+    void PointShopApp::SmoothPointCloudNormal()
     {
-        if (mpPointCloud == NULL)
+        if (mpPointCloud == NULL || mpPointCloud->HasNormal() == false)
         {
             return;
         }
-        GPP::ErrorCode res = GPP::ConsolidatePointCloud::LaplaceSmooth(mpPointCloud, 0.2, 5);
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(mpPointCloud, 1.0);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -291,7 +291,7 @@ namespace MagicApp
         {
             return;
         }
-        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloud, 0);
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloud, GPP::NORMAL_QUALITY_LOW);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);

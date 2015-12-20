@@ -32,7 +32,7 @@ namespace MagicApp
 
         bool ImportPointCloud(void);
         void ExportPointCloud(void);
-        void SmoothPointCloud(void);
+        void SmoothPointCloudNormal(void);
         void RemovePointCloudOutlier(void);
         void SamplePointCloud(int targetPointCount);
         void CalculatePointCloudNormal(void);

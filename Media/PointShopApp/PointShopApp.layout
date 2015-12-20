@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Widget" skin="PanelEmpty" position="0 0 220 768" align="Left Top" layer="Back">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 230 768" align="Left Top" layer="Back">
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportPointCloud"/>
         <Widget type="Button" skin="But_Save" position="15 85 60 60" align="Left Top" name="But_ExportPointCloud"/>
 
@@ -18,6 +18,9 @@
             <Property key="Visible" value="false"/>
         </Widget>
         <Widget type="Button" skin="But_Flip_CN" position="118 235 43 43" align="Left Top" name="But_FlipNormal">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="161 235 43 43" align="Left Top" name="But_SmoothNormal">
             <Property key="Visible" value="false"/>
         </Widget>
 
