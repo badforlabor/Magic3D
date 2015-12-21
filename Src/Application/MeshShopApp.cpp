@@ -570,7 +570,10 @@ namespace MagicApp
         {
             mpTriMesh->FuseVertex();
         }
-        GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount);
+        std::vector<GPP::Real> vertexFields;
+        CollectTriMeshVerticesColorFields(mpTriMesh, &vertexFields);
+        std::vector<GPP::Real> simplifiedVertexFields;
+        GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount, &vertexFields, &simplifiedVertexFields);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -581,6 +584,12 @@ namespace MagicApp
             MagicCore::ToolKit::Get()->SetAppRunning(false);
 #endif
             return;
+        }
+        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            GPP::Int baseIndex = vid * 3;
+            mpTriMesh->SetVertexColor(vid, GPP::Vector3(simplifiedVertexFields.at(baseIndex), simplifiedVertexFields.at(baseIndex + 1), simplifiedVertexFields.at(baseIndex + 2)));
         }
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();
@@ -601,6 +610,7 @@ namespace MagicApp
         for (GPP::Int vid = 0; vid < vertexCount; vid++)
         {
             pointCloud->InsertPoint(mpTriMesh->GetVertexCoord(vid), mpTriMesh->GetVertexNormal(vid));
+            pointCloud->SetPointColor(vid, mpTriMesh->GetVertexColor(vid));
         }
         pointCloud->SetHasNormal(true);
         AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");

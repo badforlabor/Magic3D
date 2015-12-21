@@ -169,7 +169,7 @@ namespace MagicApp
             return;
         }
         std::string fileName;
-        char filterName[] = "Support format(*.obj, *.ply)\0*.*\0";
+        char filterName[] = "Support format(*.obj, *.ply, *.asc)\0*.*\0";
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
             GPP::Parser::ExportPointCloud(fileName, mpPointCloud);
@@ -182,6 +182,7 @@ namespace MagicApp
         {
             return;
         }
+        //GPP::DumpOnce();
         GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(mpPointCloud, 1.0);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
@@ -222,11 +223,6 @@ namespace MagicApp
             GPPFREEARRAY(isolation);
             return;
         }
-        /*for (GPP::Int pid = 0; pid < pointCount; pid++)
-        {
-            mpPointCloud->SetPointColor(pid, MagicCore::ToolKit::ColorCoding(0.2 + isolation[pid]));
-        }
-        mpPointCloud->SetHasNormal(false);*/
 
         GPP::Real cutValue = 0.05;
         std::vector<GPP::Int> deleteIndex;
@@ -249,7 +245,6 @@ namespace MagicApp
 
         GPPFREEARRAY(isolation);
         UpdatePointCloudRendering();
-        //mpPointCloud->SetHasNormal(true);
     }
 
     void PointShopApp::SamplePointCloud(int targetPointCount)

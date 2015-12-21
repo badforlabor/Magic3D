@@ -1,5 +1,6 @@
 #pragma once
 #include "ITriMesh.h"
+#include <vector>
 
 namespace GPP
 {
@@ -9,6 +10,7 @@ namespace GPP
         SimplifyMesh();
         ~SimplifyMesh();
 
-        static ErrorCode QuadricSimplify(ITriMesh* triMesh, Int targetVertexCount);
+        static ErrorCode QuadricSimplify(ITriMesh* triMesh, Int targetVertexCount, const std::vector<Real>* vertexFields = NULL, 
+            std::vector<Real>* simplifiedVertexFields = NULL);
     };
 }

@@ -15,8 +15,6 @@ namespace GPP
         ConsolidatePointCloud();
         ~ConsolidatePointCloud();
 
-        static ErrorCode LaplaceSmooth(IPointCloud* pointCloud, Real positionWeight = 1.0);
-
         static ErrorCode CalculatePointCloudNormal(IPointCloud* pointCloud, NormalQuality quality = NORMAL_QUALITY_LOW);
 
         static ErrorCode SmoothNormal(IPointCloud* pointCloud, Real normalWeight = 1.0);

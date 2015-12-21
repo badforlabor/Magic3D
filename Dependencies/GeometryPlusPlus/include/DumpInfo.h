@@ -20,16 +20,14 @@ namespace GPP
         MESH_SIMPLIFICATION_QUADRIC,
         MESH_FILLHOLE_FIND,
         MESH_FILLHOLE_FILL,
-        POINT_CONSOLIDATION_LAPLACESMOOTH,
+        POINT_CONSOLIDATION_NORMALSMOOTHING,
         POINT_CONSOLIDATION_NORMALCALCULATION,
         POINT_CONSOLIDATION_ISOLATIONCALCULATION,
         POINT_RECONSTRUCTION_POISSON,
         POINT_SAMPLING_UNIFORM,
         POINT_REGISTRATION_ALIGNPOINTPAIR,
         POINT_REGISTRATION_ICP,
-        POINT_REGISTRATION_GLOBAL,
-        POINT_FUSION_UPDATE,
-        POINT_FUSION_EXTRACT
+        POINT_REGISTRATION_GLOBAL
     };
 
     class ITriMesh;
@@ -76,7 +74,9 @@ namespace GPP
 
     extern GPP_EXPORT void RegisterDumpInfo(void);
 
-    extern bool GppDumpApiOnce;
-
     extern GPP_EXPORT void DumpOnce(void);
+
+    extern bool GetDumpOnce(void);
+
+    extern void SetDumpOnce(bool dump);
 }

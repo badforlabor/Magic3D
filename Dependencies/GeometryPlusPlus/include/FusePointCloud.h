@@ -13,15 +13,12 @@ namespace GPP
         ~FusePointCloud();
 
         // initTransform == NULL if initTransform is identity
-        ErrorCode UpdateFuseFunction(const IPointCloud* pointCloud, const Matrix4x4* transform);
+        ErrorCode UpdateFuseFunction(const IPointCloud* pointCloud, const Matrix4x4* transform, const std::vector<Real>* pointFields = NULL);
 
         // pointCloud should allocate memory first and be blank
-        ErrorCode ExtractPointCloud(IPointCloud* pointCloud);
+        ErrorCode ExtractPointCloud(IPointCloud* pointCloud, std::vector<Real>* pointFields = NULL);
         
         void Clear(void);
-
-        void DumpInfo(std::ofstream& dumpOut) const;
-        void LoadInfo(std::ifstream& loadIn);
 
     private:
         FusePointCloud();

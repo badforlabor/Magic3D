@@ -242,33 +242,83 @@ namespace MagicApp
         if (mpFusePointCloud == NULL)
         {
             mpFusePointCloud = new GPP::FusePointCloud(1024, 1024, 1024, GPP::Vector3(-1.5, -1.5, -1.5), GPP::Vector3(1.5, 1.5, 1.5));
-            res = mpFusePointCloud->UpdateFuseFunction(mpPointCloudRef, NULL);
+            if (mpPointCloudRef->HasColor())
+            {
+                GPP::Int pointCountRef = mpPointCloudRef->GetPointCount();
+                std::vector<GPP::Real> pointColorFieldsRef(pointCountRef * 3);
+                for (GPP::Int pid = 0; pid < pointCountRef; pid++)
+                {
+                    GPP::Vector3 color = mpPointCloudRef->GetPointColor(pid);
+                    GPP::Int baseId = pid * 3;
+                    pointColorFieldsRef.at(baseId) = color[0];
+                    pointColorFieldsRef.at(baseId + 1) = color[1];
+                    pointColorFieldsRef.at(baseId + 2) = color[2];
+                }
+                res = mpFusePointCloud->UpdateFuseFunction(mpPointCloudRef, NULL, &pointColorFieldsRef);
+            }
+            else
+            {
+                res = mpFusePointCloud->UpdateFuseFunction(mpPointCloudRef, NULL, NULL);
+            }         
             if (res != GPP_NO_ERROR)
             {
                 GPPFREEPOINTER(mpFusePointCloud);
                 return;
             }
         }
-        res = mpFusePointCloud->UpdateFuseFunction(mpPointCloudFrom, NULL);
-        if (res != GPP_NO_ERROR)
+        GPP::Int pointCountFrom = mpPointCloudFrom->GetPointCount();
+        if (mpPointCloudFrom->HasColor())
         {
-            GPPFREEPOINTER(mpFusePointCloud);
-            return;
+            std::vector<GPP::Real> pointColorFieldsFrom(pointCountFrom * 3);
+            for (GPP::Int pid = 0; pid < pointCountFrom; pid++)
+            {
+                GPP::Vector3 color = mpPointCloudFrom->GetPointColor(pid);
+                GPP::Int baseId = pid * 3;
+                pointColorFieldsFrom.at(baseId) = color[0];
+                pointColorFieldsFrom.at(baseId + 1) = color[1];
+                pointColorFieldsFrom.at(baseId + 2) = color[2];
+            }
+            res = mpFusePointCloud->UpdateFuseFunction(mpPointCloudFrom, NULL, &pointColorFieldsFrom);
+            if (res != GPP_NO_ERROR)
+            {
+                GPPFREEPOINTER(mpFusePointCloud);
+                return;
+            }
+            GPP::PointCloud* extractPointCloud = new GPP::PointCloud;
+            std::vector<GPP::Real> pointColorFieldsFused;
+            res = mpFusePointCloud->ExtractPointCloud(extractPointCloud, &pointColorFieldsFused);
+            if (res != GPP_NO_ERROR)
+            {
+                GPPFREEPOINTER(extractPointCloud);
+                GPPFREEPOINTER(mpFusePointCloud);
+                return;
+            }
+            GPP::Int pointCountFused = extractPointCloud->GetPointCount();
+            for (GPP::Int pid = 0; pid < pointCountFused; pid++)
+            {
+                GPP::Int baseIndex = pid * 3;
+                extractPointCloud->SetPointColor(pid, GPP::Vector3(pointColorFieldsFused.at(baseIndex), pointColorFieldsFused.at(baseIndex + 1), pointColorFieldsFused.at(baseIndex + 2)));
+            }
+            GPPFREEPOINTER(mpPointCloudRef);
+            mpPointCloudRef = extractPointCloud;
         }
-        GPP::PointCloud* extractPointCloud = new GPP::PointCloud;
-        res = mpFusePointCloud->ExtractPointCloud(extractPointCloud);
-        if (res != GPP_NO_ERROR)
+        else
         {
-            GPPFREEPOINTER(extractPointCloud);
-            GPPFREEPOINTER(mpFusePointCloud);
-            return;
+            res = mpFusePointCloud->UpdateFuseFunction(mpPointCloudFrom, NULL, NULL);
+            GPP::PointCloud* extractPointCloud = new GPP::PointCloud;
+            res = mpFusePointCloud->ExtractPointCloud(extractPointCloud, NULL);
+            if (res != GPP_NO_ERROR)
+            {
+                GPPFREEPOINTER(extractPointCloud);
+                GPPFREEPOINTER(mpFusePointCloud);
+                return;
+            }
+            GPPFREEPOINTER(mpPointCloudRef);
+            mpPointCloudRef = extractPointCloud;
         }
-        GPPFREEPOINTER(mpPointCloudRef);
-        mpPointCloudRef = extractPointCloud;
         UpdatePointCloudRefRendering();
         GPPFREEPOINTER(mpPointCloudFrom);
         MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
-
     }
 
     bool RegistrationApp::ImportPointCloudFrom()
@@ -288,7 +338,10 @@ namespace MagicApp
                 pointCloud->UnifyCoords(mScaleValue, mObjCenterCoord);
                 GPPFREEPOINTER(mpPointCloudFrom);
                 mpPointCloudFrom = pointCloud;
-                SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0.86, 0, 0));
+                if (mpPointCloudFrom->HasColor() == false)
+                {
+                    SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0.86, 0, 0));
+                }
                 InfoLog << "Import Point Cloud From: " << mpPointCloudFrom->GetPointCount() << " points" << std::endl;
                 InitViewTool();
                 UpdatePointCloudFromRendering();
@@ -496,20 +549,6 @@ namespace MagicApp
             UpdatePointCloudRefRendering();
             UpdatePointCloudFromRendering();
         }
-        else if (mpDumpInfo->GetApiName() == GPP::POINT_FUSION_UPDATE)
-        {
-            if (mpDumpInfo->GetPointCloud(1) == NULL)
-            {
-                return;
-            }
-            GPPFREEPOINTER(mpPointCloudRef);
-            mpPointCloudRef = mpDumpInfo->GetPointCloud(0);
-            GPPFREEPOINTER(mpPointCloudFrom);
-            mpPointCloudFrom = CopyPointCloud(mpDumpInfo->GetPointCloud(1));
-            SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0.86, 0, 0));
-            UpdatePointCloudRefRendering();
-            UpdatePointCloudFromRendering();
-        }
 
         InitViewTool();
     }
@@ -538,28 +577,6 @@ namespace MagicApp
             mpPointCloudFrom = CopyPointCloud(mpDumpInfo->GetPointCloud(1));
             SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0.86, 0, 0));
             UpdatePointCloudFromRendering();
-        }
-        else if (mpDumpInfo->GetApiName() == GPP::POINT_FUSION_UPDATE)
-        {
-            GPPFREEPOINTER(mpPointCloudRef);
-            mpPointCloudRef = mpDumpInfo->GetPointCloud(0);
-            UpdatePointCloudRefRendering();
-            if (mpPointCloudFrom)
-            {
-                GPPFREEPOINTER(mpPointCloudFrom);
-                MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
-            }
-        }
-        else if (mpDumpInfo->GetApiName() == GPP::POINT_FUSION_EXTRACT)
-        {
-            GPPFREEPOINTER(mpPointCloudRef);
-            mpPointCloudRef = mpDumpInfo->GetPointCloud();
-            UpdatePointCloudRefRendering();
-            if (mpPointCloudFrom)
-            {
-                GPPFREEPOINTER(mpPointCloudFrom);
-                MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
-            }
         }
         GPPFREEPOINTER(mpDumpInfo);
     }

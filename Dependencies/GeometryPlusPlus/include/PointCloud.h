@@ -47,6 +47,8 @@ namespace GPP
         virtual void PopbackPoints(Int popCount);
         virtual void Clear(void);
 
+        void SetHasColor(bool has);
+        bool HasColor(void);
         Vector3 GetPointColor(Int pid) const;
         void SetPointColor(Int pid, const Vector3& color);
 
@@ -59,5 +61,6 @@ namespace GPP
     private:
         std::vector<Point3D* > mPointList;
         bool mHasNormal;
+        bool mHasColor;
     };
 }
