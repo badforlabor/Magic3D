@@ -13,8 +13,10 @@ namespace GPP
         // Catmull-Clark subdivision
         static ErrorCode CCSubdivideMesh(ITriMesh* triMesh);
 
+        // vertexFields: it could be color, texture coordinate....
         static ErrorCode LoopSubdivideMesh(ITriMesh* triMesh, const std::vector<Real>* vertexFields = NULL, std::vector<Real>* insertedVertexFields = NULL);
 
+        // vertexFields: it could be color, texture coordinate....
         static ErrorCode RefineMesh(ITriMesh* triMesh, Int targetVertexCount, const std::vector<Real>* vertexFields = NULL, std::vector<Real>* insertedVertexFields = NULL);
     };
 }

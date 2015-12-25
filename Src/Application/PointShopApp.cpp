@@ -148,10 +148,7 @@ namespace MagicApp
             if (pointCloud != NULL)
             { 
                 pointCloud->UnifyCoords(2.0);
-                if (mpPointCloud != NULL)
-                {
-                    delete mpPointCloud;
-                }
+                GPPFREEPOINTER(mpPointCloud);
                 mpPointCloud = pointCloud;
                 InfoLog << "Import Point Cloud: " << mpPointCloud->GetPointCount() << " points" << std::endl;
                 InitViewTool();

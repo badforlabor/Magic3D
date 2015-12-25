@@ -163,6 +163,60 @@ namespace MagicCore
 
     GPP::Int PickTool::PickVertexByPoint(const GPP::TriMesh* triMesh, const GPP::Vector2& mouseCoord, bool ignoreBack)
     {
-        return -1;
+        if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode") == false || triMesh == NULL)
+        {
+            return -1;
+        }
+        double pointSizeSquared = 0.01 * 0.01;
+        Ogre::Matrix4 worldM = MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->_getFullTransform();
+        Ogre::Matrix4 viewM  = MagicCore::RenderSystem::Get()->GetMainCamera()->getViewMatrix();
+        Ogre::Matrix4 projM  = MagicCore::RenderSystem::Get()->GetMainCamera()->getProjectionMatrix();
+        Ogre::Matrix4 wvpM   = projM * viewM * worldM;
+        double minZ = 1.0e10;
+        GPP::Int pickIndex = -1;
+        GPP::Int vertexCount = triMesh->GetVertexCount();
+        if (ignoreBack)
+        {
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 normal = triMesh->GetVertexNormal(vid);
+                Ogre::Vector4 ogreNormal(normal[0], normal[1], normal[2], 0);
+                ogreNormal = worldM * ogreNormal;
+                if (ogreNormal.z > 0)
+                {
+                    GPP::Vector3 coord = triMesh->GetVertexCoord(vid);
+                    Ogre::Vector3 ogreCoord(coord[0], coord[1], coord[2]);
+                    ogreCoord = wvpM * ogreCoord;
+                    GPP::Vector2 screenCoord(ogreCoord.x, ogreCoord.y);
+                    if ((screenCoord - mouseCoord).LengthSquared() < pointSizeSquared)
+                    {
+                        if (ogreCoord.z < minZ)
+                        {
+                            minZ = ogreCoord.z;
+                            pickIndex = vid;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 coord = triMesh->GetVertexCoord(vid);
+                Ogre::Vector3 ogreCoord(coord[0], coord[1], coord[2]);
+                ogreCoord = wvpM * ogreCoord;
+                GPP::Vector2 screenCoord(ogreCoord.x, ogreCoord.y);
+                if ((screenCoord - mouseCoord).LengthSquared() < pointSizeSquared)
+                {
+                    if (ogreCoord.z < minZ)
+                    {
+                        minZ = ogreCoord.z;
+                        pickIndex = vid;
+                    }
+                }
+            }
+        }
+        return pickIndex;
     }
 }

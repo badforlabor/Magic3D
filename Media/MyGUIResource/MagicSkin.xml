@@ -638,4 +638,12 @@
             <State name="pushed" offset="1119 958 86 86"/>
         </BasisSkin>
     </Resource>
+    <Resource type="ResourceSkin" name="But_Geodesics_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="disabled" offset="0 1605 86 86"/>
+            <State name="normal" offset="0 1692 86 86"/>
+            <State name="highlighted" offset="0 1779 86 86"/>
+            <State name="pushed" offset="0 1865 86 86"/>
+        </BasisSkin>
+    </Resource>
 </MyGUI>

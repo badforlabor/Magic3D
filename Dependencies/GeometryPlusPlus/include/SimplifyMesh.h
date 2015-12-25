@@ -10,6 +10,7 @@ namespace GPP
         SimplifyMesh();
         ~SimplifyMesh();
 
+        // vertexFields: it could be color, texture coordinate....
         static ErrorCode QuadricSimplify(ITriMesh* triMesh, Int targetVertexCount, const std::vector<Real>* vertexFields = NULL, 
             std::vector<Real>* simplifiedVertexFields = NULL);
     };

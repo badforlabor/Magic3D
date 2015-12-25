@@ -4,6 +4,7 @@
 #include "PointShopApp.h"
 #include "MeshShopApp.h"
 #include "RegistrationApp.h"
+#include "MeasureApp.h"
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "DumpInfo.h"
@@ -83,6 +84,19 @@ namespace MagicApp
                 if (registrationApp)
                 {
                     registrationApp->SetDumpInfo(dumpInfo);
+                }
+                else
+                {
+                    GPPFREEPOINTER(dumpInfo);
+                }
+            }
+            else if (dumpApiName == GPP::Mesh_MEASURE_SECTION_APPROXIMATE)
+            {
+                AppManager::Get()->EnterApp(new MeasureApp, "MeasureApp");
+                MeasureApp* measureApp = dynamic_cast<MeasureApp*>(AppManager::Get()->GetApp("MeasureApp"));
+                if (measureApp)
+                {
+                    measureApp->SetDumpInfo(dumpInfo);
                 }
                 else
                 {

@@ -17,6 +17,7 @@ namespace GPP
 
         static ErrorCode CalculatePointCloudNormal(IPointCloud* pointCloud, NormalQuality quality = NORMAL_QUALITY_LOW);
 
+        // normalWeight: (0, +). Larger value will smooth less.
         static ErrorCode SmoothNormal(IPointCloud* pointCloud, Real normalWeight = 1.0);
 
         // isolation should allocate memory first

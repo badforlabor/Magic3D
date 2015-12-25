@@ -165,10 +165,7 @@ namespace MagicApp
                 mShowHoleLoopIds.clear();
                 triMesh->UnifyCoords(2.0);
                 triMesh->UpdateNormal();
-                if (mpTriMesh != NULL)
-                {
-                    delete mpTriMesh;
-                }
+                GPPFREEPOINTER(mpTriMesh);
                 mpTriMesh = triMesh;
                 InfoLog << "Import Mesh,  vertex: " << mpTriMesh->GetVertexCount() << " triangles: " << triMesh->GetTriangleCount() << std::endl;
                 InitViewTool();
@@ -573,6 +570,7 @@ namespace MagicApp
         std::vector<GPP::Real> vertexFields;
         CollectTriMeshVerticesColorFields(mpTriMesh, &vertexFields);
         std::vector<GPP::Real> simplifiedVertexFields;
+        //GPP::DumpOnce();
         GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount, &vertexFields, &simplifiedVertexFields);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {

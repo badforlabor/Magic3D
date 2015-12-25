@@ -16,6 +16,7 @@ namespace MagicApp
         void EnterPointShopApp(MyGUI::Widget* pSender);
         void EnterMeshShopApp(MyGUI::Widget* pSender);
         void EnterRegistrationApp(MyGUI::Widget* pSender);
+        void EnterMeasureApp(MyGUI::Widget* pSender);
         void Contact(MyGUI::Widget* pSender);
 
     private:
