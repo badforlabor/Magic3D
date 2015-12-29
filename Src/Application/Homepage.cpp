@@ -5,6 +5,7 @@
 #include "MeshShopApp.h"
 #include "RegistrationApp.h"
 #include "MeasureApp.h"
+#include "ReliefApp.h"
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "DumpInfo.h"
@@ -97,6 +98,19 @@ namespace MagicApp
                 if (measureApp)
                 {
                     measureApp->SetDumpInfo(dumpInfo);
+                }
+                else
+                {
+                    GPPFREEPOINTER(dumpInfo);
+                }
+            }
+            else if (dumpApiName == GPP::MESH_FILTER_COMPRESSHEIGHTFIELD)
+            {
+                AppManager::Get()->EnterApp(new MeasureApp, "ReliefApp");
+                ReliefApp* reliefApp = dynamic_cast<ReliefApp*>(AppManager::Get()->GetApp("ReliefApp"));
+                if (reliefApp)
+                {
+                    reliefApp->SetDumpInfo(dumpInfo);
                 }
                 else
                 {

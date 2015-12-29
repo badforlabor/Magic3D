@@ -3,44 +3,66 @@
     <Widget type="Widget" skin="PanelEmpty" position="0 0 220 768" align="Left Top" layer="Back">
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportPointCloudRef"/>
         
-        <Widget type="Button" skin="But_Normal_CN" position="15 85 60 60" align="Left Top" name="But_RefNormal"/>
-        <Widget type="Button" skin="But_Calculate_CN" position="75 95 43 43" align="Left Top" name="But_CalRefNormal">
+        <Widget type="Button" skin="But_Normal_CN" position="15 80 60 60" align="Left Top" name="But_RefNormal"/>
+        <Widget type="Button" skin="But_Calculate_CN" position="75 90 43 43" align="Left Top" name="But_CalRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Flip_CN" position="118 95 43 43" align="Left Top" name="But_FlipRefNormal">
+        <Widget type="Button" skin="But_Flip_CN" position="118 90 43 43" align="Left Top" name="But_FlipRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="161 95 43 43" align="Left Top" name="But_SmoothRefNormal">
+        <Widget type="Button" skin="But_Smooth_CN" position="161 90 43 43" align="Left Top" name="But_SmoothRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Open" position="15 155 60 60" align="Left Top" name="But_ImportPointCloudFrom"/>
+        <Widget type="Button" skin="But_FeaturePoint_CN" position="15 145 60 60" align="Left Top" name="But_RefFeaturePoint"/>
+        <Widget type="Button" skin="But_Mark_CN" position="75 155 43 43" align="Left Top" name="But_RefSetMark">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Delete_CN" position="118 155 43 43" align="Left Top" name="But_RefDeleteMark">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Open" position="161 155 43 43" align="Left Top" name="But_RefImportMark">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Open" position="15 210 60 60" align="Left Top" name="But_ImportPointCloudFrom"/>
         
-        <Widget type="Button" skin="But_Normal_CN" position="15 225 60 60" align="Left Top" name="But_FromNormal"/>
-        <Widget type="Button" skin="But_Calculate_CN" position="75 235 43 43" align="Left Top" name="But_CalFromNormal">
+        <Widget type="Button" skin="But_Normal_CN" position="15 275 60 60" align="Left Top" name="But_FromNormal"/>
+        <Widget type="Button" skin="But_Calculate_CN" position="75 285 43 43" align="Left Top" name="But_CalFromNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Flip_CN" position="118 235 43 43" align="Left Top" name="But_FlipFromNormal">
+        <Widget type="Button" skin="But_Flip_CN" position="118 285 43 43" align="Left Top" name="But_FlipFromNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="161 235 43 43" align="Left Top" name="But_SmoothFromNormal">
-            <Property key="Visible" value="false"/>
-        </Widget>
-
-        <Widget type="Button" skin="But_Align_CN" position="15 295 60 60" align="Left Top" name="But_AlignPointCloudFrom"/>
-        <Widget type="Button" skin="But_Fast_CN" position="75 305 43 43" align="Left Top" name="But_AlignFast">
-            <Property key="Visible" value="false"/>
-        </Widget>
-        <Widget type="Button" skin="But_Precise_CN" position="118 305 43 43" align="Left Top" name="But_AlignPrecise">
+        <Widget type="Button" skin="But_Smooth_CN" position="161 285 43 43" align="Left Top" name="But_SmoothFromNormal">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_ICP" position="15 365 60 60" align="Left Top" name="But_AlignICP"/>
+        <Widget type="Button" skin="But_FeaturePoint_CN" position="15 340 60 60" align="Left Top" name="But_FromFeaturePoint"/>
+        <Widget type="Button" skin="But_Mark_CN" position="75 350 43 43" align="Left Top" name="But_FromSetMark">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Delete_CN" position="118 350 43 43" align="Left Top" name="But_FromDeleteMark">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Open" position="161 350 43 43" align="Left Top" name="But_FromImportMark">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
-        <Widget type="Button" skin="But_Fuse_CN" position="15 435 60 60" align="Left Top" name="But_FusePointCloudRef"/>
+        <Widget type="Button" skin="But_Align_CN" position="15 405 60 60" align="Left Top" name="But_AlignPointCloudFrom"/>
+        <Widget type="Button" skin="But_Fast_CN" position="75 415 43 43" align="Left Top" name="But_AlignFast">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Precise_CN" position="118 415 43 43" align="Left Top" name="But_AlignPrecise">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
-        <Widget type="Button" skin="But_PointShop" position="15 505 60 60" align="Left Top" name="But_EnterPointShop"/>
+        <Widget type="Button" skin="But_ICP" position="15 470 60 60" align="Left Top" name="But_AlignICP"/>
 
-    	<Widget type="Button" skin="But_Home" position="15 575 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Fuse_CN" position="15 535 60 60" align="Left Top" name="But_FusePointCloudRef"/>
+
+        <Widget type="Button" skin="But_PointShop" position="15 600 60 60" align="Left Top" name="But_EnterPointShop"/>
+
+    	<Widget type="Button" skin="But_Home" position="15 665 60 60" align="Left Top" name="But_BackToHomepage"/>
     </Widget>
 </MyGUI>

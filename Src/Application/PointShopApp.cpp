@@ -141,7 +141,7 @@ namespace MagicApp
     bool PointShopApp::ImportPointCloud()
     {
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0ASC Files(*.asc)\0*.asc\0";
+        char filterName[] = "ASC Files(*.asc)\0*.asc\0OBJ Files(*.obj)\0*.obj\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
@@ -181,6 +181,28 @@ namespace MagicApp
         }
         //GPP::DumpOnce();
         GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(mpPointCloud, 1.0);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
+        }
+        UpdatePointCloudRendering();
+    }
+
+    void PointShopApp::SmoothPointCloudByNormal(void)
+    {
+        if (mpPointCloud == NULL || mpPointCloud->HasNormal() == false)
+        {
+            return;
+        }
+        //GPP::DumpOnce();
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothGeometryByNormal(mpPointCloud);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);

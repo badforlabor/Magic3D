@@ -37,6 +37,9 @@
     <Filter Include="Application\MeasureApp">
       <UniqueIdentifier>{d3d93e92-d616-44d8-8707-5028267bbffe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Application\ReliefApp">
+      <UniqueIdentifier>{46b670e7-4025-4edc-a4be-1471ada72e2f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -114,6 +117,12 @@
     <ClInclude Include="..\Src\Application\MeasureAppUI.h">
       <Filter>Application\MeasureApp</Filter>
     </ClInclude>
+    <ClInclude Include="..\Src\Application\ReliefApp.h">
+      <Filter>Application\ReliefApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\ReliefAppUI.h">
+      <Filter>Application\ReliefApp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -187,6 +196,12 @@
     </ClCompile>
     <ClCompile Include="..\Src\Application\MeasureAppUI.cpp">
       <Filter>Application\MeasureApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\ReliefApp.cpp">
+      <Filter>Application\ReliefApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\ReliefAppUI.cpp">
+      <Filter>Application\ReliefApp</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

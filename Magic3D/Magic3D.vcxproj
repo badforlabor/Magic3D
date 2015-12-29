@@ -100,6 +100,8 @@
     <ClInclude Include="..\Src\Application\PointShopAppUI.h" />
     <ClInclude Include="..\Src\Application\RegistrationApp.h" />
     <ClInclude Include="..\Src\Application\RegistrationAppUI.h" />
+    <ClInclude Include="..\Src\Application\ReliefApp.h" />
+    <ClInclude Include="..\Src\Application\ReliefAppUI.h" />
     <ClInclude Include="..\Src\Common\GUISystem.h" />
     <ClInclude Include="..\Src\Common\InputSystem.h" />
     <ClInclude Include="..\Src\Common\LogSystem.h" />
@@ -142,6 +144,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\RegistrationAppUI.cpp" />
+    <ClCompile Include="..\Src\Application\ReliefApp.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\ReliefAppUI.cpp" />
     <ClCompile Include="..\Src\Common\GUISystem.cpp" />
     <ClCompile Include="..\Src\Common\InputSystem.cpp" />
     <ClCompile Include="..\Src\Common\LogSystem.cpp" />

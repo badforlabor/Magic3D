@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MyGUI type="Layout" version="3.2.0">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 310 768" align="Left Top" layer="Back">
+        <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportModel"/>
+        <Widget type="Button" skin="But_Relief" position="15 85 60 60" align="Left Top" name="But_Relief"/>
+        <Widget type="Button" skin="But_MeshTool" position="15 155 60 60" align="Left Top" name="But_EnterMeshTool"/>
+        <Widget type="Button" skin="But_Home" position="15 225 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Contact" position="15 295 60 60" align="Left Top" name="But_Contact"/>
+    </Widget>
+</MyGUI>

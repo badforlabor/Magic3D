@@ -7,6 +7,7 @@
 #include "MeshShopApp.h"
 #include "RegistrationApp.h"
 #include "MeasureApp.h"
+#include "ReliefApp.h"
 
 namespace MagicApp
 {
@@ -33,6 +34,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_MeshShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterMeshShopApp);
         mRoot.at(0)->findWidget("But_RegistrationApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterRegistrationApp);
         mRoot.at(0)->findWidget("But_MeasureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterMeasureApp);
+        mRoot.at(0)->findWidget("But_ReliefApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterReliefApp);
         mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::Contact);
     }
 
@@ -54,6 +56,11 @@ namespace MagicApp
     void HomepageUI::EnterMeasureApp(MyGUI::Widget* pSender)
     {
         AppManager::Get()->EnterApp(new MeasureApp, "MeasureApp");
+    }
+
+    void HomepageUI::EnterReliefApp(MyGUI::Widget* pSender)
+    {
+        AppManager::Get()->EnterApp(new ReliefApp, "ReliefApp");
     }
 
     void HomepageUI::Shutdown()

@@ -66,11 +66,14 @@ namespace GPP
         virtual ErrorCode Run(void);
         virtual PointCloud* GetPointCloud(Int id = 0);
 
-        void DumpApiInfo(const IPointCloud* pointCloudRef, const IPointCloud* pointCloudFrom, Int quality, Real overlapRatio);
+        void DumpApiInfo(const IPointCloud* pointCloudRef, const std::vector<Vector3>* marksRef, 
+            const IPointCloud* pointCloudFrom, const std::vector<Vector3>* marksFrom, Int quality, Real overlapRatio);
 
     private:
         PointCloud* mpPointCloudRef;
         PointCloud* mpPointCloudFrom;
+        std::vector<Vector3> mMarksRef;
+        std::vector<Vector3> mMarksFrom;
         Int mQuality;
         Real mOverlapRatio;
     }; 

@@ -1,9 +1,11 @@
 #pragma once
 #include "AppBase.h"
+#include <vector>
+#include "GPP.h"
 
 namespace GPP
 {
-    class PointCloud;
+    class TriMesh;
     class DumpBase;
 }
 
@@ -14,13 +16,12 @@ namespace MagicCore
 
 namespace MagicApp
 {
-    class PointShopAppUI;
-    class PointShopApp : public AppBase
+    class ReliefAppUI;
+    class ReliefApp : public AppBase
     {
     public:
-
-        PointShopApp();
-        ~PointShopApp();
+        ReliefApp();
+        ~ReliefApp();
 
         virtual bool Enter(void);
         virtual bool Update(float timeElapsed);
@@ -30,36 +31,25 @@ namespace MagicApp
         virtual bool MouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
 
-        bool ImportPointCloud(void);
-        void ExportPointCloud(void);
-        
-        void SmoothPointCloudNormal(void);
-        
-        void SamplePointCloud(int targetPointCount);
-        void CalculatePointCloudNormal(void);
-        void FlipPointCloudNormal(void);
-        void ReconstructMesh(void);
+        bool ImportModel(void);
+        void GenerateRelief(void);
+        void EnterMeshTool(void);
 
-        void RemovePointCloudOutlier(void);
-        void SmoothPointCloudByNormal(void);
-
-        void SetPointCloud(GPP::PointCloud* pointCloud);
-        int GetPointCount(void);
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
-
-    private:
-        void InitViewTool(void);
-        void UpdatePointCloudRendering(void);
 
     private:
         void SetupScene(void);
         void ShutdownScene(void);
         void ClearData(void);
 
+        void InitViewTool(void);
+        void UpdateModelRendering(void);
+        GPP::TriMesh* GenerateTriMeshFromHeightField(const std::vector<GPP::Real>& heightField, int resolutionX, int resolutionY);
+
     private:
-        PointShopAppUI* mpUI;
-        GPP::PointCloud* mpPointCloud;
+        ReliefAppUI* mpUI;
+        GPP::TriMesh* mpTriMesh;
         MagicCore::ViewTool* mpViewTool;
         GPP::DumpBase* mpDumpInfo;
     };
