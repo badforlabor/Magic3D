@@ -91,7 +91,7 @@ namespace MagicApp
                     GPPFREEPOINTER(dumpInfo);
                 }
             }
-            else if (dumpApiName == GPP::Mesh_MEASURE_SECTION_APPROXIMATE)
+            else if (dumpApiName == GPP::MESH_MEASURE_SECTION_APPROXIMATE)
             {
                 AppManager::Get()->EnterApp(new MeasureApp, "MeasureApp");
                 MeasureApp* measureApp = dynamic_cast<MeasureApp*>(AppManager::Get()->GetApp("MeasureApp"));

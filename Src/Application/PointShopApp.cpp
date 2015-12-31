@@ -202,7 +202,19 @@ namespace MagicApp
             return;
         }
         //GPP::DumpOnce();
-        GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothGeometryByNormal(mpPointCloud);
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(mpPointCloud);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+#if STOPFAILEDCOMMAND
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+#endif
+            return;
+        }
+        res = GPP::ConsolidatePointCloud::SmoothGeometryByNormal(mpPointCloud);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);

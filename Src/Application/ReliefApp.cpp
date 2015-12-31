@@ -219,6 +219,10 @@ namespace MagicApp
 
     void ReliefApp::GenerateRelief(void)
     {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
         int resolution = 512;
         //Get depth data
         Ogre::TexturePtr depthTex = Ogre::TextureManager::getSingleton().createManual(  
