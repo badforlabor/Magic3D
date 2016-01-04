@@ -10,11 +10,19 @@
         <Widget type="Button" skin="But_Delete_CN" position="118 95 43 43" align="Left Top" name="But_DeleteMeshRef">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Calculate_CN" position="161 95 43 43" align="Left Top" name="But_ApproximateGeodesics">
+        <Widget type="Button" skin="But_Fast_CN" position="161 95 43 43" align="Left Top" name="But_ApproximateGeodesics">
             <Property key="Visible" value="false"/>
         </Widget>
+		<Widget type="Button" skin="But_Precise_CN" position="204 95 43 43" align="Left Top" name="But_ExactGeodesics">
+			<Property key="Visible" value="false"/>
+		</Widget>
 
         <Widget type="Button" skin="But_Home" position="15 155 60 60" align="Left Top" name="But_BackToHomepage"/>
-        <Widget type="Button" skin="But_Contact" position="15 225 60 60" align="Left Top" name="But_Contact"/>
+        
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 235 150 20" align="Left Top" name="APIProgress">
+            <Property key="AutoTrack" value="false"/>
+            <Property key="FlowDirection" value="LeftToRight"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
     </Widget>
 </MyGUI>

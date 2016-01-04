@@ -7,7 +7,8 @@
 
 namespace MagicApp
 {
-    MeshShopAppUI::MeshShopAppUI()
+    MeshShopAppUI::MeshShopAppUI() :
+        mIsProgressbarVisible(false)
     {
     }
 
@@ -33,13 +34,35 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_DoRefineMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoRefineMesh);
         mRoot.at(0)->findWidget("But_SimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SimplifyMesh);
         mRoot.at(0)->findWidget("But_DoSimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoSimplifyMesh);
-        //mRoot.at(0)->findWidget("But_ParameterizeMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ParameterizeMesh);
         mRoot.at(0)->findWidget("But_FillHole")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::FillHole);
         mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleFlat);
         mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleSmooth);
         mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SampleMesh);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::BackToHomepage);
-        mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::Contact);
+    }
+
+    void MeshShopAppUI::StartProgressbar(int range)
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setVisible(true);
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressRange(range);
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressPosition(0);
+        mIsProgressbarVisible = true;
+    }
+
+    void MeshShopAppUI::SetProgressbar(int value)
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressPosition(value);
+    }
+
+    void MeshShopAppUI::StopProgressbar()
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setVisible(false);
+        mIsProgressbarVisible = false;
+    }
+
+    bool MeshShopAppUI::IsProgressbarVisible()
+    {
+        return mIsProgressbarVisible;
     }
 
     void MeshShopAppUI::Shutdown()
@@ -268,11 +291,14 @@ namespace MagicApp
 
     void MeshShopAppUI::BackToHomepage(MyGUI::Widget* pSender)
     {
-        AppManager::Get()->SwitchCurrentApp("Homepage");
-    }
-
-    void MeshShopAppUI::Contact(MyGUI::Widget* pSender)
-    {
-        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/magic3d"));
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            if (meshShop->IsCommandInProgress())
+            {
+                return;
+            }
+            AppManager::Get()->SwitchCurrentApp("Homepage");
+        }
     }
 }

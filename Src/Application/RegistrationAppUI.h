@@ -12,6 +12,11 @@ namespace MagicApp
         void Setup();
         void Shutdown();
 
+        void StartProgressbar(int range);
+        void SetProgressbar(int value);
+        void StopProgressbar(void);
+        bool IsProgressbarVisible(void);
+
     private:
         void ImportPointCloudRef(MyGUI::Widget* pSender);
         
@@ -48,5 +53,6 @@ namespace MagicApp
 
     private:
         MyGUI::VectorWidgetPtr mRoot;
+        bool mIsProgressbarVisible;
     };
 }

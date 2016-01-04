@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <process.h>
 #include "MeshShopApp.h"
 #include "MeshShopAppUI.h"
 #include "PointShopApp.h"
@@ -6,17 +7,35 @@
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
-#include "../Common/RenderSystem.h"
 #include "GPP.h"
 #include "DumpFillMeshHole.h"
 
 namespace MagicApp
 {
+    static unsigned __stdcall RunThread(void *arg)
+    {
+        MeshShopApp* app = (MeshShopApp*)arg;
+        if (app == NULL)
+        {
+            return 0;
+        }
+        app->DoCommand(false);
+        return 1;
+    }
+
     MeshShopApp::MeshShopApp() :
         mpUI(NULL),
         mpTriMesh(NULL),
         mpViewTool(NULL),
-        mpDumpInfo(NULL)
+        mpDumpInfo(NULL),
+        mShowHoleLoopIds(),
+        mBoundarySeedIds(),
+        mTargetVertexCount(0),
+        mIsFillFlat(false),
+        mCommandType(NONE),
+        mUpdateMeshRendering(false),
+        mUpdateHoleRendering(false),
+        mIsCommandInProgress(false)
     {
     }
 
@@ -40,8 +59,23 @@ namespace MagicApp
         return true;
     }
 
-    bool MeshShopApp::Update(float timeElapsed)
+    bool MeshShopApp::Update(double timeElapsed)
     {
+        if (mpUI && mpUI->IsProgressbarVisible())
+        {
+            int progressValue = int(GPP::GetApiProgress() * 100.0);
+            mpUI->SetProgressbar(progressValue);
+        }
+        if (mUpdateMeshRendering)
+        {
+            UpdateMeshRendering();
+            mUpdateMeshRendering = false;
+        }
+        if (mUpdateHoleRendering)
+        {
+            UpdateHoleRendering();
+            mUpdateHoleRendering = false;
+        }
         return true;
     }
 
@@ -119,6 +153,54 @@ namespace MagicApp
         return true;
     }
 
+    void MeshShopApp::DoCommand(bool isSubThread)
+    {
+        if (isSubThread)
+        {
+            GPP::ResetApiProgress();
+            mpUI->StartProgressbar(100);
+            _beginthreadex(NULL, 0, RunThread, (void *)this, 0, NULL);
+        }
+        else
+        {
+            switch (mCommandType)
+            {
+            case MagicApp::MeshShopApp::NONE:
+                break;
+            case MagicApp::MeshShopApp::EXPORTMESH:
+                ExportMesh(false);
+                break;
+            case MagicApp::MeshShopApp::CONSOLIDATETOPOLOGY:
+                ConsolidateTopology(false);
+                break;
+            case MagicApp::MeshShopApp::CONSOLIDATEGEOMETRY:
+                ConsolidateGeometry(false);
+                break;
+            case MagicApp::MeshShopApp::SMOOTHMESH:
+                SmoothMesh(false);
+                break;
+            case MagicApp::MeshShopApp::ENHANCEDETAIL:
+                EnhanceMeshDetail(false);
+                break;
+            case MagicApp::MeshShopApp::LOOPSUBDIVIDE:
+                LoopSubdivide(false);
+                break;
+            case MagicApp::MeshShopApp::REFINE:
+                RefineMesh(mTargetVertexCount, false);
+                break;
+            case MagicApp::MeshShopApp::SIMPLIFY:
+                SimplifyMesh(mTargetVertexCount, false);
+                break;
+            case MagicApp::MeshShopApp::FILLHOLE:
+                FillHole(mIsFillFlat, false);
+                break;
+            default:
+                break;
+            }
+            mpUI->StopProgressbar();
+        }
+    }
+
     void MeshShopApp::SetupScene()
     {
         Ogre::SceneManager* sceneManager = MagicCore::RenderSystem::Get()->GetSceneManager();
@@ -153,8 +235,28 @@ namespace MagicApp
         mShowHoleLoopIds.clear();
     }
 
+    bool MeshShopApp::IsCommandAvaliable()
+    {
+        if (mpTriMesh == NULL)
+        {
+            MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
+            return false;
+        }
+        if (mIsCommandInProgress)
+        {
+            MessageBox(NULL, "请等待当前命令执行完", "温馨提示", MB_OK);
+            return false;
+        }
+        return true;
+    }
+
     bool MeshShopApp::ImportMesh()
     {
+        if (mIsCommandInProgress)
+        {
+            MessageBox(NULL, "请等待当前命令执行完", "温馨提示", MB_OK);
+            return false;
+        }
         std::string fileName;
         char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
@@ -173,19 +275,28 @@ namespace MagicApp
                 UpdateMeshRendering();
                 return true;
             }
+            else
+            {
+                MessageBox(NULL, "网格导入失败", "温馨提示", MB_OK);
+            }
         }
         return false;
     }
 
-    void MeshShopApp::ExportMesh()
+    void MeshShopApp::ExportMesh(bool isSubThread)
     {
-        if (mpTriMesh != NULL)
+        if (IsCommandAvaliable() == false)
         {
-            std::string fileName;
-            char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0PLY Files(*.ply)\0*.ply\0";
-            if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
+            return;
+        }
+        std::string fileName;
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0PLY Files(*.ply)\0*.ply\0";
+        if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
+        {
+            GPP::ErrorCode res = GPP::Parser::ExportTriMesh(fileName, mpTriMesh);
+            if (res != GPP_NO_ERROR)
             {
-                GPP::Parser::ExportTriMesh(fileName, mpTriMesh);
+                MessageBox(NULL, "网格导出失败", "温馨提示", MB_OK);
             }
         }
     }
@@ -277,9 +388,6 @@ namespace MagicApp
         GPP::ErrorCode res = mpDumpInfo->Run();
         if (res != GPP_NO_ERROR)
         {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
             return;
         }
 
@@ -315,43 +423,55 @@ namespace MagicApp
         
     }
 
-    void MeshShopApp::ConsolidateTopology()
+    bool MeshShopApp::IsCommandInProgress(void)
     {
-        if (mpTriMesh == NULL)
+        return mIsCommandInProgress;
+    }
+
+    void MeshShopApp::ConsolidateTopology(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        if (isSubThread)
         {
-            mpTriMesh->FuseVertex();
+            mCommandType = CONSOLIDATETOPOLOGY;
+            DoCommand(true);
         }
-        GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(mpTriMesh);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
+        else
         {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(mpTriMesh);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "拓扑修复失败", "温馨提示", MB_OK);
+                return;
+            }
+            bool isManifold = GPP::ConsolidateMesh::IsTriMeshManifold(mpTriMesh);
+            if (!isManifold)
+            {
+                MessageBox(NULL, "拓扑修复后，网格仍然是非流形结构", "温馨提示", MB_OK);
+                return;
+            }
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering= true;
         }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
-#if STOPFAILEDCOMMAND
-        bool isManifold = GPP::ConsolidateMesh::IsTriMeshManifold(mpTriMesh);
-        if (!isManifold)
-        {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-            return;
-        }
-#endif
-        mpTriMesh->UpdateNormal();
-        UpdateMeshRendering();
     }
 
     void MeshShopApp::ReverseDirection()
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
@@ -366,236 +486,280 @@ namespace MagicApp
         UpdateMeshRendering();
     }
 
-    void MeshShopApp::ConsolidateGeometry()
+    void MeshShopApp::ConsolidateGeometry(bool isSubThread)
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        if (isSubThread)
         {
-            mpTriMesh->FuseVertex();
+            mCommandType = CONSOLIDATEGEOMETRY;
+            DoCommand(true);
         }
-        GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, GPP::ONE_RADIAN * 5.0, GPP::REAL_TOL, 0.0174532925199433 * 170.0);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
+        else
         {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, GPP::ONE_RADIAN * 5.0, GPP::REAL_TOL, 0.0174532925199433 * 170.0);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "几何修复失败", "温馨提示", MB_OK);
+                return;
+            }
+            mpTriMesh->UnifyCoords(2.0);
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
         }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
-        mpTriMesh->UnifyCoords(2.0);
-        mpTriMesh->UpdateNormal();
-        UpdateMeshRendering();
     }
 
-    void MeshShopApp::SmoothMesh()
+    void MeshShopApp::SmoothMesh(bool isSubThread)
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        if (isSubThread)
         {
-            mpTriMesh->FuseVertex();
+            mCommandType = SMOOTHMESH;
+            DoCommand(true);
         }
-        GPP::ErrorCode res = GPP::FilterMesh::LaplaceSmooth(mpTriMesh);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
+        else
         {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::FilterMesh::LaplaceSmooth(mpTriMesh);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格光顺失败", "温馨提示", MB_OK);
+                return;
+            }
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
         }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
-        mpTriMesh->UpdateNormal();
-        UpdateMeshRendering();
     }
 
-    void MeshShopApp::EnhanceMeshDetail()
+    void MeshShopApp::EnhanceMeshDetail(bool isSubThread)
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        if (isSubThread)
         {
-            mpTriMesh->FuseVertex();
+            mCommandType = ENHANCEDETAIL;
+            DoCommand(true);
         }
-        GPP::ErrorCode res = GPP::FilterMesh::EnhanceDetail(mpTriMesh);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
+        else
         {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::FilterMesh::EnhanceDetail(mpTriMesh);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "几何细节增强失败", "温馨提示", MB_OK);
+                return;
+            }
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
         }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
-        mpTriMesh->UpdateNormal();
-        UpdateMeshRendering();
     }
 
-    void MeshShopApp::LoopSubdivide()
+    void MeshShopApp::LoopSubdivide(bool isSubThread)
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        if (isSubThread)
         {
-            mpTriMesh->FuseVertex();
+            mCommandType = LOOPSUBDIVIDE;
+            DoCommand(true);
         }
-        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
-        std::vector<GPP::Real> vertexFields(vertexCount * 3);
-        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        else
         {
-            GPP::Vector3 color = mpTriMesh->GetVertexColor(vid);
-            GPP::Int baseId = vid * 3;
-            vertexFields.at(baseId) = color[0];
-            vertexFields.at(baseId + 1) = color[1];
-            vertexFields.at(baseId + 2) = color[2];
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
+            GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+            if (vertexCount >= 250000)
+            {
+                if (MessageBox(NULL, "细分后网格顶点数量可能会大于1M，是否继续", "温馨提示", MB_OKCANCEL) != IDOK)
+                {
+                    return;
+                }
+            }
+            std::vector<GPP::Real> vertexFields(vertexCount * 3);
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 color = mpTriMesh->GetVertexColor(vid);
+                GPP::Int baseId = vid * 3;
+                vertexFields.at(baseId) = color[0];
+                vertexFields.at(baseId + 1) = color[1];
+                vertexFields.at(baseId + 2) = color[2];
+            }
+            std::vector<GPP::Real> insertedVertexFields;
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::SubdivideMesh::LoopSubdivideMesh(mpTriMesh, &vertexFields, &insertedVertexFields);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "Loop细分失败", "温馨提示", MB_OK);
+                return;
+            }
+            GPP::Int insertedVertexCount = mpTriMesh->GetVertexCount() - vertexCount;
+            for (GPP::Int vid = 0; vid < insertedVertexCount; vid++)
+            {
+                GPP::Int baseId = vid * 3;
+                mpTriMesh->SetVertexColor(vertexCount + vid, GPP::Vector3(insertedVertexFields.at(baseId), insertedVertexFields.at(baseId + 1), insertedVertexFields.at(baseId + 2)));
+            }
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
         }
-        std::vector<GPP::Real> insertedVertexFields;
-        GPP::ErrorCode res = GPP::SubdivideMesh::LoopSubdivideMesh(mpTriMesh, &vertexFields, &insertedVertexFields);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
-        {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-        }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
-        GPP::Int insertedVertexCount = mpTriMesh->GetVertexCount() - vertexCount;
-        for (GPP::Int vid = 0; vid < insertedVertexCount; vid++)
-        {
-            GPP::Int baseId = vid * 3;
-            mpTriMesh->SetVertexColor(vertexCount + vid, GPP::Vector3(insertedVertexFields.at(baseId), insertedVertexFields.at(baseId + 1), insertedVertexFields.at(baseId + 2)));
-        }
-        mpTriMesh->UpdateNormal();
-        UpdateMeshRendering();
     }
 
-    void MeshShopApp::CCSubdivide()
+    void MeshShopApp::RefineMesh(int targetVertexCount, bool isSubThread)
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        if (isSubThread)
         {
-            mpTriMesh->FuseVertex();
+            mTargetVertexCount = targetVertexCount;
+            mCommandType = REFINE;
+            DoCommand(true);
         }
-        GPP::ErrorCode res = GPP::SubdivideMesh::CCSubdivideMesh(mpTriMesh);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
+        else
         {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
+            if (targetVertexCount > 1000000)
+            {
+                if (MessageBox(NULL, "加密后网格顶点数量会大于1M，是否继续", "温馨提示", MB_OKCANCEL) != IDOK)
+                {
+                    return;
+                }
+            }
+            GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+            std::vector<GPP::Real> vertexFields(vertexCount * 3);
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 color = mpTriMesh->GetVertexColor(vid);
+                GPP::Int baseId = vid * 3;
+                vertexFields.at(baseId) = color[0];
+                vertexFields.at(baseId + 1) = color[1];
+                vertexFields.at(baseId + 2) = color[2];
+            }
+            std::vector<GPP::Real> insertedVertexFields;
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::SubdivideMesh::RefineMesh(mpTriMesh, targetVertexCount, &vertexFields, &insertedVertexFields);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格加密失败", "温馨提示", MB_OK);
+                return;
+            }
+            GPP::Int insertedVertexCount = mpTriMesh->GetVertexCount() - vertexCount;
+            for (GPP::Int vid = 0; vid < insertedVertexCount; vid++)
+            {
+                GPP::Int baseId = vid * 3;
+                mpTriMesh->SetVertexColor(vertexCount + vid, GPP::Vector3(insertedVertexFields.at(baseId), insertedVertexFields.at(baseId + 1), insertedVertexFields.at(baseId + 2)));
+            }
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
         }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
-        mpTriMesh->UpdateNormal();
-        UpdateMeshRendering();
     }
 
-    void MeshShopApp::RefineMesh(int targetVertexCount)
+    void MeshShopApp::SimplifyMesh(int targetVertexCount, bool isSubThread)
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        if (isSubThread)
         {
-            mpTriMesh->FuseVertex();
+            mTargetVertexCount = targetVertexCount;
+            mCommandType = SIMPLIFY;
+            DoCommand(true);
         }
-        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
-        std::vector<GPP::Real> vertexFields(vertexCount * 3);
-        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        else
         {
-            GPP::Vector3 color = mpTriMesh->GetVertexColor(vid);
-            GPP::Int baseId = vid * 3;
-            vertexFields.at(baseId) = color[0];
-            vertexFields.at(baseId + 1) = color[1];
-            vertexFields.at(baseId + 2) = color[2];
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
+            std::vector<GPP::Real> vertexFields;
+            CollectTriMeshVerticesColorFields(mpTriMesh, &vertexFields);
+            std::vector<GPP::Real> simplifiedVertexFields;
+            //GPP::DumpOnce();
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount, &vertexFields, &simplifiedVertexFields);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格简化失败", "温馨提示", MB_OK);
+                return;
+            }
+            GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Int baseIndex = vid * 3;
+                mpTriMesh->SetVertexColor(vid, GPP::Vector3(simplifiedVertexFields.at(baseIndex), simplifiedVertexFields.at(baseIndex + 1), simplifiedVertexFields.at(baseIndex + 2)));
+            }
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
         }
-        std::vector<GPP::Real> insertedVertexFields;
-        GPP::ErrorCode res = GPP::SubdivideMesh::RefineMesh(mpTriMesh, targetVertexCount, &vertexFields, &insertedVertexFields);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
-        {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-        }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
-        GPP::Int insertedVertexCount = mpTriMesh->GetVertexCount() - vertexCount;
-        for (GPP::Int vid = 0; vid < insertedVertexCount; vid++)
-        {
-            GPP::Int baseId = vid * 3;
-            mpTriMesh->SetVertexColor(vertexCount + vid, GPP::Vector3(insertedVertexFields.at(baseId), insertedVertexFields.at(baseId + 1), insertedVertexFields.at(baseId + 2)));
-        }
-        mpTriMesh->UpdateNormal();
-        UpdateMeshRendering();
-    }
-
-    void MeshShopApp::SimplifyMesh(int targetVertexCount)
-    {
-        if (mpTriMesh == NULL)
-        {
-            return;
-        }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-        {
-            mpTriMesh->FuseVertex();
-        }
-        std::vector<GPP::Real> vertexFields;
-        CollectTriMeshVerticesColorFields(mpTriMesh, &vertexFields);
-        std::vector<GPP::Real> simplifiedVertexFields;
-        //GPP::DumpOnce();
-        GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount, &vertexFields, &simplifiedVertexFields);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
-        {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-        }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
-        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
-        for (GPP::Int vid = 0; vid < vertexCount; vid++)
-        {
-            GPP::Int baseIndex = vid * 3;
-            mpTriMesh->SetVertexColor(vid, GPP::Vector3(simplifiedVertexFields.at(baseIndex), simplifiedVertexFields.at(baseIndex + 1), simplifiedVertexFields.at(baseIndex + 2)));
-        }
-        mpTriMesh->UpdateNormal();
-        UpdateMeshRendering();
     }
 
     void MeshShopApp::SampleMesh()
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
@@ -626,7 +790,7 @@ namespace MagicApp
 
     void MeshShopApp::FindHole(bool isShowHoles)
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
@@ -644,70 +808,74 @@ namespace MagicApp
             UpdateMeshRendering();
             return;
         }
-
         GPP::ErrorCode res = GPP::FillMeshHole::FindHoles(mpTriMesh, &holeIds);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
+            MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
         }
         if (res != GPP_NO_ERROR)
         {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
             return;
         }
         SetToShowHoleLoopVrtIds(holeIds);
         SetBoundarySeedIds(std::vector<GPP::Int>());
 
-        mpTriMesh->UnifyCoords(2.0);
+        //mpTriMesh->UnifyCoords(2.0);
         mpTriMesh->UpdateNormal();
         UpdateHoleRendering();
         UpdateMeshRendering();
     }
 
-    void MeshShopApp::FillHole(bool isFillFlat)
+    void MeshShopApp::FillHole(bool isFillFlat, bool isSubThread)
     {
-        if (mpTriMesh == NULL)
+        if (IsCommandAvaliable() == false)
         {
             return;
         }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        if (isSubThread)
         {
-            mpTriMesh->FuseVertex();
-        } 
-
-        std::vector<GPP::Int> holeSeeds;
-        for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
-        {
-            holeSeeds.insert(holeSeeds.end(), mShowHoleLoopIds[vLoop].begin(), mShowHoleLoopIds[vLoop].end());
+            mIsFillFlat = isFillFlat;
+            mCommandType = FILLHOLE;
+            DoCommand(true);
         }
-
-        std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
-        CollectTriMeshVerticesColorFields(mpTriMesh, &vertexScaleFields);
-        GPP::Int oldTriMeshVertexSize = mpTriMesh->GetVertexCount();
-
-        GPP::ErrorCode res = GPP::FillMeshHole::FillHoles(mpTriMesh, &holeSeeds, isFillFlat ? GPP::FILL_MESH_HOLE_FLAT : GPP::FILL_MESH_HOLE_SMOOTH,
-            &vertexScaleFields, &outputScaleFields);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
+        else
         {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-        }
-        if (res != GPP_NO_ERROR)
-        {
-#if STOPFAILEDCOMMAND
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
-            return;
-        }
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            } 
 
-        UpdateTriMeshVertexColors(mpTriMesh, oldTriMeshVertexSize, outputScaleFields);
-        SetToShowHoleLoopVrtIds(std::vector<std::vector<GPP::Int> >());
-        SetBoundarySeedIds(std::vector<GPP::Int>());
-        mpTriMesh->UnifyCoords(2.0);
-        mpTriMesh->UpdateNormal();
-        UpdateHoleRendering();
-        UpdateMeshRendering();
+            std::vector<GPP::Int> holeSeeds;
+            for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
+            {
+                holeSeeds.insert(holeSeeds.end(), mShowHoleLoopIds[vLoop].begin(), mShowHoleLoopIds[vLoop].end());
+            }
+
+            std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
+            CollectTriMeshVerticesColorFields(mpTriMesh, &vertexScaleFields);
+            GPP::Int oldTriMeshVertexSize = mpTriMesh->GetVertexCount();
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::FillMeshHole::FillHoles(mpTriMesh, &holeSeeds, isFillFlat ? GPP::FILL_MESH_HOLE_FLAT : GPP::FILL_MESH_HOLE_SMOOTH,
+                &vertexScaleFields, &outputScaleFields);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格补洞失败", "温馨提示", MB_OK);
+                return;
+            }
+            UpdateTriMeshVertexColors(mpTriMesh, oldTriMeshVertexSize, outputScaleFields);
+            SetToShowHoleLoopVrtIds(std::vector<std::vector<GPP::Int> >());
+            SetBoundarySeedIds(std::vector<GPP::Int>());
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
+            mUpdateHoleRendering = true;
+        }
     }
 
     int MeshShopApp::GetMeshVertexCount()

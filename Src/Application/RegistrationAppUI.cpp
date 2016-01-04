@@ -7,7 +7,8 @@
 
 namespace MagicApp
 {
-    RegistrationAppUI::RegistrationAppUI()
+    RegistrationAppUI::RegistrationAppUI() : 
+        mIsProgressbarVisible(false)
     {
     }
 
@@ -55,6 +56,30 @@ namespace MagicApp
         MyGUI::LayoutManager::getInstance().unloadLayout(mRoot);
         mRoot.clear();
         MagicCore::ResourceManager::UnloadResource("RegistrationApp");
+    }
+
+    void RegistrationAppUI::StartProgressbar(int range)
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setVisible(true);
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressRange(range);
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressPosition(0);
+        mIsProgressbarVisible = true;
+    }
+
+    void RegistrationAppUI::SetProgressbar(int value)
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressPosition(value);
+    }
+
+    void RegistrationAppUI::StopProgressbar()
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setVisible(false);
+        mIsProgressbarVisible = false;
+    }
+
+    bool RegistrationAppUI::IsProgressbarVisible()
+    {
+        return mIsProgressbarVisible;
     }
 
     void RegistrationAppUI::ImportPointCloudRef(MyGUI::Widget* pSender)
@@ -285,7 +310,15 @@ namespace MagicApp
 
     void RegistrationAppUI::BackToHomepage(MyGUI::Widget* pSender)
     {
-        AppManager::Get()->SwitchCurrentApp("Homepage");
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            if (registrationApp->IsCommandInProgress())
+            {
+                return;
+            }
+            AppManager::Get()->SwitchCurrentApp("Homepage");
+        }
     }
 
 }

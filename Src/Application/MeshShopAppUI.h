@@ -12,6 +12,11 @@ namespace MagicApp
         void Setup();
         void Shutdown();
 
+        void StartProgressbar(int range);
+        void SetProgressbar(int value);
+        void StopProgressbar(void);
+        bool IsProgressbarVisible(void);
+
     private:
         void ImportMesh(MyGUI::Widget* pSender);
         void ExportMesh(MyGUI::Widget* pSender);
@@ -32,9 +37,9 @@ namespace MagicApp
         void DoFillHoleFlat(MyGUI::Widget* pSender);
         void DoFillHoleSmooth(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
-        void Contact(MyGUI::Widget* pSender);
 
     private:
         MyGUI::VectorWidgetPtr mRoot;
+        bool mIsProgressbarVisible;
     };
 }

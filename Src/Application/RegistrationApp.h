@@ -21,6 +21,18 @@ namespace MagicApp
     class RegistrationAppUI;
     class RegistrationApp : public AppBase
     {
+        enum CommandType
+        {
+            NONE = 0,
+            ALIGN_FAST,
+            ALIGN_PRECISE,
+            ALIGN_ICP,
+            NORMAL_REF,
+            NORMAL_FROM,
+            NORMAL_SMOOTH_REF,
+            NORMAL_SMOOTH_FROM
+        };
+
     public:
         enum MouseMode
         {
@@ -33,18 +45,20 @@ namespace MagicApp
         ~RegistrationApp();
 
         virtual bool Enter(void);
-        virtual bool Update(float timeElapsed);
+        virtual bool Update(double timeElapsed);
         virtual bool Exit(void);
         virtual bool MouseMoved(const OIS::MouseEvent &arg);
         virtual bool MousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool MouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
 
+        void DoCommand(bool isSubThread);
+
         bool ImportPointCloudRef(void);
         
-        void CalculateRefNormal(void);
+        void CalculateRefNormal(bool isSubThread = true);
         void FlipRefNormal(void);
-        void SmoothRefNormal(void);
+        void SmoothRefNormal(bool isSubThread = true);
         
         void SwitchRefControlState(void);
         void DeleteRefMark(void);
@@ -52,17 +66,17 @@ namespace MagicApp
 
         bool ImportPointCloudFrom(void);
         
-        void CalculateFromNormal(void);
+        void CalculateFromNormal(bool isSubThread = true);
         void FlipFromNormal(void);
-        void SmoothFromNormal(void);
+        void SmoothFromNormal(bool isSubThread = true);
         
         void SwitchFromControlState(void);
         void DeleteFromMark(void);
         void ImportFromMark(void);
 
-        void AlignFast(void);
-        void AlignPrecise(void);
-        void AlignICP(void);
+        void AlignFast(bool isSubThread = true);
+        void AlignPrecise(bool isSubThread = true);
+        void AlignICP(bool isSubThread = true);
         
         void FuseRef(void);
 
@@ -71,6 +85,7 @@ namespace MagicApp
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
         void SwitchToViewMode(void);
+        bool IsCommandInProgress(void);
 
     private:
         void InitViewTool(void);
@@ -80,6 +95,7 @@ namespace MagicApp
         void UpdateMarkRefRendering(void);
         void UpdateMarkFromRendering(void);
         void SetPointCloudColor(GPP::PointCloud* pointCloud, const GPP::Vector3& color);
+        bool IsCommandAvaliable(void);
 
     private:
         void SetupScene(void);
@@ -99,5 +115,11 @@ namespace MagicApp
         MouseMode mMouseMode;
         std::vector<GPP::Vector3> mRefMarks;
         std::vector<GPP::Vector3> mFromMarks;
+        CommandType mCommandType;
+        bool mIsCommandInProgress;
+        bool mUpdatePointRefRendering;
+        bool mUpdatePointFromRendering;
+        bool mUpdateMarkRefRendering;
+        bool mUpdateMarkFromRendering;
     };
 }

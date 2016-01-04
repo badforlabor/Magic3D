@@ -46,4 +46,17 @@ namespace GPP
     extern GPP_EXPORT const Real ONE_RADIAN;
 
     extern bool IsLibraryAvailable(void);
+
+    // Reset progress value before calling api
+    extern GPP_EXPORT void ResetApiProgress(void);
+
+    // Get progress value when running api
+    // progress value range: [0, 1]
+    extern GPP_EXPORT Real GetApiProgress(void);
+
+    // Set progress value in api implmentation
+    // range: [0, 1]
+    extern void SetApiProgress(Real value);
+
+    extern Real GppApiProgressValue;
 }

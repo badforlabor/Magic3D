@@ -35,6 +35,11 @@
         <Widget type="Button" skin="But_Triangle_CN" position="15 365 60 60" align="Left Top" name="But_Reconstruction"/>
 
     	<Widget type="Button" skin="But_Home" position="15 435 60 60" align="Left Top" name="But_BackToHomepage"/>
-    	<Widget type="Button" skin="But_Contact" position="15 505 60 60" align="Left Top" name="But_Contact"/>
+
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 515 150 20" align="Left Top" name="APIProgress">
+            <Property key="AutoTrack" value="false"/>
+            <Property key="FlowDirection" value="LeftToRight"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
     </Widget>
 </MyGUI>

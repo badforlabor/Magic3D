@@ -21,6 +21,13 @@ namespace MagicApp
     class MeasureAppUI;
     class MeasureApp : public AppBase
     {
+        enum CommandType
+        {
+            NONE = 0,
+            GEODESICS_APPROXIMATE,
+            GEODESICS_EXACT
+        };
+
     public:
         enum MouseMode
         {
@@ -32,26 +39,31 @@ namespace MagicApp
         ~MeasureApp();
 
         virtual bool Enter(void);
-        virtual bool Update(float timeElapsed);
+        virtual bool Update(double timeElapsed);
         virtual bool Exit(void);
         virtual bool MouseMoved(const OIS::MouseEvent &arg);
         virtual bool MousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool MouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
 
+        void DoCommand(bool isSubThread);
+
         bool ImportModelRef(void);
         void SwitchMeshRefControlState(void);
         void DeleteMeshMarkRef(void);
-        void ComputeApproximateGeodesics(void);
+        void ComputeApproximateGeodesics(bool isSubThread = true);
+        void ComputeExactGeodesics(bool isSubThread = true);
 
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
         void SwitchToViewMode(void);
+        bool IsCommandInProgress(void);
 
     private:
         void SetupScene(void);
         void ShutdownScene(void);
         void ClearData(void);
+        bool IsCommandAvaliable(void);
 
     private:
         void InitViewTool(void);
@@ -71,5 +83,9 @@ namespace MagicApp
         GPP::DumpBase* mpDumpInfo;
         std::vector<GPP::Int> mMeshRefMarkIds;
         std::vector<GPP::Vector3> mMarkPoints;
+        CommandType mCommandType;
+        bool mIsCommandInProgress;
+        bool mUpdateModelRendering;
+        bool mUpdateMarkRendering;
     };
 }

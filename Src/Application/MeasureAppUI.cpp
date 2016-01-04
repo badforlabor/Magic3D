@@ -7,7 +7,8 @@
 
 namespace MagicApp
 {
-    MeasureAppUI::MeasureAppUI()
+    MeasureAppUI::MeasureAppUI() :
+        mIsProgressbarVisible(false)
     {
     }
 
@@ -24,8 +25,8 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_MarkMeshRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::SelectMeshMarkRef);
         mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::DeleteMeshMarkRef);
         mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeApproximateGeodesics);
+        mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeExactGeodesics);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::BackToHomepage);
-        mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::Contact);
     }
 
     void MeasureAppUI::Shutdown()
@@ -33,6 +34,30 @@ namespace MagicApp
         MyGUI::LayoutManager::getInstance().unloadLayout(mRoot);
         mRoot.clear();
         MagicCore::ResourceManager::UnloadResource("MeasureApp");
+    }
+
+    void MeasureAppUI::StartProgressbar(int range)
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setVisible(true);
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressRange(range);
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressPosition(0);
+        mIsProgressbarVisible = true;
+    }
+
+    void MeasureAppUI::SetProgressbar(int value)
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressPosition(value);
+    }
+
+    void MeasureAppUI::StopProgressbar()
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setVisible(false);
+        mIsProgressbarVisible = false;
+    }
+
+    bool MeasureAppUI::IsProgressbarVisible()
+    {
+        return mIsProgressbarVisible;
     }
 
     void MeasureAppUI::ImportModelRef(MyGUI::Widget* pSender)
@@ -50,6 +75,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_MarkMeshRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
         if (isVisible)
         {
             MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
@@ -87,13 +113,25 @@ namespace MagicApp
         }
     }
 
-    void MeasureAppUI::BackToHomepage(MyGUI::Widget* pSender)
+    void MeasureAppUI::ComputeExactGeodesics(MyGUI::Widget* pSender)
     {
-        AppManager::Get()->SwitchCurrentApp("Homepage");
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->ComputeExactGeodesics();
+        }
     }
 
-    void MeasureAppUI::Contact(MyGUI::Widget* pSender)
+    void MeasureAppUI::BackToHomepage(MyGUI::Widget* pSender)
     {
-        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/magic3d"));
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            if (measureShop->IsCommandInProgress())
+            {
+                return;
+            }
+            AppManager::Get()->SwitchCurrentApp("Homepage");
+        }
     }
 }

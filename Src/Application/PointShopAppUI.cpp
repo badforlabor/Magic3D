@@ -7,7 +7,8 @@
 
 namespace MagicApp
 {
-    PointShopAppUI::PointShopAppUI()
+    PointShopAppUI::PointShopAppUI() : 
+        mIsProgressbarVisible(false)
     {
     }
 
@@ -36,7 +37,30 @@ namespace MagicApp
 
         mRoot.at(0)->findWidget("But_Reconstruction")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ReconstructMesh);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::BackToHomepage);
-        mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::Contact);
+    }
+
+    void PointShopAppUI::StartProgressbar(int range)
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setVisible(true);
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressRange(range);
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressPosition(0);
+        mIsProgressbarVisible = true;
+    }
+
+    void PointShopAppUI::SetProgressbar(int value)
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setProgressPosition(value);
+    }
+
+    void PointShopAppUI::StopProgressbar()
+    {
+        mRoot.at(0)->findWidget("APIProgress")->castType<MyGUI::ProgressBar>()->setVisible(false);
+        mIsProgressbarVisible = false;
+    }
+
+    bool PointShopAppUI::IsProgressbarVisible()
+    {
+        return mIsProgressbarVisible;
     }
 
     void PointShopAppUI::Shutdown()
@@ -181,11 +205,14 @@ namespace MagicApp
 
     void PointShopAppUI::BackToHomepage(MyGUI::Widget* pSender)
     {
-        AppManager::Get()->SwitchCurrentApp("Homepage");
-    }
-
-    void PointShopAppUI::Contact(MyGUI::Widget* pSender)
-    {
-        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/magic3d"));
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            if (pointShop->IsCommandInProgress())
+            {
+                return;
+            }
+            AppManager::Get()->SwitchCurrentApp("Homepage");
+        }
     }
 }

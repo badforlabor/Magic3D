@@ -39,7 +39,7 @@ namespace MagicApp
         return true;
     }
 
-    bool ReliefApp::Update(float timeElapsed)
+    bool ReliefApp::Update(double timeElapsed)
     {
         return true;
     }
@@ -213,6 +213,10 @@ namespace MagicApp
                 UpdateModelRendering();
                 return true;
             }
+            else
+            {
+                MessageBox(NULL, "网格导入失败", "温馨提示", MB_OK);
+            }
         }
         return false;
     }
@@ -221,6 +225,7 @@ namespace MagicApp
     {
         if (mpTriMesh == NULL)
         {
+            MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
             return;
         }
         int resolution = 512;
@@ -266,6 +271,7 @@ namespace MagicApp
         GPP::ErrorCode res = GPP::FilterMesh::CompressHeightField(&heightField, resolution, resolution);
         if (res != GPP_NO_ERROR)
         {
+            MessageBox(NULL, "浮雕生成失败", "温馨提示", MB_OK);
             return;
         }
         GPP::TriMesh* reliefMesh = GenerateTriMeshFromHeightField(heightField, resolution, resolution);
@@ -276,6 +282,10 @@ namespace MagicApp
             mpTriMesh->UnifyCoords(2.0);
             mpTriMesh->UpdateNormal();
         }
+        else
+        {
+            MessageBox(NULL, "浮雕生成失败", "温馨提示", MB_OK);
+        }
         UpdateModelRendering();
     }
 
@@ -283,6 +293,7 @@ namespace MagicApp
     {
         if (mpTriMesh == NULL)
         {
+            MessageBox(NULL, "请先导入网格生成浮雕", "温馨提示", MB_OK);
             return;
         }
         GPP::TriMesh* copiedTriMesh = GPP::CopyTriMesh(mpTriMesh);
