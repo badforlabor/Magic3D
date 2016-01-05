@@ -479,10 +479,11 @@ namespace MagicApp
             MessageBox(NULL, "请在测量的网格上选择标记点", "温馨提示", MB_OK);
             return;
         }
-        else if (mpTriMeshRef->GetVertexCount() > 200000)
+        else if (mpTriMeshRef->GetVertexCount() > 200000 && isSubThread)
         {
-            if (MessageBox(NULL, "测量网格顶点大于200k，测量时间会比较长，是否继续？", "温馨提示", MB_OK) != IDOK)
+            if (MessageBox(NULL, "测量网格顶点大于200k，测量时间会比较长，是否继续？", "温馨提示", MB_OKCANCEL) != IDOK)
             {
+                SwitchToViewMode();
                 return;
             }
         }

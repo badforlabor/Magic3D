@@ -504,7 +504,7 @@ namespace MagicApp
                 mpTriMesh->FuseVertex();
             }
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, GPP::ONE_RADIAN * 5.0, GPP::REAL_TOL, 0.0174532925199433 * 170.0);
+            GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, GPP::ONE_RADIAN * 5.0, GPP::REAL_TOL, GPP::ONE_RADIAN * 170.0);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {

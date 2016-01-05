@@ -57,6 +57,4 @@ namespace GPP
     // Set progress value in api implmentation
     // range: [0, 1]
     extern void SetApiProgress(Real value);
-
-    extern Real GppApiProgressValue;
 }

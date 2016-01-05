@@ -959,8 +959,18 @@ namespace MagicApp
         else
         {
             GPP::Matrix4x4 resultTransform;
+            std::vector<GPP::Vector3>* marksRef = NULL;
+            if (mRefMarks.size() > 0)
+            {
+                marksRef = &mRefMarks;
+            }
+            std::vector<GPP::Vector3>* marksFrom = NULL;
+            if (mFromMarks.size() > 0)
+            {
+                marksFrom = &mFromMarks;
+            }
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::RegistratePointCloud::ICPRegistrate(mpPointCloudRef, mpPointCloudFrom, &resultTransform);
+            GPP::ErrorCode res = GPP::RegistratePointCloud::ICPRegistrate(mpPointCloudRef, marksRef, mpPointCloudFrom, marksFrom, &resultTransform);
             mIsCommandInProgress = false;
             if (res != GPP_NO_ERROR)
             {

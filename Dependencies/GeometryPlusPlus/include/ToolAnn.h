@@ -23,6 +23,8 @@ namespace GPP
         // if indexRes or distanceRes is not needed, please set it as NULL
         ErrorCode FindNearestNeighbors(const IPointList* pointList, Int neighborCount, Int* indexRes, Real* distanceRes);
 
+        void Clear(void);
+
     private:
         AnnImpl* mpImpl;
     };

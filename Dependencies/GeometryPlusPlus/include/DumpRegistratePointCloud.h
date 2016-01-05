@@ -44,12 +44,15 @@ namespace GPP
         virtual ErrorCode Run(void);
         virtual PointCloud* GetPointCloud(Int id = 0);
 
-        void DumpApiInfo(const IPointCloud* pointCloudRef, const IPointCloud* pointCloudFrom, const Matrix4x4* initTransform);
+        void DumpApiInfo(const IPointCloud* pointCloudRef, const std::vector<Vector3>* marksRef, 
+            const IPointCloud* pointCloudFrom, const std::vector<Vector3>* marksFrom, const Matrix4x4* initTransform);
         const Matrix4x4* GetInitTransform(void) const;
 
     private:
         PointCloud* mpPointCloudRef;
         PointCloud* mpPointCloudFrom;
+        std::vector<Vector3> mMarksRef;
+        std::vector<Vector3> mMarksFrom;
         Matrix4x4* mpInitTransform;
     }; 
 
