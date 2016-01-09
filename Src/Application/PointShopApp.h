@@ -49,7 +49,7 @@ namespace MagicApp
         void SmoothPointCloudNormal(bool isSubThread = true);
         
         void SamplePointCloud(int targetPointCount);
-        void CalculatePointCloudNormal(bool isSubThread = true);
+        void CalculatePointCloudNormal(bool isDepthImage, bool isSubThread = true);
         void FlipPointCloudNormal(void);
         void ReconstructMesh(bool isSubThread = true);
 
@@ -81,5 +81,6 @@ namespace MagicApp
         bool mUpdatePointCloudRendering;
         bool mIsCommandInProgress;
         GPP::TriMesh* mpTriMesh;
+        bool mIsDepthImage;
     };
 }

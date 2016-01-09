@@ -22,6 +22,7 @@ namespace MagicApp
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("RegistrationApp.layout");
         mRoot.at(0)->findWidget("But_ImportPointCloudRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ImportPointCloudRef);
         mRoot.at(0)->findWidget("But_RefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RefNormal);
+        mRoot.at(0)->findWidget("But_CalRefNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateRefNormalFront);
         mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateRefNormal);
         mRoot.at(0)->findWidget("But_FlipRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FlipRefNormal);
         mRoot.at(0)->findWidget("But_SmoothRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::SmoothRefNormal);
@@ -33,6 +34,7 @@ namespace MagicApp
 
         mRoot.at(0)->findWidget("But_ImportPointCloudFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ImportPointCloudFrom);
         mRoot.at(0)->findWidget("But_FromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FromNormal);
+        mRoot.at(0)->findWidget("But_CalFromNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateFromNormalFront);
         mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateFromNormal);
         mRoot.at(0)->findWidget("But_FlipFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FlipFromNormal);
         mRoot.at(0)->findWidget("But_SmoothFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::SmoothFromNormal);
@@ -94,9 +96,19 @@ namespace MagicApp
     void RegistrationAppUI::RefNormal(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_CalRefNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_FlipRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);  
         mRoot.at(0)->findWidget("But_SmoothRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);  
+    }
+
+    void RegistrationAppUI::CalculateRefNormalFront(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->CalculateRefNormal(true);
+        }
     }
 
     void RegistrationAppUI::CalculateRefNormal(MyGUI::Widget* pSender)
@@ -104,7 +116,7 @@ namespace MagicApp
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->CalculateRefNormal();
+            registrationApp->CalculateRefNormal(false);
         }
     }
 
@@ -190,17 +202,26 @@ namespace MagicApp
     void RegistrationAppUI::FromNormal(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_CalFromNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_FlipFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_SmoothFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
+    void RegistrationAppUI::CalculateFromNormalFront(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->CalculateFromNormal(true);
+        }
+    }
     void RegistrationAppUI::CalculateFromNormal(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->CalculateFromNormal();
+            registrationApp->CalculateFromNormal(false);
         }
     }
 

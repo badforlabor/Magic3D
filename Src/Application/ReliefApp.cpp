@@ -15,7 +15,9 @@ namespace MagicApp
         mpUI(NULL),
         mpTriMesh(NULL),
         mpViewTool(NULL),
-        mpDumpInfo(NULL)
+        mpDumpInfo(NULL),
+        mHeightField(),
+        mResolution(650)
     {
     }
 
@@ -121,11 +123,11 @@ namespace MagicApp
     void ReliefApp::SetupScene()
     {
         Ogre::SceneManager* sceneManager = MagicCore::RenderSystem::Get()->GetSceneManager();
-        sceneManager->setAmbientLight(Ogre::ColourValue(0.1, 0.1, 0.1));
+        sceneManager->setAmbientLight(Ogre::ColourValue(0.3, 0.3, 0.3));
         Ogre::Light* light = sceneManager->createLight("ReliefApp_SimpleLight");
-        light->setPosition(0, 0, 20);
-        light->setDiffuseColour(0.8, 0.8, 0.8);
-        light->setSpecularColour(0.5, 0.5, 0.5);
+        light->setPosition(-7.5, 7.5, 20);
+        light->setDiffuseColour(0.7, 0.7, 0.7);
+        light->setSpecularColour(0.1, 0.1, 0.1);
     }
 
     void ReliefApp::ShutdownScene()
@@ -147,6 +149,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpDumpInfo);
+        mHeightField.clear();
     }
 
     void ReliefApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
@@ -204,13 +207,14 @@ namespace MagicApp
             GPP::TriMesh* triMesh = GPP::Parser::ImportTriMesh(fileName);
             if (triMesh != NULL)
             { 
-                triMesh->UnifyCoords(2.0);
+                triMesh->UnifyCoords(2.5);
                 triMesh->UpdateNormal();
                 GPPFREEPOINTER(mpTriMesh);
                 mpTriMesh = triMesh;
                 InfoLog << "Import Mesh,  vertex: " << mpTriMesh->GetVertexCount() << " triangles: " << mpTriMesh->GetTriangleCount() << std::endl;
                 InitViewTool();
                 UpdateModelRendering();
+                mHeightField.clear();
                 return true;
             }
             else
@@ -221,60 +225,63 @@ namespace MagicApp
         return false;
     }
 
-    void ReliefApp::GenerateRelief(void)
+    void ReliefApp::GenerateRelief(double compressRatio)
     {
-        if (mpTriMesh == NULL)
+        //GPPDebug << "Compress ratio: " << compressRatio << std::endl;
+        if (mpTriMesh == NULL && mHeightField.empty())
         {
             MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
             return;
         }
-        int resolution = 512;
-        //Get depth data
-        Ogre::TexturePtr depthTex = Ogre::TextureManager::getSingleton().createManual(  
-            "DepthTexture",      // name   
-            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,  
-            Ogre::TEX_TYPE_2D,   // type   
-            resolution,  // width   
-            resolution,  // height   
-            0,                   // number of mipmaps   
-            //Ogre::PF_B8G8R8A8,   // pixel format
-            Ogre::PF_FLOAT32_R,
-            Ogre::TU_RENDERTARGET
-            ); 
-        Ogre::RenderTarget* target = depthTex->getBuffer()->getRenderTarget();
-        Ogre::Camera* orthCam = MagicCore::RenderSystem::Get()->GetMainCamera();
-        orthCam->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
-        orthCam->setOrthoWindow(3, 3);
-        orthCam->setPosition(0, 0, 3);
-        orthCam->lookAt(0, 0, 0);
-        orthCam->setAspectRatio(1.0);
-        orthCam->setNearClipDistance(0.5);
-        orthCam->setFarClipDistance(5);
-        Ogre::Viewport* viewport = target->addViewport(orthCam);
-        viewport->setDimensions(0, 0, 1, 1);
-        MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "Depth", mpTriMesh);
-        MagicCore::RenderSystem::Get()->Update();
-        Ogre::Image img;
-        depthTex->convertToImage(img);
-        std::vector<double> heightField(resolution * resolution);
-        for(int x = 0; x < resolution; x++)  
-        {  
-            int baseIndex = x * resolution;
-            for(int y = 0; y < resolution; y++)  
-            {
-                heightField.at(baseIndex + y) = (img.getColourAt(x, resolution - 1 - y, 0))[1];
+        if (mHeightField.empty())
+        {
+            //Get depth data
+            Ogre::TexturePtr depthTex = Ogre::TextureManager::getSingleton().createManual(  
+                "DepthTexture",      // name   
+                Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,  
+                Ogre::TEX_TYPE_2D,   // type   
+                mResolution,  // width   
+                mResolution,  // height   
+                0,                   // number of mipmaps   
+                //Ogre::PF_B8G8R8A8,   // pixel format
+                Ogre::PF_FLOAT32_R,
+                Ogre::TU_RENDERTARGET
+                ); 
+            Ogre::RenderTarget* target = depthTex->getBuffer()->getRenderTarget();
+            Ogre::Camera* orthCam = MagicCore::RenderSystem::Get()->GetMainCamera();
+            orthCam->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
+            orthCam->setOrthoWindow(3, 3);
+            orthCam->setPosition(0, 0, 3);
+            orthCam->lookAt(0, 0, 0);
+            orthCam->setAspectRatio(1.0);
+            orthCam->setNearClipDistance(0.5);
+            orthCam->setFarClipDistance(5);
+            Ogre::Viewport* viewport = target->addViewport(orthCam);
+            viewport->setDimensions(0, 0, 1, 1);
+            MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "Depth", mpTriMesh);
+            MagicCore::RenderSystem::Get()->Update();
+            Ogre::Image img;
+            depthTex->convertToImage(img);
+            mHeightField = std::vector<double>(mResolution * mResolution);
+            for(int x = 0; x < mResolution; x++)  
+            {  
+                int baseIndex = x * mResolution;
+                for(int y = 0; y < mResolution; y++)  
+                {
+                    mHeightField.at(baseIndex + y) = (img.getColourAt(x, mResolution - 1 - y, 0))[1];
+                }
             }
+            Ogre::TextureManager::getSingleton().remove("DepthTexture");
+            MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
         }
-        Ogre::TextureManager::getSingleton().remove("DepthTexture");
-        MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
-        //GPP::DumpOnce();
-        GPP::ErrorCode res = GPP::FilterMesh::CompressHeightField(&heightField, resolution, resolution);
+        std::vector<GPP::Real> compressedHeightField = mHeightField;
+        GPP::ErrorCode res = GPP::FilterMesh::CompressHeightField(&compressedHeightField, mResolution, mResolution, compressRatio);
         if (res != GPP_NO_ERROR)
         {
             MessageBox(NULL, "浮雕生成失败", "温馨提示", MB_OK);
             return;
         }
-        GPP::TriMesh* reliefMesh = GenerateTriMeshFromHeightField(heightField, resolution, resolution);
+        GPP::TriMesh* reliefMesh = GenerateTriMeshFromHeightField(compressedHeightField, mResolution, mResolution);
         if (reliefMesh != NULL)
         {
             GPPFREEPOINTER(mpTriMesh);
@@ -323,7 +330,7 @@ namespace MagicApp
     {
         if (mpTriMesh != NULL)
         {
-            MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "CookTorrance", mpTriMesh);
+            MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "CookTorranceRough", mpTriMesh);
         }
         else
         {

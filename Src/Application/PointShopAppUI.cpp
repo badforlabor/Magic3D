@@ -27,6 +27,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_DoSamplePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoSamplePointCloud);
         
         mRoot.at(0)->findWidget("But_Normal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::PointCloudNormal);
+        mRoot.at(0)->findWidget("But_CalNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::CalculatePointCloudNormalFront);
         mRoot.at(0)->findWidget("But_CalNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::CalculatePointCloudNormal);
         mRoot.at(0)->findWidget("But_FlipNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::FlipPointCloudNormal);
         mRoot.at(0)->findWidget("But_SmoothNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SmoothPointCloudNormal);
@@ -137,9 +138,19 @@ namespace MagicApp
     void PointShopAppUI::PointCloudNormal(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_CalNormal")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_CalNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CalNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_FlipNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_SmoothNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
+    }
+
+    void PointShopAppUI::CalculatePointCloudNormalFront(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->CalculatePointCloudNormal(true);
+        }
     }
 
     void PointShopAppUI::CalculatePointCloudNormal(MyGUI::Widget* pSender)
@@ -147,7 +158,7 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->CalculatePointCloudNormal();
+            pointShop->CalculatePointCloudNormal(false);
         }
     }
 

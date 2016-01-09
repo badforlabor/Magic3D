@@ -32,7 +32,8 @@ namespace MagicApp
         mCommandType(NONE),
         mUpdatePointCloudRendering(false),
         mIsCommandInProgress(false),
-        mpTriMesh(NULL)
+        mpTriMesh(NULL),
+        mIsDepthImage(0)
     {
     }
 
@@ -197,7 +198,7 @@ namespace MagicApp
                 ExportPointCloud(false);
                 break;
             case MagicApp::PointShopApp::NORMALCALCULATION:
-                CalculatePointCloudNormal(false);
+                CalculatePointCloudNormal(mIsDepthImage, false);
                 break;
             case MagicApp::PointShopApp::NORMALSMOOTH:
                 SmoothPointCloudNormal(false);
@@ -445,7 +446,7 @@ namespace MagicApp
         GPPFREEARRAY(sampleIndex);
     }
 
-    void PointShopApp::CalculatePointCloudNormal(bool isSubThread)
+    void PointShopApp::CalculatePointCloudNormal(bool isDepthImage, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -454,12 +455,13 @@ namespace MagicApp
         if (isSubThread)
         {
             mCommandType = NORMALCALCULATION;
+            mIsDepthImage = isDepthImage;
             DoCommand(true);
         }
         else
         {
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloud, false);
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloud, isDepthImage);
             mIsCommandInProgress = false;
             mUpdatePointCloudRendering = true;
             if (res == GPP_API_IS_NOT_AVAILABLE)

@@ -25,6 +25,7 @@ namespace MagicApp
         void DoSamplePointCloud(MyGUI::Widget* pSender);
 
         void PointCloudNormal(MyGUI::Widget* pSender);
+        void CalculatePointCloudNormalFront(MyGUI::Widget* pSender);
         void CalculatePointCloudNormal(MyGUI::Widget* pSender);
         void FlipPointCloudNormal(MyGUI::Widget* pSender);
         void SmoothPointCloudNormal(MyGUI::Widget* pSender);

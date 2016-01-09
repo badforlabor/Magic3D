@@ -144,6 +144,8 @@ namespace GPP
         // If you want to erase the NULL elements, UpdateVertexIndex, UpdateEdgeIndex, UpdateFaceIndex can be used to do this
         ErrorCode ContractInnerEdge(Int edgeId, bool updateEdgeMap);
 
+        ErrorCode ContractBoundaryEdge(Int edgeId, bool updateEdgeMap);
+
         ~HalfMesh();
 
     private:

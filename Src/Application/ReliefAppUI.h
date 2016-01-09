@@ -14,6 +14,7 @@ namespace MagicApp
 
     private:
         void ImportModel(MyGUI::Widget* pSender);
+        void Relief(MyGUI::Widget* pSender);
         void GenerateRelief(MyGUI::Widget* pSender);
         void EnterMeshTool(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);

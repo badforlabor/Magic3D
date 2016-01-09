@@ -1,16 +1,19 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Widget" skin="PanelEmpty" position="0 0 220 768" align="Left Top" layer="Back">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 270 768" align="Left Top" layer="Back">
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportPointCloudRef"/>
         
         <Widget type="Button" skin="But_Normal_CN" position="15 80 60 60" align="Left Top" name="But_RefNormal"/>
-        <Widget type="Button" skin="But_Calculate_CN" position="75 90 43 43" align="Left Top" name="But_CalRefNormal">
+        <Widget type="Button" skin="But_Front" position="75 90 43 43" align="Left Top" name="But_CalRefNormalFront">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Flip_CN" position="118 90 43 43" align="Left Top" name="But_FlipRefNormal">
+        <Widget type="Button" skin="But_Calculate_CN" position="118 90 43 43" align="Left Top" name="But_CalRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="161 90 43 43" align="Left Top" name="But_SmoothRefNormal">
+        <Widget type="Button" skin="But_Flip_CN" position="161 90 43 43" align="Left Top" name="But_FlipRefNormal">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="204 90 43 43" align="Left Top" name="But_SmoothRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
 
@@ -28,13 +31,16 @@
         <Widget type="Button" skin="But_Open" position="15 210 60 60" align="Left Top" name="But_ImportPointCloudFrom"/>
         
         <Widget type="Button" skin="But_Normal_CN" position="15 275 60 60" align="Left Top" name="But_FromNormal"/>
-        <Widget type="Button" skin="But_Calculate_CN" position="75 285 43 43" align="Left Top" name="But_CalFromNormal">
+        <Widget type="Button" skin="But_Front" position="75 285 43 43" align="Left Top" name="But_CalFromNormalFront">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Flip_CN" position="118 285 43 43" align="Left Top" name="But_FlipFromNormal">
+        <Widget type="Button" skin="But_Calculate_CN" position="118 285 43 43" align="Left Top" name="But_CalFromNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="161 285 43 43" align="Left Top" name="But_SmoothFromNormal">
+        <Widget type="Button" skin="But_Flip_CN" position="161 285 43 43" align="Left Top" name="But_FlipFromNormal">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="204 285 43 43" align="Left Top" name="But_SmoothFromNormal">
             <Property key="Visible" value="false"/>
         </Widget>
 

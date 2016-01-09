@@ -21,6 +21,7 @@ namespace MagicApp
         void ImportPointCloudRef(MyGUI::Widget* pSender);
         
         void RefNormal(MyGUI::Widget* pSender);
+        void CalculateRefNormalFront(MyGUI::Widget* pSender);
         void CalculateRefNormal(MyGUI::Widget* pSender);
         void FlipRefNormal(MyGUI::Widget* pSender);
         void SmoothRefNormal(MyGUI::Widget* pSender);
@@ -33,6 +34,7 @@ namespace MagicApp
         void ImportPointCloudFrom(MyGUI::Widget* pSender);
         
         void FromNormal(MyGUI::Widget* pSender);
+        void CalculateFromNormalFront(MyGUI::Widget* pSender);
         void CalculateFromNormal(MyGUI::Widget* pSender);
         void FlipFromNormal(MyGUI::Widget* pSender);
         void SmoothFromNormal(MyGUI::Widget* pSender);

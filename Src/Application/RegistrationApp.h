@@ -56,7 +56,7 @@ namespace MagicApp
 
         bool ImportPointCloudRef(void);
         
-        void CalculateRefNormal(bool isSubThread = true);
+        void CalculateRefNormal(bool isDepthImage, bool isSubThread = true);
         void FlipRefNormal(void);
         void SmoothRefNormal(bool isSubThread = true);
         
@@ -66,7 +66,7 @@ namespace MagicApp
 
         bool ImportPointCloudFrom(void);
         
-        void CalculateFromNormal(bool isSubThread = true);
+        void CalculateFromNormal(bool isDepthImage, bool isSubThread = true);
         void FlipFromNormal(void);
         void SmoothFromNormal(bool isSubThread = true);
         
@@ -121,5 +121,7 @@ namespace MagicApp
         bool mUpdatePointFromRendering;
         bool mUpdateMarkRefRendering;
         bool mUpdateMarkFromRendering;
+        bool mIsDepthImageRef;
+        bool mIsDepthImageFrom;
     };
 }

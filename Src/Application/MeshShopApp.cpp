@@ -206,7 +206,7 @@ namespace MagicApp
         Ogre::SceneManager* sceneManager = MagicCore::RenderSystem::Get()->GetSceneManager();
         sceneManager->setAmbientLight(Ogre::ColourValue(0.1, 0.1, 0.1));
         Ogre::Light* light = sceneManager->createLight("MeshShop_SimpleLight");
-        light->setPosition(0, 0, 20);
+        light->setPosition(-5, 5, 20);
         light->setDiffuseColour(0.8, 0.8, 0.8);
         light->setSpecularColour(0.5, 0.5, 0.5);
     }
@@ -540,7 +540,7 @@ namespace MagicApp
                 mpTriMesh->FuseVertex();
             }
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::FilterMesh::LaplaceSmooth(mpTriMesh);
+            GPP::ErrorCode res = GPP::FilterMesh::LaplaceSmooth(mpTriMesh, false);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -734,7 +734,7 @@ namespace MagicApp
             std::vector<GPP::Real> simplifiedVertexFields;
             //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount, &vertexFields, &simplifiedVertexFields);
+            GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(mpTriMesh, targetVertexCount, false, &vertexFields, &simplifiedVertexFields);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {

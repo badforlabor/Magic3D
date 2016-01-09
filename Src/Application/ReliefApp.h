@@ -32,7 +32,7 @@ namespace MagicApp
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
 
         bool ImportModel(void);
-        void GenerateRelief(void);
+        void GenerateRelief(double compressRatio);
         void EnterMeshTool(void);
 
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -52,5 +52,7 @@ namespace MagicApp
         GPP::TriMesh* mpTriMesh;
         MagicCore::ViewTool* mpViewTool;
         GPP::DumpBase* mpDumpInfo;
+        std::vector<GPP::Real> mHeightField;
+        int mResolution;
     };
 }

@@ -44,7 +44,9 @@ namespace MagicApp
         mUpdatePointRefRendering(false),
         mUpdatePointFromRendering(false),
         mUpdateMarkRefRendering(false),
-        mUpdateMarkFromRendering(false)
+        mUpdateMarkFromRendering(false),
+        mIsDepthImageRef(0),
+        mIsDepthImageFrom(0)
     {
     }
 
@@ -250,10 +252,10 @@ namespace MagicApp
                 AlignICP(false);
                 break;
             case MagicApp::RegistrationApp::NORMAL_REF:
-                CalculateRefNormal(false);
+                CalculateRefNormal(mIsDepthImageRef, false);
                 break;
             case MagicApp::RegistrationApp::NORMAL_FROM:
-                CalculateFromNormal(false);
+                CalculateFromNormal(mIsDepthImageFrom, false);
                 break;
             case MagicApp::RegistrationApp::NORMAL_SMOOTH_REF:
                 SmoothRefNormal(false);
@@ -310,7 +312,7 @@ namespace MagicApp
         return false;
     }
 
-    void RegistrationApp::CalculateRefNormal(bool isSubThread)
+    void RegistrationApp::CalculateRefNormal(bool isDepthImage, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -324,12 +326,13 @@ namespace MagicApp
         if (isSubThread)
         {
             mCommandType = NORMAL_REF;
+            mIsDepthImageRef = isDepthImage;
             DoCommand(true);
         }
         else
         {
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloudRef);
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloudRef, isDepthImage);
             mIsCommandInProgress = false;
             mUpdatePointRefRendering = true;
             if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -497,6 +500,7 @@ namespace MagicApp
             MessageBox(NULL, "请先导入参考点云和需要对齐的点云", "温馨提示", MB_OK);
             return;
         }
+        GPP::Real markTol = 3.0 / 2048.0;
         GPP::ErrorCode res = GPP_NO_ERROR;
         if (mpFusePointCloud == NULL)
         {
@@ -579,9 +583,24 @@ namespace MagicApp
         GPPFREEPOINTER(mpPointCloudFrom);
         MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
         //Update Ref Marks
-        for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
+        for (std::vector<GPP::Vector3>::iterator fromItr = mFromMarks.begin(); fromItr != mFromMarks.end(); ++fromItr)
         {
-            mRefMarks.push_back(*markItr);
+            bool merged = false;
+            for (std::vector<GPP::Vector3>::iterator refItr = mRefMarks.begin(); refItr != mRefMarks.end(); ++refItr)
+            {
+                GPP::Real markDist = ((*refItr) - (*fromItr)).Length();
+                if (markDist < markTol)
+                {
+                    (*refItr) = ((*refItr) + (*fromItr)) / 2.0;
+                    merged = true;
+                    //GPPDebug << "RegistrationApp::FuseRef: Merged one mark: " << markDist << " / " << markTol << std::endl;
+                    break;
+                }
+            }
+            if (!merged)
+            {
+                mRefMarks.push_back(*fromItr);
+            }
         }
         UpdateMarkRefRendering();
         mFromMarks.clear();
@@ -629,7 +648,7 @@ namespace MagicApp
         return false;
     }
 
-    void RegistrationApp::CalculateFromNormal(bool isSubThread)
+    void RegistrationApp::CalculateFromNormal(bool isDepthImage, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -643,12 +662,13 @@ namespace MagicApp
         if (isSubThread)
         {
             mCommandType = NORMAL_FROM;
+            mIsDepthImageFrom = isDepthImage;
             DoCommand(true);
         }
         else
         {
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloudFrom);
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(mpPointCloudFrom, isDepthImage);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
