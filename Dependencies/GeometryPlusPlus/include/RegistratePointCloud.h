@@ -43,5 +43,9 @@ namespace GPP
             const IPointCloud* pointCloudFrom, const std::vector<Vector3>* marksFrom, Matrix4x4* resultTransform, 
             RegistrateQuality quality = REGISTRATE_QUALITY_LOW, Real overlapRatio = 0.66);
 
+
+        static ErrorCode GlobalRegistrateWithReliableMark(const IPointCloud* pointCloudRef, const std::vector<Vector3>* marksRef, 
+            const IPointCloud* pointCloudFrom, const std::vector<Vector3>* marksFrom, Matrix4x4* resultTransform);
+
     };
 }

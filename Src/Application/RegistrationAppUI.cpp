@@ -20,15 +20,16 @@ namespace MagicApp
     {
         MagicCore::ResourceManager::LoadResource("../../Media/RegistrationApp", "FileSystem", "RegistrationApp");
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("RegistrationApp.layout");
+        mRoot.at(0)->findWidget("But_SwitchDisplayMode")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::SwitchDisplayMode);
+
         mRoot.at(0)->findWidget("But_ImportPointCloudRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ImportPointCloudRef);
         mRoot.at(0)->findWidget("But_RefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RefNormal);
         mRoot.at(0)->findWidget("But_CalRefNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateRefNormalFront);
         mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateRefNormal);
         mRoot.at(0)->findWidget("But_FlipRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FlipRefNormal);
-        mRoot.at(0)->findWidget("But_SmoothRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::SmoothRefNormal);
+        //mRoot.at(0)->findWidget("But_SmoothRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::SmoothRefNormal);
         
         mRoot.at(0)->findWidget("But_RefFeaturePoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RefFeaturePoint);
-        mRoot.at(0)->findWidget("But_RefSetMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RefSetMark);
         mRoot.at(0)->findWidget("But_RefDeleteMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RefDeleteMark);
         mRoot.at(0)->findWidget("But_RefImportMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RefImportMark);
 
@@ -37,16 +38,15 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalFromNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateFromNormalFront);
         mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateFromNormal);
         mRoot.at(0)->findWidget("But_FlipFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FlipFromNormal);
-        mRoot.at(0)->findWidget("But_SmoothFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::SmoothFromNormal);
+        //mRoot.at(0)->findWidget("But_SmoothFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::SmoothFromNormal);
         
         mRoot.at(0)->findWidget("But_FromFeaturePoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FromFeaturePoint);
-        mRoot.at(0)->findWidget("But_FromSetMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FromSetMark);
         mRoot.at(0)->findWidget("But_FromDeleteMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FromDeleteMark);
         mRoot.at(0)->findWidget("But_FromImportMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FromImportMark);
 
         mRoot.at(0)->findWidget("But_AlignPointCloudFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignFrom);
-        mRoot.at(0)->findWidget("But_AlignFast")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignFast);
-        mRoot.at(0)->findWidget("But_AlignPrecise")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignPrecise);
+        mRoot.at(0)->findWidget("But_AlignMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignMark);
+        mRoot.at(0)->findWidget("But_AlignFree")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignFree);
         mRoot.at(0)->findWidget("But_AlignICP")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignICP);
         mRoot.at(0)->findWidget("But_FusePointCloudRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseRef);
         mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::EnterPointShop);
@@ -84,6 +84,15 @@ namespace MagicApp
         return mIsProgressbarVisible;
     }
 
+    void RegistrationAppUI::SwitchDisplayMode(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->SwitchSeparateDisplay();
+        }
+    }
+
     void RegistrationAppUI::ImportPointCloudRef(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
@@ -99,7 +108,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalRefNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_FlipRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);  
-        mRoot.at(0)->findWidget("But_SmoothRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);  
+        //mRoot.at(0)->findWidget("But_SmoothRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);  
     }
 
     void RegistrationAppUI::CalculateRefNormalFront(MyGUI::Widget* pSender)
@@ -129,38 +138,20 @@ namespace MagicApp
         }
     }
 
-    void RegistrationAppUI::SmoothRefNormal(MyGUI::Widget* pSender)
+    /*void RegistrationAppUI::SmoothRefNormal(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
             registrationApp->SmoothRefNormal();
         }
-    }
+    }*/
 
     void RegistrationAppUI::RefFeaturePoint(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_RefSetMark")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_RefSetMark")->castType<MyGUI::Button>()->setVisible(!isVisible);  
+        bool isVisible = mRoot.at(0)->findWidget("But_RefDeleteMark")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_RefDeleteMark")->castType<MyGUI::Button>()->setVisible(!isVisible);  
         mRoot.at(0)->findWidget("But_RefImportMark")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        if (isVisible)
-        {
-            RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
-            if (registrationApp != NULL)
-            {
-                registrationApp->SwitchToViewMode();
-            }
-        }
-    }
-
-    void RegistrationAppUI::RefSetMark(MyGUI::Widget* pSender)
-    {
-        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
-        if (registrationApp != NULL)
-        {
-            registrationApp->SwitchRefControlState();
-        }
     }
 
     void RegistrationAppUI::RefDeleteMark(MyGUI::Widget* pSender)
@@ -205,7 +196,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalFromNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_FlipFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_SmoothFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        //mRoot.at(0)->findWidget("But_SmoothFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
     void RegistrationAppUI::CalculateFromNormalFront(MyGUI::Widget* pSender)
@@ -234,38 +225,20 @@ namespace MagicApp
         }
     }
 
-    void RegistrationAppUI::SmoothFromNormal(MyGUI::Widget* pSender)
+    /*void RegistrationAppUI::SmoothFromNormal(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
             registrationApp->SmoothFromNormal();
         }
-    }
+    }*/
 
     void RegistrationAppUI::FromFeaturePoint(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_FromSetMark")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_FromSetMark")->castType<MyGUI::Button>()->setVisible(!isVisible);  
+        bool isVisible = mRoot.at(0)->findWidget("But_FromDeleteMark")->castType<MyGUI::Button>()->isVisible(); 
         mRoot.at(0)->findWidget("But_FromDeleteMark")->castType<MyGUI::Button>()->setVisible(!isVisible);  
         mRoot.at(0)->findWidget("But_FromImportMark")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        if (isVisible)
-        {
-            RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
-            if (registrationApp != NULL)
-            {
-                registrationApp->SwitchToViewMode();
-            }
-        }
-    }
-
-    void RegistrationAppUI::FromSetMark(MyGUI::Widget* pSender)
-    {
-        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
-        if (registrationApp != NULL)
-        {
-            registrationApp->SwitchFromControlState();
-        }
     }
 
     void RegistrationAppUI::FromDeleteMark(MyGUI::Widget* pSender)
@@ -288,26 +261,27 @@ namespace MagicApp
 
     void RegistrationAppUI::AlignFrom(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_AlignFast")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_AlignFast")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_AlignPrecise")->castType<MyGUI::Button>()->setVisible(!isVisible);   
+        bool isVisible = mRoot.at(0)->findWidget("But_AlignMark")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_AlignMark")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_AlignFree")->castType<MyGUI::Button>()->setVisible(!isVisible);  
+        mRoot.at(0)->findWidget("But_AlignICP")->castType<MyGUI::Button>()->setVisible(!isVisible);  
     }
 
-    void RegistrationAppUI::AlignFast(MyGUI::Widget* pSender)
+    void RegistrationAppUI::AlignMark(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->AlignFast();
+            registrationApp->AlignMark();
         }
     }
 
-    void RegistrationAppUI::AlignPrecise(MyGUI::Widget* pSender)
+    void RegistrationAppUI::AlignFree(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->AlignPrecise();
+            registrationApp->AlignFree();
         }
     }
 

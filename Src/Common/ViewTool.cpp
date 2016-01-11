@@ -30,31 +30,35 @@ namespace MagicCore
 
     void ViewTool::MouseMoved(int mouseCoordX, int mouseCoordY, MouseMode mm)
     {
-        if (mm == MM_LEFT_DOWN && RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
+        if (mm == MM_MIDDLE_DOWN)
         {
             int mouseDiffX = mouseCoordX - mMouseCoordX;
             int mouseDiffY = mouseCoordY - mMouseCoordY;
             mMouseCoordX = mouseCoordX;
             mMouseCoordY = mouseCoordY;
-            RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->yaw(Ogre::Degree(mouseDiffX) * 0.2, Ogre::Node::TS_PARENT);
-            RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->pitch(Ogre::Degree(mouseDiffY) * 0.2, Ogre::Node::TS_PARENT);
+            if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
+            {
+                RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->yaw(Ogre::Degree(mouseDiffX) * 0.2, Ogre::Node::TS_PARENT);
+                RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->pitch(Ogre::Degree(mouseDiffY) * 0.2, Ogre::Node::TS_PARENT);
+            }
+            if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNodeLeft"))
+            {
+                RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeLeft")->yaw(Ogre::Degree(mouseDiffX) * 0.2, Ogre::Node::TS_PARENT);
+                RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeLeft")->pitch(Ogre::Degree(mouseDiffY) * 0.2, Ogre::Node::TS_PARENT);
+            }
+            if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNodeRight"))
+            {
+                RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeRight")->yaw(Ogre::Degree(mouseDiffX) * 0.2, Ogre::Node::TS_PARENT);
+                RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeRight")->pitch(Ogre::Degree(mouseDiffY) * 0.2, Ogre::Node::TS_PARENT);
+            }
         }
-        else if (mm == MM_RIGHT_DOWN)
+        else if (mm == MM_LEFT_DOWN)
         {
             int mouseDiffY = mouseCoordY - mMouseCoordY;
             mMouseCoordX = mouseCoordX;
             mMouseCoordY = mouseCoordY;
             RenderSystem::Get()->GetMainCamera()->move(Ogre::Vector3(0, 0, mouseDiffY) * 0.007 * mScale);
         }
-        else if (mm == MM_MIDDLE_DOWN)
-        {
-            int mouseDiffX = mouseCoordX - mMouseCoordX;
-            int mouseDiffY = mouseCoordY - mMouseCoordY;
-            mMouseCoordX = mouseCoordX;
-            mMouseCoordY = mouseCoordY;
-            RenderSystem::Get()->GetMainCamera()->move(Ogre::Vector3(mouseDiffX * (-1), mouseDiffY, 0) * 0.0025 * mScale);
-        }
-        
     }
 
     void ViewTool::SetScale(double scale)

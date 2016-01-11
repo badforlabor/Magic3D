@@ -29,14 +29,15 @@ namespace MagicApp
     RegistrationApp::RegistrationApp() :
         mpUI(NULL),
         mpViewTool(NULL),
-        mpPickTool(NULL),
+        mIsSeparateDisplay(false),
+        mpPickToolRef(NULL),
+        mpPickToolFrom(NULL),
         mpDumpInfo(NULL),
         mpPointCloudRef(NULL),
         mpPointCloudFrom(NULL),
         mpFusePointCloud(NULL),
         mObjCenterCoord(),
         mScaleValue(0),
-        mMouseMode(MM_VIEW),
         mRefMarks(),
         mFromMarks(),
         mCommandType(NONE),
@@ -54,7 +55,8 @@ namespace MagicApp
     {
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpViewTool);
-        GPPFREEPOINTER(mpPickTool);
+        GPPFREEPOINTER(mpPickToolRef);
+        GPPFREEPOINTER(mpPickToolFrom);
         GPPFREEPOINTER(mpDumpInfo);
         GPPFREEPOINTER(mpPointCloudRef);
         GPPFREEPOINTER(mpPointCloudFrom);
@@ -117,64 +119,62 @@ namespace MagicApp
 
     bool RegistrationApp::MouseMoved( const OIS::MouseEvent &arg )
     {
-        if (mMouseMode == MM_VIEW && mpViewTool != NULL)
+        if (arg.state.buttonDown(OIS::MB_Middle) && mpViewTool != NULL)
         {
-            MagicCore::ViewTool::MouseMode mm;
-            if (arg.state.buttonDown(OIS::MB_Left))
-            {
-                mm = MagicCore::ViewTool::MM_LEFT_DOWN;
-            }
-            else if (arg.state.buttonDown(OIS::MB_Middle))
-            {
-                mm = MagicCore::ViewTool::MM_MIDDLE_DOWN;
-            }
-            else if (arg.state.buttonDown(OIS::MB_Right))
-            {
-                mm = MagicCore::ViewTool::MM_RIGHT_DOWN;
-            }
-            else
-            {
-                mm = MagicCore::ViewTool::MM_NONE;
-            }
-            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, mm);
+            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_MIDDLE_DOWN);
         }
-        
+        else if (arg.state.buttonDown(OIS::MB_Left) && mpViewTool != NULL)
+        {
+            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_LEFT_DOWN);
+        }     
         return true;
     }
 
     bool RegistrationApp::MousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        if (mMouseMode == MM_VIEW && mpViewTool != NULL)
+        if ((id == OIS::MB_Middle || id == OIS::MB_Left) && mpViewTool != NULL)
         {
             mpViewTool->MousePressed(arg.state.X.abs, arg.state.Y.abs);
         }
-        else if ((mMouseMode == MM_PICK_REF || mMouseMode == MM_PICK_FROM) && mpPickTool != NULL && IsCommandAvaliable())
+        else if (id == OIS::MB_Right && mIsCommandInProgress == false && (mpPickToolRef || mpPickToolFrom))
         {
-            mpPickTool->MousePressed(arg.state.X.abs, arg.state.Y.abs);
+            if (mpPickToolRef)
+            {
+                mpPickToolRef->MousePressed(arg.state.X.abs, arg.state.Y.abs);
+            }
+            if (mpPickToolFrom)
+            {
+                mpPickToolFrom->MousePressed(arg.state.X.abs, arg.state.Y.abs);
+            }
         }
         return true;
     }
 
     bool RegistrationApp::MouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        if ((mMouseMode == MM_PICK_REF || mMouseMode == MM_PICK_FROM) && mpPickTool != NULL && IsCommandAvaliable())
+        if ((mpPickToolRef || mpPickToolFrom) && mIsCommandInProgress == false && id == OIS::MB_Right)
         {
-            mpPickTool->MouseReleased(arg.state.X.abs, arg.state.Y.abs);
-            GPP::Int pickedId = mpPickTool->GetPickPointId();
-            mpPickTool->ClearPickedIds();
-            if (pickedId == -1)
+            if (mpPickToolRef)
             {
-                return true;
+                mpPickToolRef->MouseReleased(arg.state.X.abs, arg.state.Y.abs);
+                GPP::Int pickedIdRef = mpPickToolRef->GetPickPointId();
+                mpPickToolRef->ClearPickedIds();
+                if (pickedIdRef != -1)
+                {
+                    mRefMarks.push_back(mpPointCloudRef->GetPointCoord(pickedIdRef));
+                    UpdateMarkRefRendering();
+                }
             }
-            if (mMouseMode == MM_PICK_REF)
+            if (mpPickToolFrom)
             {
-                mRefMarks.push_back(mpPointCloudRef->GetPointCoord(pickedId));
-                UpdateMarkRefRendering();
-            }
-            else if (mMouseMode == MM_PICK_FROM)
-            {
-                mFromMarks.push_back(mpPointCloudFrom->GetPointCoord(pickedId));
-                UpdateMarkFromRendering();
+                mpPickToolFrom->MouseReleased(arg.state.X.abs, arg.state.Y.abs);
+                GPP::Int pickedIdFrom = mpPickToolFrom->GetPickPointId();
+                mpPickToolFrom->ClearPickedIds();
+                if (pickedIdFrom != -1)
+                {
+                    mFromMarks.push_back(mpPointCloudFrom->GetPointCoord(pickedIdFrom));
+                    UpdateMarkFromRendering();
+                }
             }
         }
         return true;
@@ -206,9 +206,13 @@ namespace MagicApp
         sceneManager->destroyLight("RegistrationApp_SimpleLight");
         MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
         MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_Right_RegistrationApp");
         MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_RegistrationApp");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_Left_RegistrationApp");
         MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_RegistrationApp");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_Left_RegistrationApp");
         MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_RegistrationApp");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_Right_RegistrationApp");
         if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
         {
             MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->resetToInitialState();
@@ -219,13 +223,15 @@ namespace MagicApp
     {
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpViewTool);
-        GPPFREEPOINTER(mpPickTool);
+        GPPFREEPOINTER(mpPickToolRef);
+        GPPFREEPOINTER(mpPickToolFrom);
         GPPFREEPOINTER(mpDumpInfo);
         GPPFREEPOINTER(mpPointCloudRef);
         GPPFREEPOINTER(mpPointCloudFrom);
         GPPFREEPOINTER(mpFusePointCloud);
         mRefMarks.clear();
         mFromMarks.clear();
+        mIsSeparateDisplay = false;
     }
 
     void RegistrationApp::DoCommand(bool isSubThread)
@@ -242,11 +248,11 @@ namespace MagicApp
             {
             case MagicApp::RegistrationApp::NONE:
                 break;
-            case MagicApp::RegistrationApp::ALIGN_FAST:
-                AlignFast(false);
+            case MagicApp::RegistrationApp::ALIGN_MARK:
+                AlignMark(false);
                 break;
-            case MagicApp::RegistrationApp::ALIGN_PRECISE:
-                AlignPrecise(false);
+            case MagicApp::RegistrationApp::ALIGN_FREE:
+                AlignFree(false);
                 break;
             case MagicApp::RegistrationApp::ALIGN_ICP:
                 AlignICP(false);
@@ -287,12 +293,18 @@ namespace MagicApp
                 GPPFREEPOINTER(mpPointCloudRef);
                 mpPointCloudRef = pointCloud;
                 InfoLog << "Import Point Cloud Ref: " << mpPointCloudRef->GetPointCount() << " points" << std::endl;
+                if (mpPointCloudRef->HasColor() == false)
+                {
+                    SetPointCloudColor(mpPointCloudRef, GPP::Vector3(0.86, 0, 0));
+                }
                 InitViewTool();
+                SetSeparateDisplay(false);
                 UpdatePointCloudRefRendering();
                 
                 if (mpPointCloudFrom)
                 {
                     GPPFREEPOINTER(mpPointCloudFrom);
+                    MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_Right_RegistrationApp");
                     MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
                 }
                 GPPFREEPOINTER(mpFusePointCloud);
@@ -301,6 +313,12 @@ namespace MagicApp
                 UpdateMarkRefRendering();
                 mFromMarks.clear();
                 UpdateMarkFromRendering();
+
+                // set up pick tool
+                GPPFREEPOINTER(mpPickToolRef);
+                GPPFREEPOINTER(mpPickToolFrom);
+                mpPickToolRef = new MagicCore::PickTool;
+                mpPickToolRef->SetPickParameter(MagicCore::PM_POINT, false, mpPointCloudRef, NULL, "ModelNode");
 
                 return true;
             }
@@ -409,39 +427,6 @@ namespace MagicApp
                 return;
             }
             mUpdatePointRefRendering = true;
-        }
-    }
-
-    void RegistrationApp::SwitchRefControlState()
-    {
-        if (mpPointCloudRef == NULL)
-        {
-            MessageBox(NULL, "请先导入参考点云", "温馨提示", MB_OK);
-            return;
-        }
-        else if (mpPointCloudRef->HasNormal() == false)
-        {
-            MessageBox(NULL, "请先给点云计算法向量", "温馨提示", MB_OK);
-            return;
-        }
-        if (mMouseMode != MM_PICK_REF)
-        {
-            if (IsCommandAvaliable() == false)
-            {
-                return;
-            }
-            mMouseMode = MM_PICK_REF;
-            InitPickTool();
-            mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, mpPointCloudRef, NULL);
-            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
-            MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_RegistrationApp");
-            UpdatePointCloudRefRendering();
-            UpdateMarkRefRendering();
-            MessageBox(NULL, "鼠标进入选择参考点云标记点模式，\n再次点击此按钮可以返回旋转视角模式", "温馨提示", MB_OK);
-        }
-        else
-        {
-            SwitchToViewMode();
         }
     }
 
@@ -579,9 +564,18 @@ namespace MagicApp
             GPPFREEPOINTER(mpPointCloudRef);
             mpPointCloudRef = extractPointCloud;
         }
+        if (mpPointCloudRef && mpPointCloudRef->HasColor() == false)
+        {
+            SetPointCloudColor(mpPointCloudRef, GPP::Vector3(0.86, 0, 0));
+        }
+        SetSeparateDisplay(false);
         UpdatePointCloudRefRendering();
         GPPFREEPOINTER(mpPointCloudFrom);
         MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
+        //Update pick tool
+        GPPFREEPOINTER(mpPickToolFrom);
+        mpPickToolRef->Reset();
+        mpPickToolRef->SetPickParameter(MagicCore::PM_POINT, false, mpPointCloudRef, NULL, "ModelNode");
         //Update Ref Marks
         for (std::vector<GPP::Vector3>::iterator fromItr = mFromMarks.begin(); fromItr != mFromMarks.end(); ++fromItr)
         {
@@ -630,14 +624,24 @@ namespace MagicApp
                 mpPointCloudFrom = pointCloud;
                 if (mpPointCloudFrom->HasColor() == false)
                 {
-                    SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0.86, 0, 0));
+                    SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0, 0.86, 0));
                 }
                 InfoLog << "Import Point Cloud From: " << mpPointCloudFrom->GetPointCount() << " points" << std::endl;
                 InitViewTool();
-
+                if (!mIsSeparateDisplay)
+                {
+                    SetSeparateDisplay(true);
+                    UpdatePointCloudRefRendering();
+                    UpdateMarkRefRendering();
+                }
                 UpdatePointCloudFromRendering();
                 mFromMarks.clear();
                 UpdateMarkFromRendering();
+
+                GPPFREEPOINTER(mpPickToolFrom);
+                mpPickToolFrom = new MagicCore::PickTool;
+                mpPickToolFrom->SetPickParameter(MagicCore::PM_POINT, false, mpPointCloudFrom, NULL, "ModelNodeRight");
+
                 return true;
             }
             else
@@ -746,51 +750,51 @@ namespace MagicApp
         }
     }
 
-    void RegistrationApp::SwitchFromControlState()
+    bool RegistrationApp::IsCommandInProgress()
     {
-        if (mpPointCloudFrom == NULL)
-        {
-            MessageBox(NULL, "请先导入需要对齐的点云", "温馨提示", MB_OK);
-            return;
-        }
-        else if (mpPointCloudFrom->HasNormal() == false)
-        {
-            MessageBox(NULL, "请先给点云计算法向量", "温馨提示", MB_OK);
-            return;
-        }
-        if (mMouseMode != MM_PICK_FROM)
-        {
-            if (IsCommandAvaliable() == false)
-            {
-                return;
-            }
-            mMouseMode = MM_PICK_FROM;
-            InitPickTool();
-            mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, mpPointCloudFrom, NULL);
-            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_RegistrationApp");
-            MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_RegistrationApp");
-            UpdatePointCloudFromRendering();
-            UpdateMarkFromRendering();
-            MessageBox(NULL, "鼠标进入选择参考点云标记点模式，\n再次点击此按钮可以返回旋转视角模式", "温馨提示", MB_OK);
-        }
-        else
-        {
-            SwitchToViewMode();
-        }
+        return mIsCommandInProgress;
     }
 
-    void RegistrationApp::SwitchToViewMode()
+    void RegistrationApp::SwitchSeparateDisplay()
     {
-        mMouseMode = MM_VIEW;
+        mIsSeparateDisplay = !mIsSeparateDisplay;
         UpdatePointCloudRefRendering();
         UpdatePointCloudFromRendering();
         UpdateMarkRefRendering();
         UpdateMarkFromRendering();
+        UpdatePickToolNodeName();
     }
 
-    bool RegistrationApp::IsCommandInProgress()
+    void RegistrationApp::SetSeparateDisplay(bool isSeparate)
     {
-        return mIsCommandInProgress;
+        mIsSeparateDisplay = isSeparate;
+        UpdatePickToolNodeName();
+    }
+
+    void RegistrationApp::UpdatePickToolNodeName()
+    {
+        if (mpPickToolRef)
+        {
+            if (mIsSeparateDisplay)
+            {
+                mpPickToolRef->SetModelNodeName("ModelNodeLeft");
+            }
+            else
+            {
+                mpPickToolRef->SetModelNodeName("ModelNode");
+            }
+        }
+        if (mpPickToolFrom)
+        {
+            if (mIsSeparateDisplay)
+            {
+                mpPickToolFrom->SetModelNodeName("ModelNodeRight");
+            }
+            else
+            {
+                mpPickToolFrom->SetModelNodeName("ModelNode");
+            }
+        }
     }
 
     void RegistrationApp::DeleteFromMark()
@@ -837,7 +841,75 @@ namespace MagicApp
         }
     }
         
-    void RegistrationApp::AlignFast(bool isSubThread)
+    void RegistrationApp::AlignMark(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (mpPointCloudFrom == NULL || mpPointCloudRef == NULL)
+        {
+            MessageBox(NULL, "请先导入参考点云和需要对齐的点云", "温馨提示", MB_OK);
+            return;
+        }
+        else if (mpPointCloudFrom->HasNormal() == false || mpPointCloudRef->HasNormal() == false)
+        {
+            MessageBox(NULL, "请先给参考点云和需要对齐的点云计算法线", "温馨提示", MB_OK);
+            return;
+        }
+        if (mRefMarks.size() < 3 || mFromMarks.size() < 3)
+        {
+            MessageBox(NULL, "带标记的拼接需要3个及以上的标记点", "温馨提示", MB_OK);
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = ALIGN_MARK;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::Matrix4x4 resultTransform;
+            std::vector<GPP::Vector3>* marksRef = NULL;
+            if (mRefMarks.size() > 0)
+            {
+                marksRef = &mRefMarks;
+            }
+            std::vector<GPP::Vector3>* marksFrom = NULL;
+            if (mFromMarks.size() > 0)
+            {
+                marksFrom = &mFromMarks;
+            }
+            mIsCommandInProgress = true;
+            //GPP::ErrorCode res = GPP::RegistratePointCloud::GlobalRegistrate(mpPointCloudRef, marksRef, mpPointCloudFrom, marksFrom, &resultTransform, GPP::REGISTRATE_QUALITY_LOW);
+            GPP::ErrorCode res = GPP::RegistratePointCloud::GlobalRegistrateWithReliableMark(mpPointCloudRef, marksRef, mpPointCloudFrom, marksFrom, &resultTransform);
+            mIsCommandInProgress = false;
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "快速对齐失败", "温馨提示", MB_OK);
+                return;
+            }
+            //Update mpPointCloudFrom
+            GPP::Int fromPointCount = mpPointCloudFrom->GetPointCount();
+            for (GPP::Int pid = 0; pid < fromPointCount; pid++)
+            {
+                mpPointCloudFrom->SetPointCoord(pid, resultTransform.TransformPoint(mpPointCloudFrom->GetPointCoord(pid)));
+                mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
+            }
+            SetSeparateDisplay(false);
+            mUpdatePointRefRendering = true;
+            mUpdatePointFromRendering = true;
+            //Update from marks
+            for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
+            {
+                (*markItr) = resultTransform.TransformPoint(*markItr);
+            }
+            mUpdateMarkFromRendering = true;
+            mUpdateMarkRefRendering = true;
+        }
+    }
+
+    void RegistrationApp::AlignFree(bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -855,7 +927,7 @@ namespace MagicApp
         }
         if (isSubThread)
         {
-            mCommandType = ALIGN_FAST;
+            mCommandType = ALIGN_FREE;
             DoCommand(true);
         }
         else
@@ -876,65 +948,6 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res != GPP_NO_ERROR)
             {
-                MessageBox(NULL, "快速对齐失败", "温馨提示", MB_OK);
-                return;
-            }
-            //Update mpPointCloudFrom
-            GPP::Int fromPointCount = mpPointCloudFrom->GetPointCount();
-            for (GPP::Int pid = 0; pid < fromPointCount; pid++)
-            {
-                mpPointCloudFrom->SetPointCoord(pid, resultTransform.TransformPoint(mpPointCloudFrom->GetPointCoord(pid)));
-                mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
-            }     
-            mUpdatePointFromRendering = true;
-            //Update from marks
-            for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
-            {
-                (*markItr) = resultTransform.TransformPoint(*markItr);
-            }
-            mUpdateMarkFromRendering = true;
-        }
-    }
-
-    void RegistrationApp::AlignPrecise(bool isSubThread)
-    {
-        if (IsCommandAvaliable() == false)
-        {
-            return;
-        }
-        if (mpPointCloudFrom == NULL || mpPointCloudRef == NULL)
-        {
-            MessageBox(NULL, "请先导入参考点云和需要对齐的点云", "温馨提示", MB_OK);
-            return;
-        }
-        else if (mpPointCloudFrom->HasNormal() == false || mpPointCloudRef->HasNormal() == false)
-        {
-            MessageBox(NULL, "请先给参考点云和需要对齐的点云计算法线", "温馨提示", MB_OK);
-            return;
-        }
-        if (isSubThread)
-        {
-            mCommandType = ALIGN_PRECISE;
-            DoCommand(true);
-        }
-        else
-        {
-            GPP::Matrix4x4 resultTransform;
-            std::vector<GPP::Vector3>* marksRef = NULL;
-            if (mRefMarks.size() > 0)
-            {
-                marksRef = &mRefMarks;
-            }
-            std::vector<GPP::Vector3>* marksFrom = NULL;
-            if (mFromMarks.size() > 0)
-            {
-                marksFrom = &mFromMarks;
-            }
-            mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::RegistratePointCloud::GlobalRegistrate(mpPointCloudRef, marksRef, mpPointCloudFrom, marksFrom, &resultTransform, GPP::REGISTRATE_QUALITY_HIGH);
-            mIsCommandInProgress = false;
-            if (res != GPP_NO_ERROR)
-            {
                 MessageBox(NULL, "精细对齐失败", "温馨提示", MB_OK);
                 return;
             }
@@ -944,13 +957,16 @@ namespace MagicApp
             {
                 mpPointCloudFrom->SetPointCoord(pid, resultTransform.TransformPoint(mpPointCloudFrom->GetPointCoord(pid)));
                 mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
-            }     
+            }
+            SetSeparateDisplay(false);
+            mUpdatePointRefRendering = true;
             mUpdatePointFromRendering = true;
             //Update from marks
             for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
             {
                 (*markItr) = resultTransform.TransformPoint(*markItr);
             }
+            mUpdateMarkRefRendering = true;
             mUpdateMarkFromRendering = true;
         }
     }
@@ -978,6 +994,16 @@ namespace MagicApp
         }
         else
         {
+            if (mRefMarks.size() > 0 || mFromMarks.size() > 0)
+            {
+                if (MessageBox(NULL, "需要删除所有标记点吗", "温馨提示", MB_YESNO) == IDYES)
+                {
+                    mRefMarks.clear();
+                    mFromMarks.clear();
+                    mUpdateMarkRefRendering = true;
+                    mUpdateMarkFromRendering = true;
+                }
+            }
             GPP::Matrix4x4 resultTransform;
             std::vector<GPP::Vector3>* marksRef = NULL;
             if (mRefMarks.size() > 0)
@@ -1003,7 +1029,8 @@ namespace MagicApp
             {
                 mpPointCloudFrom->SetPointCoord(pid, resultTransform.TransformPoint(mpPointCloudFrom->GetPointCoord(pid)));
                 mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
-            }     
+            }
+            SetSeparateDisplay(false);
             mUpdatePointFromRendering = true;
             //Update from marks
             for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
@@ -1132,13 +1159,29 @@ namespace MagicApp
         {
             return;
         }
-        if (mpPointCloudFrom->HasNormal())
+        if (mIsSeparateDisplay)
         {
-            MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudFrom_RegistrationApp", "CookTorrancePoint", mpPointCloudFrom);
+            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
+            if (mpPointCloudFrom->HasNormal())
+            {
+                MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudFrom_Right_RegistrationApp", "CookTorrancePoint", mpPointCloudFrom, MagicCore::RenderSystem::MODEL_NODE_RIGHT);
+            }
+            else
+            {
+                MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudFrom_Right_RegistrationApp", "SimplePoint", mpPointCloudFrom, MagicCore::RenderSystem::MODEL_NODE_RIGHT);
+            }
         }
         else
         {
-            MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudFrom_RegistrationApp", "SimplePoint", mpPointCloudFrom);
+            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_Right_RegistrationApp");
+            if (mpPointCloudFrom->HasNormal())
+            {
+                MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudFrom_RegistrationApp", "CookTorrancePoint", mpPointCloudFrom, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+            }
+            else
+            {
+                MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudFrom_RegistrationApp", "SimplePoint", mpPointCloudFrom, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+            }
         }
     }
 
@@ -1148,37 +1191,63 @@ namespace MagicApp
         {
             return;
         }
-        if (mpPointCloudRef->HasNormal())
+        if (mIsSeparateDisplay)
         {
-            MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudRef_RegistrationApp", "CookTorrancePoint", mpPointCloudRef);
+            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_RegistrationApp");
+            if (mpPointCloudRef->HasNormal())
+            {
+                MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudRef_Left_RegistrationApp", "CookTorrancePoint", mpPointCloudRef, MagicCore::RenderSystem::MODEL_NODE_LEFT);
+            }
+            else
+            {
+                MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudRef_Left_RegistrationApp", "SimplePoint", mpPointCloudRef, MagicCore::RenderSystem::MODEL_NODE_LEFT);
+            }
         }
         else
         {
-            MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudRef_RegistrationApp", "SimplePoint", mpPointCloudRef);
+            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_Left_RegistrationApp");
+            if (mpPointCloudRef->HasNormal())
+            {
+                MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudRef_RegistrationApp", "CookTorrancePoint", mpPointCloudRef, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+            }
+            else
+            {
+                MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudRef_RegistrationApp", "SimplePoint", mpPointCloudRef, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+            }
         }
     }
 
     void RegistrationApp::UpdateMarkRefRendering()
     {
-        if (mRefMarks.empty())
+        MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_RegistrationApp");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_Left_RegistrationApp");
+        if (mRefMarks.empty() == false)
         {
-            MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_RegistrationApp");
-        }
-        else
-        {
-            MagicCore::RenderSystem::Get()->RenderPointList("RefMarks_RegistrationApp", "SimplePoint_Large", GPP::Vector3(0, 1, 1), mRefMarks);
+            if (mIsSeparateDisplay)
+            {
+                MagicCore::RenderSystem::Get()->RenderPointList("RefMarks_Left_RegistrationApp", "SimplePoint_Large", GPP::Vector3(1, 0, 1), mRefMarks, MagicCore::RenderSystem::MODEL_NODE_LEFT);
+            }
+            else
+            {
+                MagicCore::RenderSystem::Get()->RenderPointList("RefMarks_RegistrationApp", "SimplePoint_Large", GPP::Vector3(1, 0, 1), mRefMarks, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+            }
         }
     }
 
     void RegistrationApp::UpdateMarkFromRendering()
     {
-        if (mFromMarks.empty())
+        MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_RegistrationApp");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_Right_RegistrationApp");
+        if (mFromMarks.empty() == false)
         {
-            MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_RegistrationApp");
-        }
-        else
-        {
-            MagicCore::RenderSystem::Get()->RenderPointList("FromMarks_RegistrationApp", "SimplePoint_Large", GPP::Vector3(1, 1, 0), mFromMarks);
+            if (mIsSeparateDisplay)
+            {
+                MagicCore::RenderSystem::Get()->RenderPointList("FromMarks_Right_RegistrationApp", "SimplePoint_Large", GPP::Vector3(0, 1, 1), mFromMarks, MagicCore::RenderSystem::MODEL_NODE_RIGHT);
+            }
+            else
+            {
+                MagicCore::RenderSystem::Get()->RenderPointList("FromMarks_RegistrationApp", "SimplePoint_Large", GPP::Vector3(0, 1, 1), mFromMarks, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+            }            
         }
     }
 
@@ -1188,14 +1257,5 @@ namespace MagicApp
         {
             mpViewTool = new MagicCore::ViewTool;
         }
-    }
-
-    void RegistrationApp::InitPickTool()
-    {
-        if (mpPickTool == NULL)
-        {
-            mpPickTool = new MagicCore::PickTool;
-        }
-        mpPickTool->Reset();
     }
 }

@@ -4,16 +4,13 @@
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportModelRef"/>
 
         <Widget type="Button" skin="But_Geodesics_CN" position="15 85 60 60" align="Left Top" name="But_Geodesics"></Widget>
-        <Widget type="Button" skin="But_Mark_CN" position="75 95 43 43" align="Left Top" name="But_MarkMeshRef">
+        <Widget type="Button" skin="But_Delete_CN" position="75 95 43 43" align="Left Top" name="But_DeleteMeshRef">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Delete_CN" position="118 95 43 43" align="Left Top" name="But_DeleteMeshRef">
+        <Widget type="Button" skin="But_Fast_CN" position="118 95 43 43" align="Left Top" name="But_ApproximateGeodesics">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Fast_CN" position="161 95 43 43" align="Left Top" name="But_ApproximateGeodesics">
-            <Property key="Visible" value="false"/>
-        </Widget>
-		<Widget type="Button" skin="But_Precise_CN" position="204 95 43 43" align="Left Top" name="But_ExactGeodesics">
+		<Widget type="Button" skin="But_Precise_CN" position="161 95 43 43" align="Left Top" name="But_ExactGeodesics">
 			<Property key="Visible" value="false"/>
 		</Widget>
 

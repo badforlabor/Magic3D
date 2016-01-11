@@ -25,6 +25,13 @@ namespace MagicCore
         static RenderSystem* mpRenderSystem;
         RenderSystem(void);
     public:
+        enum ModelNodeType
+        {
+            MODEL_NODE_CENTER = 0,
+            MODEL_NODE_LEFT,
+            MODEL_NODE_RIGHT
+        };
+
         static RenderSystem* Get(void);
         void Init(void);
         void Update(void);
@@ -38,8 +45,8 @@ namespace MagicCore
         int GetRenderWindowHeight(void);
 
         //Rendering tools
-        void RenderPointCloud(std::string pointCloudName, std::string materialName, const GPP::PointCloud* pointCloud);
-        void RenderPointList(std::string pointListName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& pointCoords);
+        void RenderPointCloud(std::string pointCloudName, std::string materialName, const GPP::PointCloud* pointCloud, ModelNodeType nodeType = MODEL_NODE_CENTER);
+        void RenderPointList(std::string pointListName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& pointCoords, ModelNodeType nodeType = MODEL_NODE_CENTER);
         void RenderMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh);
         void RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords);
         void RenderPolyline(std::string polylineName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& polylineCoords, bool appendNewPolyline = false);

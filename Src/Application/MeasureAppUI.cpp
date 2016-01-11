@@ -22,7 +22,6 @@ namespace MagicApp
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("MeasureApp.layout");
         mRoot.at(0)->findWidget("But_ImportModelRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ImportModelRef);
         mRoot.at(0)->findWidget("But_Geodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::Geodesics);
-        mRoot.at(0)->findWidget("But_MarkMeshRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::SelectMeshMarkRef);
         mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::DeleteMeshMarkRef);
         mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeApproximateGeodesics);
         mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeExactGeodesics);
@@ -71,28 +70,10 @@ namespace MagicApp
 
     void MeasureAppUI::Geodesics(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_MarkMeshRef")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_MarkMeshRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        bool isVisible = mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        if (isVisible)
-        {
-            MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
-            if (measureShop != NULL)
-            {
-                measureShop->SwitchToViewMode();
-            }
-        }
-    }
-
-    void MeasureAppUI::SelectMeshMarkRef(MyGUI::Widget* pSender)
-    {
-        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
-        if (measureShop != NULL)
-        {
-            measureShop->SwitchMeshRefControlState();
-        }
     }
 
     void MeasureAppUI::DeleteMeshMarkRef(MyGUI::Widget* pSender)

@@ -10,6 +10,7 @@ namespace MagicCore
         mMouseCoord(),
         mpPointCloud(NULL),
         mpTriMesh(NULL),
+        mModelNodeName(),
         mPickPointIds(),
         mPickVertexIds(),
         mPickPressed(false)
@@ -20,12 +21,18 @@ namespace MagicCore
     {
     }
 
-    void PickTool::SetPickParameter(PickMode pm, bool ignoreBack, GPP::PointCloud* pointCloud, GPP::TriMesh* triMesh)
+    void PickTool::SetPickParameter(PickMode pm, bool ignoreBack, GPP::PointCloud* pointCloud, GPP::TriMesh* triMesh, std::string modelNodeName)
     {
         mPickMode = pm;
         mIgnoreBack = ignoreBack;
         mpPointCloud = pointCloud;
         mpTriMesh = triMesh;
+        mModelNodeName = modelNodeName;
+    }
+
+    void PickTool::SetModelNodeName(std::string modelNodeName)
+    {
+        mModelNodeName = modelNodeName;
     }
     
     void PickTool::Reset()
@@ -103,12 +110,12 @@ namespace MagicCore
 
     GPP::Int PickTool::PickPointByPoint(const GPP::PointCloud* pointCloud, const GPP::Vector2& mouseCoord, bool ignoreBack)
     {
-        if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode") == false || pointCloud == NULL)
+        if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode(mModelNodeName) == false || pointCloud == NULL)
         {
             return -1;
         }
         double pointSizeSquared = 0.01 * 0.01;
-        Ogre::Matrix4 worldM = MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->_getFullTransform();
+        Ogre::Matrix4 worldM = MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode(mModelNodeName)->_getFullTransform();
         Ogre::Matrix4 viewM  = MagicCore::RenderSystem::Get()->GetMainCamera()->getViewMatrix();
         Ogre::Matrix4 projM  = MagicCore::RenderSystem::Get()->GetMainCamera()->getProjectionMatrix();
         Ogre::Matrix4 wvpM   = projM * viewM * worldM;
@@ -163,12 +170,12 @@ namespace MagicCore
 
     GPP::Int PickTool::PickVertexByPoint(const GPP::TriMesh* triMesh, const GPP::Vector2& mouseCoord, bool ignoreBack)
     {
-        if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode") == false || triMesh == NULL)
+        if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode(mModelNodeName) == false || triMesh == NULL)
         {
             return -1;
         }
         double pointSizeSquared = 0.01 * 0.01;
-        Ogre::Matrix4 worldM = MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->_getFullTransform();
+        Ogre::Matrix4 worldM = MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode(mModelNodeName)->_getFullTransform();
         Ogre::Matrix4 viewM  = MagicCore::RenderSystem::Get()->GetMainCamera()->getViewMatrix();
         Ogre::Matrix4 projM  = MagicCore::RenderSystem::Get()->GetMainCamera()->getProjectionMatrix();
         Ogre::Matrix4 wvpM   = projM * viewM * worldM;
