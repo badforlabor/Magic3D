@@ -18,16 +18,17 @@ namespace MagicApp
         bool IsProgressbarVisible(void);
 
     private:
+        void SwitchDisplayMode(MyGUI::Widget* pSender);
+
         void ImportPointCloudRef(MyGUI::Widget* pSender);
         
         void RefNormal(MyGUI::Widget* pSender);
         void CalculateRefNormalFront(MyGUI::Widget* pSender);
         void CalculateRefNormal(MyGUI::Widget* pSender);
         void FlipRefNormal(MyGUI::Widget* pSender);
-        void SmoothRefNormal(MyGUI::Widget* pSender);
+        //void SmoothRefNormal(MyGUI::Widget* pSender);
         
         void RefFeaturePoint(MyGUI::Widget* pSender);
-        void RefSetMark(MyGUI::Widget* pSender);
         void RefDeleteMark(MyGUI::Widget* pSender);
         void RefImportMark(MyGUI::Widget* pSender);
 
@@ -37,16 +38,15 @@ namespace MagicApp
         void CalculateFromNormalFront(MyGUI::Widget* pSender);
         void CalculateFromNormal(MyGUI::Widget* pSender);
         void FlipFromNormal(MyGUI::Widget* pSender);
-        void SmoothFromNormal(MyGUI::Widget* pSender);
+        //void SmoothFromNormal(MyGUI::Widget* pSender);
         
         void FromFeaturePoint(MyGUI::Widget* pSender);
-        void FromSetMark(MyGUI::Widget* pSender);
         void FromDeleteMark(MyGUI::Widget* pSender);
         void FromImportMark(MyGUI::Widget* pSender);
 
         void AlignFrom(MyGUI::Widget* pSender);
-        void AlignFast(MyGUI::Widget* pSender);
-        void AlignPrecise(MyGUI::Widget* pSender);
+        void AlignMark(MyGUI::Widget* pSender);
+        void AlignFree(MyGUI::Widget* pSender);
         void AlignICP(MyGUI::Widget* pSender);
         
         void FuseRef(MyGUI::Widget* pSender);

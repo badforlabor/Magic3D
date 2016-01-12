@@ -2,6 +2,7 @@
 #include "PointCloud.h"
 #include "TriMesh.h"
 #include "Vector2.h"
+#include <string>
 
 namespace MagicCore
 {
@@ -18,7 +19,8 @@ namespace MagicCore
         PickTool();
         ~PickTool();
 
-        void SetPickParameter(PickMode pm, bool ignoreBack, GPP::PointCloud* pointCloud, GPP::TriMesh* triMesh);
+        void SetPickParameter(PickMode pm, bool ignoreBack, GPP::PointCloud* pointCloud, GPP::TriMesh* triMesh, std::string modelNodeName);
+        void SetModelNodeName(std::string modelNodeName);
         void Reset(void);
 
         void MousePressed(int mouseCoordX, int mouseCoordY);
@@ -39,6 +41,7 @@ namespace MagicCore
         GPP::Vector2 mMouseCoord;
         GPP::PointCloud* mpPointCloud;
         GPP::TriMesh* mpTriMesh;
+        std::string mModelNodeName;
         std::vector<GPP::Int> mPickPointIds;
         std::vector<GPP::Int> mPickVertexIds;
         bool mPickPressed;

@@ -24,8 +24,8 @@ namespace MagicApp
         enum CommandType
         {
             NONE = 0,
-            ALIGN_FAST,
-            ALIGN_PRECISE,
+            ALIGN_MARK,
+            ALIGN_FREE,
             ALIGN_ICP,
             NORMAL_REF,
             NORMAL_FROM,
@@ -34,12 +34,6 @@ namespace MagicApp
         };
 
     public:
-        enum MouseMode
-        {
-            MM_VIEW = 0,
-            MM_PICK_REF,
-            MM_PICK_FROM
-        };
 
         RegistrationApp();
         ~RegistrationApp();
@@ -60,7 +54,6 @@ namespace MagicApp
         void FlipRefNormal(void);
         void SmoothRefNormal(bool isSubThread = true);
         
-        void SwitchRefControlState(void);
         void DeleteRefMark(void);
         void ImportRefMark(void);
 
@@ -70,12 +63,11 @@ namespace MagicApp
         void FlipFromNormal(void);
         void SmoothFromNormal(bool isSubThread = true);
         
-        void SwitchFromControlState(void);
         void DeleteFromMark(void);
         void ImportFromMark(void);
 
-        void AlignFast(bool isSubThread = true);
-        void AlignPrecise(bool isSubThread = true);
+        void AlignMark(bool isSubThread = true);
+        void AlignFree(bool isSubThread = true);
         void AlignICP(bool isSubThread = true);
         
         void FuseRef(void);
@@ -84,12 +76,14 @@ namespace MagicApp
 
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
-        void SwitchToViewMode(void);
         bool IsCommandInProgress(void);
+
+        void SwitchSeparateDisplay(void);
+        void SetSeparateDisplay(bool isSeparate);
+        void UpdatePickToolNodeName(void);
 
     private:
         void InitViewTool(void);
-        void InitPickTool(void);
         void UpdatePointCloudFromRendering(void);
         void UpdatePointCloudRefRendering(void);
         void UpdateMarkRefRendering(void);
@@ -105,14 +99,15 @@ namespace MagicApp
     private:
         RegistrationAppUI* mpUI;
         MagicCore::ViewTool* mpViewTool;
-        MagicCore::PickTool* mpPickTool;
+        bool mIsSeparateDisplay;
+        MagicCore::PickTool* mpPickToolRef;
+        MagicCore::PickTool* mpPickToolFrom;
         GPP::DumpBase* mpDumpInfo;
         GPP::PointCloud* mpPointCloudRef;
         GPP::PointCloud* mpPointCloudFrom;
         GPP::FusePointCloud* mpFusePointCloud;
         GPP::Vector3 mObjCenterCoord;
         GPP::Real mScaleValue;
-        MouseMode mMouseMode;
         std::vector<GPP::Vector3> mRefMarks;
         std::vector<GPP::Vector3> mFromMarks;
         CommandType mCommandType;

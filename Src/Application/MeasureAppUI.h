@@ -20,7 +20,6 @@ namespace MagicApp
     private:
         void ImportModelRef(MyGUI::Widget* pSender);
         void Geodesics(MyGUI::Widget* pSender);
-        void SelectMeshMarkRef(MyGUI::Widget* pSender);
         void DeleteMeshMarkRef(MyGUI::Widget* pSender);
         void ComputeApproximateGeodesics(MyGUI::Widget* pSender);
         void ComputeExactGeodesics(MyGUI::Widget* pSender);

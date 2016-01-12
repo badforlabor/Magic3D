@@ -25,7 +25,6 @@ namespace MagicApp
 
     MeasureApp::MeasureApp() :
         mpUI(NULL),
-        mMouseMode(MM_VIEW),
         mpTriMeshRef(NULL),
         mpPointCloudRef(NULL),
         mpTriMeshFrom(NULL),
@@ -99,43 +98,26 @@ namespace MagicApp
 
     bool MeasureApp::MouseMoved( const OIS::MouseEvent &arg )
     {
-        if (mMouseMode == MM_VIEW && mpViewTool != NULL)
+        if (arg.state.buttonDown(OIS::MB_Middle) && mpViewTool != NULL)
         {
-            MagicCore::ViewTool::MouseMode mm;
-            if (arg.state.buttonDown(OIS::MB_Left))
-            {
-                mm = MagicCore::ViewTool::MM_LEFT_DOWN;
-            }
-            else if (arg.state.buttonDown(OIS::MB_Middle))
-            {
-                mm = MagicCore::ViewTool::MM_MIDDLE_DOWN;
-            }
-            else if (arg.state.buttonDown(OIS::MB_Right))
-            {
-                mm = MagicCore::ViewTool::MM_RIGHT_DOWN;
-            }
-            else
-            {
-                mm = MagicCore::ViewTool::MM_NONE;
-            }
-            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, mm);
+            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_MIDDLE_DOWN);
         }
+        else if (arg.state.buttonDown(OIS::MB_Left) && mpViewTool != NULL)
+        {
+            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_LEFT_DOWN);
+        }     
         
         return true;
     }
 
     bool MeasureApp::MousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        if (mMouseMode == MM_VIEW && mpViewTool != NULL)
+        if ((arg.state.buttonDown(OIS::MB_Middle) || arg.state.buttonDown(OIS::MB_Left)) && mpViewTool != NULL)
         {
             mpViewTool->MousePressed(arg.state.X.abs, arg.state.Y.abs);
         }
-        else if (mMouseMode == MM_PICK_MESH_REF && mpPickTool != NULL)
+        else if (arg.state.buttonDown(OIS::MB_Right) && mIsCommandInProgress == false && mpPickTool)
         {
-            if (IsCommandAvaliable() == false)
-            {
-                return false;
-            }
             mpPickTool->MousePressed(arg.state.X.abs, arg.state.Y.abs);
         }
         return true;
@@ -143,21 +125,16 @@ namespace MagicApp
 
     bool MeasureApp::MouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        if (mMouseMode == MM_PICK_MESH_REF && mpPickTool != NULL)
+        if (mpPickTool && mIsCommandInProgress == false && id == OIS::MB_Right)
         {
-            if (IsCommandAvaliable() == false)
-            {
-                return false;
-            }
             mpPickTool->MouseReleased(arg.state.X.abs, arg.state.Y.abs);
             GPP::Int pickedId = mpPickTool->GetPickVertexId();
             mpPickTool->ClearPickedIds();
-            if (pickedId == -1)
+            if (pickedId != -1)
             {
-                return true;
+                mMeshRefMarkIds.push_back(pickedId);
+                UpdateMarkRendering();
             }
-            mMeshRefMarkIds.push_back(pickedId);
-            UpdateMarkRendering();
         }
         return  true;
     }
@@ -218,7 +195,6 @@ namespace MagicApp
         GPPFREEPOINTER(mpPointCloudFrom);
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpDumpInfo);
-        mMouseMode = MM_VIEW;
         mMeshRefMarkIds.clear();
         mMarkPoints.clear();
     }
@@ -313,11 +289,6 @@ namespace MagicApp
         GPPFREEPOINTER(mpDumpInfo);
     }
 
-    void MeasureApp::SwitchToViewMode()
-    {
-        mMouseMode = MM_VIEW;
-    }
-
     bool MeasureApp::IsCommandInProgress()
     {
         return mIsCommandInProgress;
@@ -345,7 +316,11 @@ namespace MagicApp
             {
                 GPP::TriMesh* triMesh = GPP::Parser::ImportTriMesh(fileName);
                 if (triMesh != NULL)
-                { 
+                {
+                    if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+                    {
+                        triMesh->FuseVertex();
+                    }
                     triMesh->UnifyCoords(2.0);
                     triMesh->UpdateNormal();
                     GPPFREEPOINTER(mpTriMeshRef);
@@ -355,6 +330,9 @@ namespace MagicApp
                     InitViewTool();
                     UpdateModelRendering();
                     updateMark = true;
+                    GPPFREEPOINTER(mpPickTool);
+                    mpPickTool = new MagicCore::PickTool;
+                    mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, NULL, mpTriMeshRef, "ModelNode");
                 }
             }
             else if (extName == std::string("asc"))
@@ -378,34 +356,10 @@ namespace MagicApp
                 mMarkPoints.clear();
                 MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPoints_MeasureApp");
                 MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPointLine_MeasureApp");
-                SwitchToViewMode();
                 return true;
             }
         }
         return false;
-    }
-
-    void MeasureApp::SwitchMeshRefControlState()
-    {
-        if (mpTriMeshRef == NULL)
-        {
-            return;
-        }
-        if (mMouseMode == MM_VIEW)
-        {
-            if (IsCommandAvaliable() == false)
-            {
-                return;
-            }
-            mMouseMode = MM_PICK_MESH_REF;
-            InitPickTool();
-            mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, NULL, mpTriMeshRef);
-            MessageBox(NULL, "鼠标进入选择标记点模式，\n再次点击此按钮可以返回旋转视角模式", "温馨提示", MB_OK);
-        }
-        else if (mMouseMode == MM_PICK_MESH_REF)
-        {
-            mMouseMode = MM_VIEW;
-        }
     }
 
     void MeasureApp::DeleteMeshMarkRef()
@@ -458,7 +412,6 @@ namespace MagicApp
             {
                 mMarkPoints.push_back(mpTriMeshRef->GetVertexCoord(*pathItr));
             }
-            SwitchToViewMode();
             mUpdateMarkRendering = true;
         }
     }
@@ -483,7 +436,6 @@ namespace MagicApp
         {
             if (MessageBox(NULL, "测量网格顶点大于200k，测量时间会比较长，是否继续？", "温馨提示", MB_OKCANCEL) != IDOK)
             {
-                SwitchToViewMode();
                 return;
             }
         }
@@ -506,7 +458,6 @@ namespace MagicApp
             }
             mMarkPoints.clear();
             mMarkPoints.swap(pathPoints);
-            SwitchToViewMode();
             mUpdateMarkRendering = true;
         }
     }
@@ -517,15 +468,6 @@ namespace MagicApp
         {
             mpViewTool = new MagicCore::ViewTool;
         }
-    }
-
-    void MeasureApp::InitPickTool()
-    {
-        if (mpPickTool == NULL)
-        {
-            mpPickTool = new MagicCore::PickTool;
-        }
-        mpPickTool->Reset();
     }
 
     void MeasureApp::UpdateModelRendering()

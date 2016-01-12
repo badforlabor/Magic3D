@@ -293,6 +293,10 @@ namespace MagicApp
         char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0PLY Files(*.ply)\0*.ply\0";
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
             GPP::ErrorCode res = GPP::Parser::ExportTriMesh(fileName, mpTriMesh);
             if (res != GPP_NO_ERROR)
             {

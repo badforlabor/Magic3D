@@ -29,12 +29,6 @@ namespace MagicApp
         };
 
     public:
-        enum MouseMode
-        {
-            MM_VIEW = 0,
-            MM_PICK_MESH_REF
-        };
-
         MeasureApp();
         ~MeasureApp();
 
@@ -49,14 +43,12 @@ namespace MagicApp
         void DoCommand(bool isSubThread);
 
         bool ImportModelRef(void);
-        void SwitchMeshRefControlState(void);
         void DeleteMeshMarkRef(void);
         void ComputeApproximateGeodesics(bool isSubThread = true);
         void ComputeExactGeodesics(bool isSubThread = true);
 
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
-        void SwitchToViewMode(void);
         bool IsCommandInProgress(void);
 
     private:
@@ -67,13 +59,11 @@ namespace MagicApp
 
     private:
         void InitViewTool(void);
-        void InitPickTool(void);
         void UpdateModelRendering(void);
         void UpdateMarkRendering(void);
 
     private:
         MeasureAppUI* mpUI;
-        MouseMode mMouseMode;
         GPP::TriMesh* mpTriMeshRef;
         GPP::PointCloud* mpPointCloudRef;
         GPP::TriMesh* mpTriMeshFrom;

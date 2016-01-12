@@ -124,7 +124,7 @@ namespace MagicCore
         return mpMainCamera;
     }
 
-    void RenderSystem::RenderPointCloud(std::string pointCloudName, std::string materialName, const GPP::PointCloud* pointCloud)
+    void RenderSystem::RenderPointCloud(std::string pointCloudName, std::string materialName, const GPP::PointCloud* pointCloud, ModelNodeType nodeType)
     {
         if (mpSceneManager == NULL)
         {
@@ -140,13 +140,41 @@ namespace MagicCore
         else
         {
             manualObj = mpSceneManager->createManualObject(pointCloudName);
-            if (mpSceneManager->hasSceneNode("ModelNode"))
+            Ogre::SceneNode* modelNode = NULL;
+            switch (nodeType)
             {
-                mpSceneManager->getSceneNode("ModelNode")->attachObject(manualObj);
-            }
-            else
-            {
-                mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNode")->attachObject(manualObj);
+            case MagicCore::RenderSystem::MODEL_NODE_CENTER:
+                if (mpSceneManager->hasSceneNode("ModelNode"))
+                {
+                    mpSceneManager->getSceneNode("ModelNode")->attachObject(manualObj);
+                }
+                else
+                {
+                    mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNode")->attachObject(manualObj);
+                }
+                break;
+            case MagicCore::RenderSystem::MODEL_NODE_LEFT:
+                if (mpSceneManager->hasSceneNode("ModelNodeLeft"))
+                {
+                    mpSceneManager->getSceneNode("ModelNodeLeft")->attachObject(manualObj);
+                }
+                else
+                {
+                    mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNodeLeft", Ogre::Vector3(-1, 0, 0))->attachObject(manualObj);
+                }
+                break;
+            case MagicCore::RenderSystem::MODEL_NODE_RIGHT:
+                if (mpSceneManager->hasSceneNode("ModelNodeRight"))
+                {
+                    mpSceneManager->getSceneNode("ModelNodeRight")->attachObject(manualObj);
+                }
+                else
+                {
+                    mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNodeRight", Ogre::Vector3(1, 0, 0))->attachObject(manualObj);
+                }
+                break;
+            default:
+                break;
             }
         }
         if (pointCloud->HasNormal())
@@ -179,7 +207,8 @@ namespace MagicCore
         }
     }
 
-    void RenderSystem::RenderPointList(std::string pointListName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& pointCoords)
+    void RenderSystem::RenderPointList(std::string pointListName, std::string materialName, const GPP::Vector3& color, 
+        const std::vector<GPP::Vector3>& pointCoords, ModelNodeType nodeType)
     {
         if (mpSceneManager == NULL)
         {
@@ -195,13 +224,41 @@ namespace MagicCore
         else
         {
             manualObj = mpSceneManager->createManualObject(pointListName);
-            if (mpSceneManager->hasSceneNode("ModelNode"))
+            Ogre::SceneNode* modelNode = NULL;
+            switch (nodeType)
             {
-                mpSceneManager->getSceneNode("ModelNode")->attachObject(manualObj);
-            }
-            else
-            {
-                mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNode")->attachObject(manualObj);
+            case MagicCore::RenderSystem::MODEL_NODE_CENTER:
+                if (mpSceneManager->hasSceneNode("ModelNode"))
+                {
+                    mpSceneManager->getSceneNode("ModelNode")->attachObject(manualObj);
+                }
+                else
+                {
+                    mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNode")->attachObject(manualObj);
+                }
+                break;
+            case MagicCore::RenderSystem::MODEL_NODE_LEFT:
+                if (mpSceneManager->hasSceneNode("ModelNodeLeft"))
+                {
+                    mpSceneManager->getSceneNode("ModelNodeLeft")->attachObject(manualObj);
+                }
+                else
+                {
+                    mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNodeLeft", Ogre::Vector3(-1, 0, 0))->attachObject(manualObj);
+                }
+                break;
+            case MagicCore::RenderSystem::MODEL_NODE_RIGHT:
+                if (mpSceneManager->hasSceneNode("ModelNodeRight"))
+                {
+                    mpSceneManager->getSceneNode("ModelNodeRight")->attachObject(manualObj);
+                }
+                else
+                {
+                    mpSceneManager->getRootSceneNode()->createChildSceneNode("ModelNodeRight", Ogre::Vector3(1, 0, 0))->attachObject(manualObj);
+                }
+                break;
+            default:
+                break;
             }
         }
         manualObj->begin(materialName, Ogre::RenderOperation::OT_POINT_LIST);
