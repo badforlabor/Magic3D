@@ -79,5 +79,28 @@ namespace GPP
         std::vector<Vector3> mMarksFrom;
         Int mQuality;
         Real mOverlapRatio;
+    };
+
+    extern GPP_EXPORT DumpBase* CreateDumpPointCloudRegistrationGlobalWithMark(void);
+
+    class GPP_EXPORT DumpPointCloudRegistrationGlobalWithMark : public DumpBase
+    {
+    public:
+        DumpPointCloudRegistrationGlobalWithMark();
+        ~DumpPointCloudRegistrationGlobalWithMark();
+
+        virtual ApiName GetApiName(void);
+        virtual void LoadDumpFile(const std::string& fileName);
+        virtual ErrorCode Run(void);
+        virtual PointCloud* GetPointCloud(Int id = 0);
+
+        void DumpApiInfo(const IPointCloud* pointCloudRef, const std::vector<Vector3>* marksRef, 
+            const IPointCloud* pointCloudFrom, const std::vector<Vector3>* marksFrom);
+
+    private:
+        PointCloud* mpPointCloudRef;
+        PointCloud* mpPointCloudFrom;
+        std::vector<Vector3> mMarksRef;
+        std::vector<Vector3> mMarksFrom;
     }; 
 }

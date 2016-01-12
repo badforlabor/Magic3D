@@ -59,6 +59,14 @@ namespace MagicCore
             mMouseCoordY = mouseCoordY;
             RenderSystem::Get()->GetMainCamera()->move(Ogre::Vector3(0, 0, mouseDiffY) * 0.007 * mScale);
         }
+        else if (mm == MM_RIGHT_DOWN)
+        {
+            int mouseDiffX = mouseCoordX - mMouseCoordX;
+            int mouseDiffY = mouseCoordY - mMouseCoordY;
+            mMouseCoordX = mouseCoordX;
+            mMouseCoordY = mouseCoordY;
+            RenderSystem::Get()->GetMainCamera()->move(Ogre::Vector3(mouseDiffX * (-1), mouseDiffY, 0) * 0.0025 * mScale);
+        }
     }
 
     void ViewTool::SetScale(double scale)
