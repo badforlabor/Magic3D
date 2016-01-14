@@ -50,6 +50,9 @@ namespace MagicApp
         void AlignICP(MyGUI::Widget* pSender);
         
         void FuseRef(MyGUI::Widget* pSender);
+        
+        void GlobalRegistrate(MyGUI::Widget* pSender);
+
         void EnterPointShop(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
 

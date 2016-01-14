@@ -30,7 +30,8 @@ namespace MagicApp
             NORMAL_REF,
             NORMAL_FROM,
             NORMAL_SMOOTH_REF,
-            NORMAL_SMOOTH_FROM
+            NORMAL_SMOOTH_FROM,
+            GLOBAL_REGISTRATE
         };
 
     public:
@@ -72,6 +73,8 @@ namespace MagicApp
         
         void FuseRef(void);
 
+        void GlobalRegistrate(bool isSubThread = true);
+
         void EnterPointShop(void);
 
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -95,6 +98,7 @@ namespace MagicApp
         void SetupScene(void);
         void ShutdownScene(void);
         void ClearData(void);
+        void ResetGlobalRegistrationData(void);
 
     private:
         RegistrationAppUI* mpUI;
@@ -118,5 +122,8 @@ namespace MagicApp
         bool mUpdateMarkFromRendering;
         bool mIsDepthImageRef;
         bool mIsDepthImageFrom;
+        std::vector<GPP::PointCloud*> mPointCloudList;
+        std::vector<std::vector<GPP::Vector3> > mMarkList;
+        double mGlobalRegistrateProgress;
     };
 }

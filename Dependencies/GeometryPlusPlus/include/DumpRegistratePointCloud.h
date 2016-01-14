@@ -56,13 +56,13 @@ namespace GPP
         Matrix4x4* mpInitTransform;
     }; 
 
-    extern GPP_EXPORT DumpBase* CreateDumpPointCloudRegistrationGlobal(void);
+    extern GPP_EXPORT DumpBase* CreateDumpPointCloudRegistrationAlignPointCloud(void);
 
-    class GPP_EXPORT DumpPointCloudRegistrationGlobal : public DumpBase
+    class GPP_EXPORT DumpPointCloudRegistrationAlignPointCloud : public DumpBase
     {
     public:
-        DumpPointCloudRegistrationGlobal();
-        ~DumpPointCloudRegistrationGlobal();
+        DumpPointCloudRegistrationAlignPointCloud();
+        ~DumpPointCloudRegistrationAlignPointCloud();
 
         virtual ApiName GetApiName(void);
         virtual void LoadDumpFile(const std::string& fileName);
@@ -81,13 +81,13 @@ namespace GPP
         Real mOverlapRatio;
     };
 
-    extern GPP_EXPORT DumpBase* CreateDumpPointCloudRegistrationGlobalByMark(void);
+    extern GPP_EXPORT DumpBase* CreateDumpPointCloudRegistrationAlignPointCloudByMark(void);
 
-    class GPP_EXPORT DumpPointCloudRegistrationGlobalByMark : public DumpBase
+    class GPP_EXPORT DumpPointCloudRegistrationAlignPointCloudByMark : public DumpBase
     {
     public:
-        DumpPointCloudRegistrationGlobalByMark();
-        ~DumpPointCloudRegistrationGlobalByMark();
+        DumpPointCloudRegistrationAlignPointCloudByMark();
+        ~DumpPointCloudRegistrationAlignPointCloudByMark();
 
         virtual ApiName GetApiName(void);
         virtual void LoadDumpFile(const std::string& fileName);

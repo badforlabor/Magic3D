@@ -60,11 +60,13 @@
 
         <Widget type="Button" skin="But_Fuse_CN" position="15 470 60 60" align="Left Top" name="But_FusePointCloudRef"/>
 
-        <Widget type="Button" skin="But_PointShop" position="15 535 60 60" align="Left Top" name="But_EnterPointShop"/>
+        <Widget type="Button" skin="But_Global_CN" position="15 535 60 60" align="Left Top" name="But_GlobalRegistrate"/>
 
-    	<Widget type="Button" skin="But_Home" position="15 600 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_PointShop" position="15 600 60 60" align="Left Top" name="But_EnterPointShop"/>
 
-        <Widget type="ProgressBar" skin="ProgressBar" position="15 680 150 20" align="Left Top" name="APIProgress">
+    	<Widget type="Button" skin="But_Home" position="15 665 60 60" align="Left Top" name="But_BackToHomepage"/>
+
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 740 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>
             <Property key="FlowDirection" value="LeftToRight"/>
             <Property key="Visible" value="false"/>

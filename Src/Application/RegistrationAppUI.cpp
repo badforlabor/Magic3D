@@ -49,6 +49,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_AlignFree")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignFree);
         mRoot.at(0)->findWidget("But_AlignICP")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignICP);
         mRoot.at(0)->findWidget("But_FusePointCloudRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseRef);
+        mRoot.at(0)->findWidget("But_GlobalRegistrate")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::GlobalRegistrate);
         mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::EnterPointShop);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::BackToHomepage);
     }
@@ -178,6 +179,15 @@ namespace MagicApp
         if (registrationApp != NULL)
         {
             registrationApp->FuseRef();
+        }
+    }
+
+    void RegistrationAppUI::GlobalRegistrate(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->GlobalRegistrate();
         }
     }
 
