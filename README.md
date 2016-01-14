@@ -14,50 +14,5 @@ Run Software:
 Build Code:
 1. Configuration: VS2012 Release x64.
 
-Commands:
 
-PointShop:
-
-Import: OBJ
-
-Export: OBJ, PLY
-
-Smooth
-
-Sampling: Uniform sampling
-
-Calculate point cloud normal
-
-Reverse point cloud normal
-
-Mesh reconstructiong(needs point cloud normal)
-
-
-MeshShop:
-
-Import: OBJ, STL, OFF
-
-Export: OBJ, STL
-
-Consolidate topology(Topo): Remove singular vertex and non-manifold structure
-
-Reverse direction
-
-Consolidate geometry(Geo): Optimize degenerate and flipped triangles
-
-Smooth
-
-Enhance mesh detail
-
-Loop Subdivision(Loop)
-
-C-C Subdivision(C-C)
-
-Refine Mesh(Refine): Add vertices on triangles
-
-Simplify Mesh(Sim)
-
-Parameterization(Flat): Angle preserving parameterization
-
-Sampling: Sample vertex to point cloud format
 
