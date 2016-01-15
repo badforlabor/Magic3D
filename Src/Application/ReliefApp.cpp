@@ -95,7 +95,11 @@ namespace MagicApp
     }
 
     bool ReliefApp::MouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
-    {
+    {        
+        if (mpViewTool)
+        {
+            mpViewTool->MouseReleased();
+        }
         return  true;
     }
 
@@ -118,6 +122,14 @@ namespace MagicApp
             RunDumpInfo();
         }
         return true;
+    }
+
+    void ReliefApp::WindowFocusChanged(Ogre::RenderWindow* rw)
+    {
+        if (mpViewTool)
+        {
+            mpViewTool->MouseReleased();
+        }
     }
 
     void ReliefApp::SetupScene()
@@ -309,7 +321,7 @@ namespace MagicApp
         if (meshShop)
         {
             copiedTriMesh->UpdateNormal();
-            meshShop->SetMesh(copiedTriMesh);
+            meshShop->SetMesh(copiedTriMesh, GPP::Vector3(1.0, 1.0, 1.0), 1.0);
         }
         else
         {

@@ -28,6 +28,7 @@ namespace MagicApp
         bool KeyPressed(const OIS::KeyEvent &arg);
         bool KeyReleased(const OIS::KeyEvent &arg);
         void WindowResized(Ogre::RenderWindow* rw);
+        void WindowFocusChanged(Ogre::RenderWindow* rw);
 
         virtual ~AppManager(void);
 

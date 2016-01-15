@@ -17,6 +17,7 @@ namespace MagicCore
         ViewTool(double scale);
         void MousePressed(int mouseCoordX, int mouseCoordY);
         void MouseMoved(int mouseCoordX, int mouseCoordY, MouseMode mm);
+        void MouseReleased();
         void SetScale(double scale);
         ~ViewTool();
 
@@ -24,5 +25,6 @@ namespace MagicCore
         int mMouseCoordX;
         int mMouseCoordY;
         double mScale;
+        bool mIsMousePressed;
     };
 }

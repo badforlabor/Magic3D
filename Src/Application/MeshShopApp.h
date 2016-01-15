@@ -3,13 +3,7 @@
 #include "../Common/RenderSystem.h"
 #include "Vector3.h"
 #include <vector>
-
-namespace GPP
-{
-    class TriMesh;
-    class PointCloud;
-    class DumpBase;
-}
+#include "Gpp.h"
 
 namespace MagicCore
 {
@@ -47,6 +41,7 @@ namespace MagicApp
         virtual bool MousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool MouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
+        virtual void WindowFocusChanged(Ogre::RenderWindow* rw);
 
         void DoCommand(bool isSubThread);
 
@@ -64,7 +59,7 @@ namespace MagicApp
         void FindHole(bool isShowHole);
         void FillHole(bool isFillFlat, bool isSubThread = true);
 
-        void SetMesh(GPP::TriMesh* triMesh);
+        void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
         int GetMeshVertexCount(void);
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
@@ -86,6 +81,8 @@ namespace MagicApp
     private:
         MeshShopAppUI* mpUI;
         GPP::TriMesh* mpTriMesh;
+        GPP::Vector3 mObjCenterCoord;
+        GPP::Real mScaleValue;
         MagicCore::ViewTool* mpViewTool;
         GPP::DumpBase* mpDumpInfo;
         std::vector<std::vector<GPP::Int> > mShowHoleLoopIds;

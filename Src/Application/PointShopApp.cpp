@@ -8,7 +8,6 @@
 #include "../Common/ViewTool.h"
 #include "AppManager.h"
 #include "MeshShopApp.h"
-#include "GPP.h"
 #include <algorithm>
 
 namespace MagicApp
@@ -27,6 +26,8 @@ namespace MagicApp
     PointShopApp::PointShopApp() :
         mpUI(NULL),
         mpPointCloud(NULL),
+        mObjCenterCoord(),
+        mScaleValue(0),
         mpViewTool(NULL),
         mpDumpInfo(NULL),
         mCommandType(NONE),
@@ -76,7 +77,7 @@ namespace MagicApp
             if (meshShop)
             {
                 mpTriMesh->UpdateNormal();
-                meshShop->SetMesh(mpTriMesh);
+                meshShop->SetMesh(mpTriMesh, mObjCenterCoord, mScaleValue);
                 mpTriMesh = NULL;
             }
             else
@@ -137,6 +138,10 @@ namespace MagicApp
 
     bool PointShopApp::MouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
+        if (mpViewTool)
+        {
+            mpViewTool->MouseReleased();
+        }
         return true;
     }
 
@@ -147,6 +152,14 @@ namespace MagicApp
             RunDumpInfo();
         }
         return true;
+    }
+
+    void PointShopApp::WindowFocusChanged(Ogre::RenderWindow* rw)
+    {
+        if (mpViewTool)
+        {
+            mpViewTool->MouseReleased();
+        }
     }
 
     void PointShopApp::SetupScene(void)
@@ -234,7 +247,7 @@ namespace MagicApp
             GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
             if (pointCloud != NULL)
             { 
-                pointCloud->UnifyCoords(2.0);
+                pointCloud->UnifyCoords(2.0, &mScaleValue, &mObjCenterCoord);
                 GPPFREEPOINTER(mpPointCloud);
                 mpPointCloud = pointCloud;
                 InfoLog << "Import Point Cloud: " << mpPointCloud->GetPointCount() << " points" << std::endl;
@@ -260,7 +273,9 @@ namespace MagicApp
         char filterName[] = "Support format(*.obj, *.ply, *.asc)\0*.*\0";
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
+            mpPointCloud->UnifyCoords(1.0 / mScaleValue, mObjCenterCoord * (-mScaleValue));
             GPP::ErrorCode res = GPP::Parser::ExportPointCloud(fileName, mpPointCloud);
+            mpPointCloud->UnifyCoords(mScaleValue, mObjCenterCoord);
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "导出点云失败", "温馨提示", MB_OK);
@@ -554,13 +569,15 @@ namespace MagicApp
         }
     }
 
-    void PointShopApp::SetPointCloud(GPP::PointCloud* pointCloud)
+    void PointShopApp::SetPointCloud(GPP::PointCloud* pointCloud, GPP::Vector3 objCenterCoord, GPP::Real scaleValue)
     {
         if (!mpPointCloud)
         {
             delete mpPointCloud;
         }
         mpPointCloud = pointCloud;
+        mObjCenterCoord = objCenterCoord;
+        mScaleValue = scaleValue;
         InitViewTool();
         UpdatePointCloudRendering();
     }
@@ -618,7 +635,7 @@ namespace MagicApp
             if (meshShop)
             {
                 triMesh->UpdateNormal();
-                meshShop->SetMesh(triMesh);
+                meshShop->SetMesh(triMesh, mObjCenterCoord, mScaleValue);
             }
             else
             {

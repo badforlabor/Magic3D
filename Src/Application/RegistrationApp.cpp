@@ -167,7 +167,11 @@ namespace MagicApp
     }
 
     bool RegistrationApp::MouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
-    {
+    {        
+        if (mpViewTool)
+        {
+            mpViewTool->MouseReleased();
+        }
         if ((mpPickToolRef || mpPickToolFrom) && mIsCommandInProgress == false && id == OIS::MB_Right)
         {
             if (mpPickToolRef)
@@ -205,6 +209,14 @@ namespace MagicApp
         return true;
     }
 
+    void RegistrationApp::WindowFocusChanged(Ogre::RenderWindow* rw)
+    {
+        if (mpViewTool)
+        {
+            mpViewTool->MouseReleased();
+        }
+    }
+
     void RegistrationApp::SetupScene(void)
     {
         Ogre::SceneManager* sceneManager = MagicCore::RenderSystem::Get()->GetSceneManager();
@@ -213,6 +225,7 @@ namespace MagicApp
         light->setPosition(0, 0, 20);
         light->setDiffuseColour(0.8, 0.8, 0.8);
         light->setSpecularColour(0.5, 0.5, 0.5);
+        MagicCore::RenderSystem::Get()->ResertAllSceneNode();
     }
 
     void RegistrationApp::ShutdownScene(void)
@@ -229,10 +242,7 @@ namespace MagicApp
         MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_Left_RegistrationApp");
         MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_RegistrationApp");
         MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_Right_RegistrationApp");
-        if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
-        {
-            MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->resetToInitialState();
-        }
+        MagicCore::RenderSystem::Get()->ResertAllSceneNode();
     }
 
     void RegistrationApp::ClearData(void)
@@ -323,7 +333,9 @@ namespace MagicApp
                 pointCloud->UnifyCoords(2.0, &mScaleValue, &mObjCenterCoord);
                 GPPFREEPOINTER(mpPointCloudRef);
                 mpPointCloudRef = pointCloud;
-                InfoLog << "Import Point Cloud Ref: " << mpPointCloudRef->GetPointCount() << " points" << std::endl;
+                //InfoLog << "Import Point Cloud Ref: " << mpPointCloudRef->GetPointCount() << " points" << std::endl;
+                mpUI->SetRefPointInfo(mpPointCloudRef->GetPointCount());
+                mpUI->SetFromPointInfo(0, 0);
                 if (mpPointCloudRef->HasColor() == false)
                 {
                     SetPointCloudColor(mpPointCloudRef, GPP::Vector3(0.86, 0, 0));
@@ -820,7 +832,15 @@ namespace MagicApp
                 {
                     SetPointCloudColor(mpPointCloudFrom, GPP::Vector3(0, 0.86, 0));
                 }
-                InfoLog << "Import Point Cloud From: " << mpPointCloudFrom->GetPointCount() << " points" << std::endl;
+                //InfoLog << "Import Point Cloud From: " << mpPointCloudFrom->GetPointCount() << " points" << std::endl;
+                if (mPointCloudList.empty())
+                {
+                    mpUI->SetFromPointInfo(mpPointCloudFrom->GetPointCount(), 2);
+                }
+                else
+                {
+                    mpUI->SetFromPointInfo(mpPointCloudFrom->GetPointCount(), mPointCloudList.size() + 1);
+                }
                 InitViewTool();
                 if (!mIsSeparateDisplay)
                 {
@@ -1224,6 +1244,8 @@ namespace MagicApp
                 mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
             }
             SetSeparateDisplay(false);
+            mUpdatePointRefRendering = true;
+            mUpdateMarkRefRendering = true;
             mUpdatePointFromRendering = true;
             //Update from marks
             for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
@@ -1272,7 +1294,7 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp*>(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop)
         {
-            pointShop->SetPointCloud(copiedPointCloud);
+            pointShop->SetPointCloud(copiedPointCloud, mObjCenterCoord, mScaleValue);
         }
         else
         {
@@ -1348,14 +1370,10 @@ namespace MagicApp
 
     void RegistrationApp::UpdatePointCloudFromRendering()
     {
-        if (mpPointCloudFrom == NULL)
-        {
-            return;
-        }
         if (mIsSeparateDisplay)
         {
             MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
-            if (mpPointCloudFrom->HasNormal())
+            if (mpPointCloudFrom && mpPointCloudFrom->HasNormal())
             {
                 MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudFrom_Right_RegistrationApp", "CookTorrancePoint", mpPointCloudFrom, MagicCore::RenderSystem::MODEL_NODE_RIGHT);
             }
@@ -1367,7 +1385,7 @@ namespace MagicApp
         else
         {
             MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_Right_RegistrationApp");
-            if (mpPointCloudFrom->HasNormal())
+            if (mpPointCloudFrom && mpPointCloudFrom->HasNormal())
             {
                 MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudFrom_RegistrationApp", "CookTorrancePoint", mpPointCloudFrom, MagicCore::RenderSystem::MODEL_NODE_CENTER);
             }
@@ -1380,14 +1398,10 @@ namespace MagicApp
 
     void RegistrationApp::UpdatePointCloudRefRendering()
     {
-        if (mpPointCloudRef == NULL)
-        {
-            return;
-        }
         if (mIsSeparateDisplay)
         {
             MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_RegistrationApp");
-            if (mpPointCloudRef->HasNormal())
+            if (mpPointCloudRef && mpPointCloudRef->HasNormal())
             {
                 MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudRef_Left_RegistrationApp", "CookTorrancePoint", mpPointCloudRef, MagicCore::RenderSystem::MODEL_NODE_LEFT);
             }
@@ -1399,7 +1413,7 @@ namespace MagicApp
         else
         {
             MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_Left_RegistrationApp");
-            if (mpPointCloudRef->HasNormal())
+            if (mpPointCloudRef && mpPointCloudRef->HasNormal())
             {
                 MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudRef_RegistrationApp", "CookTorrancePoint", mpPointCloudRef, MagicCore::RenderSystem::MODEL_NODE_CENTER);
             }
@@ -1412,36 +1426,30 @@ namespace MagicApp
 
     void RegistrationApp::UpdateMarkRefRendering()
     {
-        MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_RegistrationApp");
-        MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_Left_RegistrationApp");
-        if (mRefMarks.empty() == false)
+        if (mIsSeparateDisplay)
         {
-            if (mIsSeparateDisplay)
-            {
-                MagicCore::RenderSystem::Get()->RenderPointList("RefMarks_Left_RegistrationApp", "SimplePoint_Large", GPP::Vector3(1, 0, 1), mRefMarks, MagicCore::RenderSystem::MODEL_NODE_LEFT);
-            }
-            else
-            {
-                MagicCore::RenderSystem::Get()->RenderPointList("RefMarks_RegistrationApp", "SimplePoint_Large", GPP::Vector3(1, 0, 1), mRefMarks, MagicCore::RenderSystem::MODEL_NODE_CENTER);
-            }
+            MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_RegistrationApp");
+            MagicCore::RenderSystem::Get()->RenderPointList("RefMarks_Left_RegistrationApp", "SimplePoint_Large", GPP::Vector3(1, 0, 1), mRefMarks, MagicCore::RenderSystem::MODEL_NODE_LEFT);
+        }
+        else
+        {
+            MagicCore::RenderSystem::Get()->HideRenderingObject("RefMarks_Left_RegistrationApp");
+            MagicCore::RenderSystem::Get()->RenderPointList("RefMarks_RegistrationApp", "SimplePoint_Large", GPP::Vector3(1, 0, 1), mRefMarks, MagicCore::RenderSystem::MODEL_NODE_CENTER);
         }
     }
 
     void RegistrationApp::UpdateMarkFromRendering()
     {
-        MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_RegistrationApp");
-        MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_Right_RegistrationApp");
-        if (mFromMarks.empty() == false)
+        if (mIsSeparateDisplay)
         {
-            if (mIsSeparateDisplay)
-            {
-                MagicCore::RenderSystem::Get()->RenderPointList("FromMarks_Right_RegistrationApp", "SimplePoint_Large", GPP::Vector3(0, 1, 1), mFromMarks, MagicCore::RenderSystem::MODEL_NODE_RIGHT);
-            }
-            else
-            {
-                MagicCore::RenderSystem::Get()->RenderPointList("FromMarks_RegistrationApp", "SimplePoint_Large", GPP::Vector3(0, 1, 1), mFromMarks, MagicCore::RenderSystem::MODEL_NODE_CENTER);
-            }            
+            MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_RegistrationApp");
+            MagicCore::RenderSystem::Get()->RenderPointList("FromMarks_Right_RegistrationApp", "SimplePoint_Large", GPP::Vector3(0, 1, 1), mFromMarks, MagicCore::RenderSystem::MODEL_NODE_RIGHT);
         }
+        else
+        {
+            MagicCore::RenderSystem::Get()->HideRenderingObject("FromMarks_Right_RegistrationApp");
+            MagicCore::RenderSystem::Get()->RenderPointList("FromMarks_RegistrationApp", "SimplePoint_Large", GPP::Vector3(0, 1, 1), mFromMarks, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+        }     
     }
 
     void RegistrationApp::InitViewTool()

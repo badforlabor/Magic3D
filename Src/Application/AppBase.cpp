@@ -60,6 +60,11 @@ namespace MagicApp
     {
 
     }
+
+    void AppBase::WindowFocusChanged( Ogre::RenderWindow* rw )
+    {
+
+    }
  
     AppBase::~AppBase(void)
     {

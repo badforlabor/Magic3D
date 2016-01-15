@@ -38,36 +38,46 @@ namespace MagicCore
 
     bool MagicListener::mouseMoved( const OIS::MouseEvent &arg )
     {
+        Ogre::RenderWindow* rw = RenderSystem::Get()->GetRenderWindow();
+        if (arg.state.X.abs < rw->getViewport(0)->getActualLeft() + 1
+            || arg.state.Y.abs < rw->getViewport(0)->getActualTop() + 1
+            || arg.state.X.abs > rw->getViewport(0)->getActualLeft() + rw->getViewport(0)->getActualWidth()
+            || arg.state.Y.abs > rw->getViewport(0)->getActualTop() + rw->getViewport(0)->getActualHeight())
+        {
+            return true;
+        }
         ToolKit::Get()->SetMousePressLocked(false);
         MyGUI::InputManager::getInstance().injectMouseMove(arg.state.X.abs, arg.state.Y.abs, arg.state.Z.abs);
-        return MagicApp::AppManager::Get()->MouseMoved(arg);
-        
+        return MagicApp::AppManager::Get()->MouseMoved(arg); 
     }
 
     bool MagicListener::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        if (ToolKit::Get()->IsMousePressLocked())
+        Ogre::RenderWindow* rw = RenderSystem::Get()->GetRenderWindow();
+        if (arg.state.X.abs < rw->getViewport(0)->getActualLeft() + 1
+            || arg.state.Y.abs < rw->getViewport(0)->getActualTop() + 1
+            || arg.state.X.abs > rw->getViewport(0)->getActualLeft() + rw->getViewport(0)->getActualWidth()
+            || arg.state.Y.abs > rw->getViewport(0)->getActualTop() + rw->getViewport(0)->getActualHeight())
         {
             return true;
         }
         else
         {
-            MyGUI::InputManager::getInstance().injectMousePress(arg.state.X.abs, arg.state.Y.abs, MyGUI::MouseButton::Enum(id));
+            if (ToolKit::Get()->IsMousePressLocked() == false)
+            {
+                MyGUI::InputManager::getInstance().injectMousePress(arg.state.X.abs, arg.state.Y.abs, MyGUI::MouseButton::Enum(id));
+            }            
             return MagicApp::AppManager::Get()->MousePressed(arg, id);
         }
     }
 
     bool MagicListener::mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        if (ToolKit::Get()->IsMousePressLocked())
-        {
-            return true;
-        }
-        else
+        if (ToolKit::Get()->IsMousePressLocked() == false)
         {
             MyGUI::InputManager::getInstance().injectMouseRelease(arg.state.X.abs, arg.state.Y.abs, MyGUI::MouseButton::Enum(id));
-            return MagicApp::AppManager::Get()->MouseReleased(arg, id);
         }
+        return MagicApp::AppManager::Get()->MouseReleased(arg, id);
     }
 
     bool MagicListener::keyPressed( const OIS::KeyEvent &arg )
@@ -100,6 +110,7 @@ namespace MagicCore
     void MagicListener::windowFocusChange(Ogre::RenderWindow* rw)
     {
         ToolKit::Get()->SetMousePressLocked(true);
+        MagicApp::AppManager::Get()->WindowFocusChanged(rw);
     }
 
     MagicListener::~MagicListener()

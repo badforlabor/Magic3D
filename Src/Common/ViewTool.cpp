@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ViewTool.h"
 #include "RenderSystem.h"
+#include <iostream>
 
 namespace MagicCore
 {
@@ -26,10 +27,15 @@ namespace MagicCore
     {
         mMouseCoordX = mouseCoordX;
         mMouseCoordY = mouseCoordY;
+        mIsMousePressed = true;
     }
 
     void ViewTool::MouseMoved(int mouseCoordX, int mouseCoordY, MouseMode mm)
     {
+        if (!mIsMousePressed)
+        {
+            return;
+        }
         if (mm == MM_MIDDLE_DOWN)
         {
             int mouseDiffX = mouseCoordX - mMouseCoordX;
@@ -67,6 +73,11 @@ namespace MagicCore
             mMouseCoordY = mouseCoordY;
             RenderSystem::Get()->GetMainCamera()->move(Ogre::Vector3(mouseDiffX * (-1), mouseDiffY, 0) * 0.0025 * mScale);
         }
+    }
+
+    void ViewTool::MouseReleased()
+    {
+        mIsMousePressed = false;
     }
 
     void ViewTool::SetScale(double scale)

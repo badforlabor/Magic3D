@@ -46,6 +46,7 @@ namespace MagicApp
         virtual bool MousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool MouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
+        virtual void WindowFocusChanged(Ogre::RenderWindow* rw);
 
         void DoCommand(bool isSubThread);
 

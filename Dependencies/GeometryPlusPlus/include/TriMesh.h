@@ -71,7 +71,8 @@ namespace GPP
         Vector3 GetVertexTexcoord(Int vid) const;
         void SetVertexTexcoord(Int vid, const Vector3& texcoord);
         
-        void UnifyCoords(Real bboxSize);
+        void UnifyCoords(Real bboxSize, Real* scaleValue = NULL, Vector3* objCenterCoord = NULL);
+        void UnifyCoords(Real scaleValue, const Vector3& objCenterCoord);
 
         virtual ~TriMesh();
 

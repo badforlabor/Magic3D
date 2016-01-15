@@ -17,6 +17,9 @@ namespace MagicApp
         void StopProgressbar(void);
         bool IsProgressbarVisible(void);
 
+        void SetRefPointInfo(int pointCount);
+        void SetFromPointInfo(int pointCount, int pointId);
+
     private:
         void SwitchDisplayMode(MyGUI::Widget* pSender);
 
@@ -56,8 +59,15 @@ namespace MagicApp
         void EnterPointShop(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
 
+        void UpdateTextInfo(void);
+
     private:
         MyGUI::VectorWidgetPtr mRoot;
         bool mIsProgressbarVisible;
+        MyGUI::TextBox* mTextInfo;
+        // Application Information
+        int mRefPointCount;
+        int mFromPointCount;
+        int mFromPointId;
     };
 }

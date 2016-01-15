@@ -9,6 +9,7 @@ namespace Ogre
     class SceneManager;
     class Camera;
     class Root;
+    class ManualObject;
 }
 
 namespace GPP
@@ -47,12 +48,17 @@ namespace MagicCore
         //Rendering tools
         void RenderPointCloud(std::string pointCloudName, std::string materialName, const GPP::PointCloud* pointCloud, ModelNodeType nodeType = MODEL_NODE_CENTER);
         void RenderPointList(std::string pointListName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& pointCoords, ModelNodeType nodeType = MODEL_NODE_CENTER);
-        void RenderMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh);
-        void RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords);
-        void RenderPolyline(std::string polylineName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& polylineCoords, bool appendNewPolyline = false);
+        void RenderMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh, ModelNodeType nodeType = MODEL_NODE_CENTER);
+        //void RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords);
+        void RenderPolyline(std::string polylineName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& polylineCoords, bool appendNewPolyline = false, ModelNodeType nodeType = MODEL_NODE_CENTER);
         void HideRenderingObject(std::string objName);
 
+        void ResertAllSceneNode(void);
+
         virtual ~RenderSystem(void);
+
+    private:
+        void AttachManualObjectToSceneNode(ModelNodeType nodeType, Ogre::ManualObject* manualObj);
 
     private:
         Ogre::Root*    mpRoot;

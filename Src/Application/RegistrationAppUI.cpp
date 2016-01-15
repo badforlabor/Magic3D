@@ -8,7 +8,11 @@
 namespace MagicApp
 {
     RegistrationAppUI::RegistrationAppUI() : 
-        mIsProgressbarVisible(false)
+        mIsProgressbarVisible(false),
+        mTextInfo(NULL),
+        mRefPointCount(0),
+        mFromPointCount(0),
+        mFromPointId(0)
     {
     }
 
@@ -52,6 +56,9 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_GlobalRegistrate")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::GlobalRegistrate);
         mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::EnterPointShop);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::BackToHomepage);
+
+        mTextInfo = mRoot.at(0)->findWidget("Text_Info")->castType<MyGUI::TextBox>();
+        mTextInfo->setTextColour(MyGUI::Colour(75.0 / 255.0, 131.0 / 255.0, 128.0 / 255.0));
     }
 
     void RegistrationAppUI::Shutdown()
@@ -92,6 +99,52 @@ namespace MagicApp
         {
             registrationApp->SwitchSeparateDisplay();
         }
+    }
+
+    void RegistrationAppUI::SetRefPointInfo(int pointCount)
+    {
+        mRefPointCount = pointCount;
+        UpdateTextInfo();
+    }
+
+    void RegistrationAppUI::SetFromPointInfo(int pointCount, int pointId)
+    {
+        mFromPointCount = pointCount;
+        mFromPointId = pointId;
+        UpdateTextInfo();
+    }
+
+    void RegistrationAppUI::UpdateTextInfo()
+    {
+        std::string textString = "";
+        if (mRefPointCount > 0)
+        {
+            textString += "Fix model point count = ";
+            std::stringstream ss;
+            ss << mRefPointCount;
+            std::string numberString;
+            ss >> numberString;
+            textString += numberString;
+            textString += "\n";
+        }
+        if (mFromPointCount > 0)
+        {
+            textString += "\nFloat model point count = ";
+            std::stringstream ss;
+            ss << mFromPointCount;
+            std::string numberString;
+            ss >> numberString;
+            textString += numberString;
+            textString += "\n";
+            textString += "Float model id = ";
+            ss.clear();
+            ss << mFromPointId;
+            numberString.clear();
+            ss >> numberString;
+            textString += numberString;
+            textString += "\n";
+        }
+        mTextInfo->setCaption(textString);
     }
 
     void RegistrationAppUI::ImportPointCloudRef(MyGUI::Widget* pSender)

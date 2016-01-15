@@ -25,7 +25,8 @@ namespace MagicApp
         {
             NONE = 0,
             GEODESICS_APPROXIMATE,
-            GEODESICS_EXACT
+            GEODESICS_EXACT,
+            DEVIATION
         };
 
     public:
@@ -39,6 +40,7 @@ namespace MagicApp
         virtual bool MousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool MouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id);
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
+        virtual void WindowFocusChanged(Ogre::RenderWindow* rw);
 
         void DoCommand(bool isSubThread);
 
@@ -47,35 +49,53 @@ namespace MagicApp
         void ComputeApproximateGeodesics(bool isSubThread = true);
         void ComputeExactGeodesics(bool isSubThread = true);
 
+        bool ImportModelFrom(void);
+        void ComputeDeviation(bool isSubThread = true);
+
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
         bool IsCommandInProgress(void);
+
+        void SwitchSeparateDisplay(void);
 
     private:
         void SetupScene(void);
         void ShutdownScene(void);
         void ClearData(void);
+        void ClearModelFromData(void);
         bool IsCommandAvaliable(void);
 
-    private:
         void InitViewTool(void);
-        void UpdateModelRendering(void);
-        void UpdateMarkRendering(void);
+        void UpdateModelRefRendering(void);
+        void UpdateMarkRefRendering(void);
+        void UpdateModelFromRendering(void);
+        void UpdateMarkFromRendering(void);
+
+        void SetPointCloudColor(GPP::PointCloud* pointCloud, const GPP::Vector3& color);
+        void SetMeshColor(GPP::TriMesh* triMesh, const GPP::Vector3& color);
 
     private:
         MeasureAppUI* mpUI;
         GPP::TriMesh* mpTriMeshRef;
         GPP::PointCloud* mpPointCloudRef;
+        GPP::Vector3 mObjCenterCoord;
+        GPP::Real mScaleValue;
         GPP::TriMesh* mpTriMeshFrom;
         GPP::PointCloud* mpPointCloudFrom;
         MagicCore::ViewTool* mpViewTool;
-        MagicCore::PickTool* mpPickTool;
+        bool mIsSeparateDisplay;
+        MagicCore::PickTool* mpPickToolRef;
+        MagicCore::PickTool* mpPickToolFrom;
         GPP::DumpBase* mpDumpInfo;
-        std::vector<GPP::Int> mMeshRefMarkIds;
-        std::vector<GPP::Vector3> mMarkPoints;
+        std::vector<GPP::Int> mRefMarkIds;
+        std::vector<GPP::Vector3> mRefMarkPoints;
+        std::vector<GPP::Int> mFromMarkIds;
+        std::vector<GPP::Vector3> mFromMarkPoints;
         CommandType mCommandType;
         bool mIsCommandInProgress;
-        bool mUpdateModelRendering;
-        bool mUpdateMarkRendering;
+        bool mUpdateModelRefRendering;
+        bool mUpdateMarkRefRendering;
+        bool mUpdateModelFromRendering;
+        bool mUpdateMarkFromRendering;
     };
 }

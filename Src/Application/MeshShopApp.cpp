@@ -7,7 +7,6 @@
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
-#include "GPP.h"
 #include "DumpFillMeshHole.h"
 
 namespace MagicApp
@@ -26,6 +25,8 @@ namespace MagicApp
     MeshShopApp::MeshShopApp() :
         mpUI(NULL),
         mpTriMesh(NULL),
+        mObjCenterCoord(),
+        mScaleValue(0),
         mpViewTool(NULL),
         mpDumpInfo(NULL),
         mShowHoleLoopIds(),
@@ -152,6 +153,14 @@ namespace MagicApp
         }
         return true;
     }
+    
+    void MeshShopApp::WindowFocusChanged( Ogre::RenderWindow* rw)
+    {
+        if (mpViewTool)
+        {
+            mpViewTool->MouseReleased();
+        }
+    }
 
     void MeshShopApp::DoCommand(bool isSubThread)
     {
@@ -265,7 +274,7 @@ namespace MagicApp
             if (triMesh != NULL)
             { 
                 mShowHoleLoopIds.clear();
-                triMesh->UnifyCoords(2.0);
+                triMesh->UnifyCoords(2.0, &mScaleValue, &mObjCenterCoord);
                 triMesh->UpdateNormal();
                 GPPFREEPOINTER(mpTriMesh);
                 mpTriMesh = triMesh;
@@ -297,7 +306,9 @@ namespace MagicApp
             {
                 mpTriMesh->FuseVertex();
             }
+            mpTriMesh->UnifyCoords(1.0 / mScaleValue, mObjCenterCoord * (-mScaleValue));
             GPP::ErrorCode res = GPP::Parser::ExportTriMesh(fileName, mpTriMesh);
+            mpTriMesh->UnifyCoords(mScaleValue, mObjCenterCoord);
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "网格导出失败", "温馨提示", MB_OK);
@@ -305,13 +316,15 @@ namespace MagicApp
         }
     }
 
-    void MeshShopApp::SetMesh(GPP::TriMesh* triMesh)
+    void MeshShopApp::SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue)
     {
         if (!mpTriMesh)
         {
             delete mpTriMesh;
         }
         mpTriMesh = triMesh;
+        mObjCenterCoord = objCenterCoord;
+        mScaleValue = scaleValue;
         InitViewTool();
         UpdateMeshRendering();
     }
@@ -783,7 +796,7 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp*>(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop)
         {
-            pointShop->SetPointCloud(pointCloud);
+            pointShop->SetPointCloud(pointCloud, mObjCenterCoord, mScaleValue);
         }
         else
         {

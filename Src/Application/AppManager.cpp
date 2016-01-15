@@ -181,6 +181,14 @@ namespace MagicApp
         }
     }
 
+    void AppManager::WindowFocusChanged( Ogre::RenderWindow* rw )
+    {
+        if (mpCurrentApp != NULL)
+        {
+            mpCurrentApp->WindowFocusChanged(rw);
+        }
+    }
+
     AppManager::~AppManager(void)
     {
         for (std::map<std::string, AppBase* >::iterator itr = mAppSet.begin(); itr != mAppSet.end(); itr++)

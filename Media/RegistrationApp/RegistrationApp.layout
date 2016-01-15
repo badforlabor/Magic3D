@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Widget" skin="PanelEmpty" position="0 0 270 768" align="Left Top" layer="Back">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 1024 768" align="Left Top" layer="Back">
+        <Widget type="TextBox" skin="TextBox" position="250 15 700 300" align="Left Top" name="Text_Info"/>
+        
         <Widget type="Button" skin="But_Clustering" position="120 15 40 40" align="Left Top" name="But_SwitchDisplayMode"/>
 
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportPointCloudRef"/>
