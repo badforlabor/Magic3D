@@ -19,6 +19,7 @@ namespace MagicApp
             NORMALCALCULATION,
             NORMALSMOOTH,
             OUTLIER,
+            ISOLATE,
             COORDSMOOTH,
             RECONSTRUCTION
         };
@@ -49,6 +50,7 @@ namespace MagicApp
         void ReconstructMesh(bool isSubThread = true);
 
         void RemovePointCloudOutlier(bool isSubThread = true);
+        void RemoveIsolatePart(bool isSubThread = true);
         void SmoothPointCloudByNormal(bool isSubThread = true);
 
         void SetPointCloud(GPP::PointCloud* pointCloud, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);

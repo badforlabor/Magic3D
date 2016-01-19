@@ -22,6 +22,8 @@ namespace MagicApp
             EXPORTMESH,
             CONSOLIDATETOPOLOGY,
             CONSOLIDATEGEOMETRY,
+            REMOVEISOLATEPART,
+            REMOVEMESHNOISE,
             SMOOTHMESH,
             ENHANCEDETAIL,
             LOOPSUBDIVIDE,
@@ -49,7 +51,9 @@ namespace MagicApp
         void ExportMesh(bool isSubThread = true);
         void ConsolidateTopology(bool isSubThread = true);
         void ReverseDirection(void);
+        void RemoveMeshIsolatePart(bool isSubThread = true);
         void ConsolidateGeometry(bool isSubThread = true);
+        void RemoveMeshNoise(bool isSubThread = true);
         void SmoothMesh(bool isSubThread = true);
         void EnhanceMeshDetail(bool isSubThread = true);
         void LoopSubdivide(bool isSubThread = true);

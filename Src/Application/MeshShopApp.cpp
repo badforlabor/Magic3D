@@ -185,6 +185,12 @@ namespace MagicApp
             case MagicApp::MeshShopApp::CONSOLIDATEGEOMETRY:
                 ConsolidateGeometry(false);
                 break;
+            case MagicApp::MeshShopApp::REMOVEISOLATEPART:
+                RemoveMeshIsolatePart(false);
+                break;
+            case MagicApp::MeshShopApp::REMOVEMESHNOISE:
+                RemoveMeshNoise(false);
+                break;
             case MagicApp::MeshShopApp::SMOOTHMESH:
                 SmoothMesh(false);
                 break;
@@ -282,10 +288,12 @@ namespace MagicApp
                 InitViewTool();
                 UpdateHoleRendering();
                 UpdateMeshRendering();
+                mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
                 return true;
             }
             else
             {
+                mpUI->SetMeshInfo(0, 0);
                 MessageBox(NULL, "网格导入失败", "温馨提示", MB_OK);
             }
         }
@@ -327,6 +335,10 @@ namespace MagicApp
         mScaleValue = scaleValue;
         InitViewTool();
         UpdateMeshRendering();
+        if (mpTriMesh)
+        {
+            mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+        }
     }
 
     static void CollectTriMeshVerticesColorFields(const GPP::TriMesh* triMesh, std::vector<GPP::Real> *vertexColorFields)
@@ -382,7 +394,6 @@ namespace MagicApp
         }
         GPPFREEPOINTER(mpTriMesh);
         mpTriMesh = CopyTriMesh(mpDumpInfo->GetTriMesh());
-        mpTriMesh->UpdateNormal();
         InitViewTool();
         if (mpDumpInfo->GetApiName() == GPP::ApiName::MESH_FILLHOLE_FILL)
         {
@@ -483,6 +494,7 @@ namespace MagicApp
             }
             mpTriMesh->UpdateNormal();
             mUpdateMeshRendering= true;
+            mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
         }
     }
 
@@ -501,6 +513,65 @@ namespace MagicApp
         }
         mpTriMesh->UpdateNormal();
         UpdateMeshRendering();
+    }
+
+    void MeshShopApp::RemoveMeshIsolatePart(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = REMOVEISOLATEPART;
+            DoCommand(true);
+        }
+        else
+        {
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
+            GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+            if (vertexCount < 1)
+            {
+                MessageBox(NULL, "网格顶点个数小于1，操作失败", "温馨提示", MB_OK);
+                return;
+            }
+            GPP::Real* isolation = new GPP::Real[vertexCount];
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::ConsolidateMesh::CalculateIsolation(mpTriMesh, isolation);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格光顺失败", "温馨提示", MB_OK);
+                return;
+            }
+            GPP::Real cutValue = 0.10;
+            std::vector<GPP::Int> deleteIndex;
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                if (isolation[vid] < cutValue)
+                {
+                    deleteIndex.push_back(vid);
+                }
+            }
+            GPPDebug << "MeshShopApp::RemoveOutlier deleteIndex size=" << deleteIndex.size() << std::endl;
+            GPPFREEARRAY(isolation);
+            res = DeleteTriMeshVertices(mpTriMesh, deleteIndex);
+            if (res != GPP_NO_ERROR)
+            {
+                return;
+            }
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
+            mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+        }
     }
 
     void MeshShopApp::ConsolidateGeometry(bool isSubThread)
@@ -533,7 +604,41 @@ namespace MagicApp
                 MessageBox(NULL, "几何修复失败", "温馨提示", MB_OK);
                 return;
             }
-            mpTriMesh->UnifyCoords(2.0);
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
+        }
+    }
+
+    void MeshShopApp::RemoveMeshNoise(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = REMOVEMESHNOISE;
+            DoCommand(true);
+        }
+        else
+        {
+            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                mpTriMesh->FuseVertex();
+            }
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::ConsolidateMesh::RemoveGeometryNoise(mpTriMesh, 1.0);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格光顺失败", "温馨提示", MB_OK);
+                return;
+            }
             mpTriMesh->UpdateNormal();
             mUpdateMeshRendering = true;
         }
@@ -665,6 +770,7 @@ namespace MagicApp
             }
             mpTriMesh->UpdateNormal();
             mUpdateMeshRendering = true;
+            mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
         }
     }
 
@@ -725,6 +831,7 @@ namespace MagicApp
             }
             mpTriMesh->UpdateNormal();
             mUpdateMeshRendering = true;
+            mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
         }
     }
 
@@ -771,6 +878,7 @@ namespace MagicApp
             }
             mpTriMesh->UpdateNormal();
             mUpdateMeshRendering = true;
+            mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
         }
     }
 
@@ -838,7 +946,6 @@ namespace MagicApp
         SetToShowHoleLoopVrtIds(holeIds);
         SetBoundarySeedIds(std::vector<GPP::Int>());
 
-        //mpTriMesh->UnifyCoords(2.0);
         mpTriMesh->UpdateNormal();
         UpdateHoleRendering();
         UpdateMeshRendering();
@@ -892,6 +999,7 @@ namespace MagicApp
             mpTriMesh->UpdateNormal();
             mUpdateMeshRendering = true;
             mUpdateHoleRendering = true;
+            mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
         }
     }
 

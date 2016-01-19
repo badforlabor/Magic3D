@@ -659,4 +659,14 @@
             <State name="normal" offset="948 785 84 84"/>
         </BasisSkin>
     </Resource>
+    <Resource type="ResourceSkin" name="But_Outlier_CN" size="84 84" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 84 84" align="Stretch">
+            <State name="normal" offset="87 1693 84 84"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Isolate_CN" size="84 84" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 84 84" align="Stretch">
+            <State name="normal" offset="173 1693 84 84"/>
+        </BasisSkin>
+    </Resource>
 </MyGUI>

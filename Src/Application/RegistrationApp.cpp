@@ -301,12 +301,6 @@ namespace MagicApp
             case MagicApp::RegistrationApp::NORMAL_FROM:
                 CalculateFromNormal(mIsDepthImageFrom, false);
                 break;
-            case MagicApp::RegistrationApp::NORMAL_SMOOTH_REF:
-                SmoothRefNormal(false);
-                break;
-            case MagicApp::RegistrationApp::NORMAL_SMOOTH_FROM:
-                SmoothFromNormal(false);
-                break;
             case MagicApp::RegistrationApp::GLOBAL_REGISTRATE:
                 GlobalRegistrate(false);
                 break;
@@ -435,7 +429,7 @@ namespace MagicApp
         UpdatePointCloudRefRendering();
     }
 
-    void RegistrationApp::SmoothRefNormal(bool isSubThread)
+    void RegistrationApp::RemoveOutlierRef()
     {
         if (IsCommandAvaliable() == false)
         {
@@ -446,33 +440,36 @@ namespace MagicApp
             MessageBox(NULL, "请先导入参考点云", "温馨提示", MB_OK);
             return;
         }
-        else if (mpPointCloudRef->HasNormal() == false)
+        GPP::Int pointCount = mpPointCloudRef->GetPointCount();
+        GPP::Real* uniformity = new GPP::Real[pointCount];
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(mpPointCloudRef, uniformity);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
         {
-            MessageBox(NULL, "请先给点云计算法向量", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+            MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "点云去除飞点失败", "温馨提示", MB_OK);
+            GPPFREEARRAY(uniformity);
             return;
         }
-        if (isSubThread)
+        GPP::Real cutValue = 0.8;
+        std::vector<GPP::Int> deleteIndex;
+        for (GPP::Int pid = 0; pid < pointCount; pid++)
         {
-            mCommandType = NORMAL_SMOOTH_REF;
-            DoCommand(true);
+            if (uniformity[pid] > cutValue)
+            {
+                deleteIndex.push_back(pid);
+            }
         }
-        else
+        GPPFREEARRAY(uniformity);
+        res = DeletePointCloudElements(mpPointCloudRef, deleteIndex);
+        if (res != GPP_NO_ERROR)
         {
-            mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(mpPointCloudRef, 1.0);
-            mIsCommandInProgress = false;
-            if (res == GPP_API_IS_NOT_AVAILABLE)
-            {
-                MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
-            }
-            if (res != GPP_NO_ERROR)
-            {
-                MessageBox(NULL, "点云法线光滑失败", "温馨提示", MB_OK);
-                return;
-            }
-            mUpdatePointRefRendering = true;
+            return;
         }
+        mUpdatePointRefRendering = true;
     }
 
     void RegistrationApp::DeleteRefMark()
@@ -926,7 +923,7 @@ namespace MagicApp
         UpdatePointCloudFromRendering();
     }
 
-    void RegistrationApp::SmoothFromNormal(bool isSubThread)
+    void RegistrationApp::RemoveOutlierFrom()
     {
         if (IsCommandAvaliable() == false)
         {
@@ -934,34 +931,39 @@ namespace MagicApp
         }
         if (mpPointCloudFrom == NULL)
         {
-            MessageBox(NULL, "请先导入需要对齐的点云", "温馨提示", MB_OK);
+            MessageBox(NULL, "请先导入参考点云", "温馨提示", MB_OK);
             return;
         }
-        else if (mpPointCloudFrom->HasNormal() == false)
+        GPP::Int pointCount = mpPointCloudFrom->GetPointCount();
+        GPP::Real* uniformity = new GPP::Real[pointCount];
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(mpPointCloudFrom, uniformity);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
         {
-            MessageBox(NULL, "请先给点云计算法向量", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+            MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "点云去除飞点失败", "温馨提示", MB_OK);
+            GPPFREEARRAY(uniformity);
             return;
         }
-        if (isSubThread)
+        GPP::Real cutValue = 0.8;
+        std::vector<GPP::Int> deleteIndex;
+        for (GPP::Int pid = 0; pid < pointCount; pid++)
         {
-            mCommandType = NORMAL_SMOOTH_FROM;
-            DoCommand(true);
+            if (uniformity[pid] > cutValue)
+            {
+                deleteIndex.push_back(pid);
+            }
         }
-        else
+        GPPFREEARRAY(uniformity);
+        res = DeletePointCloudElements(mpPointCloudFrom, deleteIndex);
+        if (res != GPP_NO_ERROR)
         {
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(mpPointCloudFrom, 1.0);
-            if (res == GPP_API_IS_NOT_AVAILABLE)
-            {
-                MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
-            }
-            if (res != GPP_NO_ERROR)
-            {
-                MessageBox(NULL, "点云法线光滑失败", "温馨提示", MB_OK);
-                return;
-            }
-            mUpdatePointFromRendering = true;
+            return;
         }
+        mUpdatePointFromRendering = true;
     }
 
     bool RegistrationApp::IsCommandInProgress()
@@ -1110,8 +1112,6 @@ namespace MagicApp
                 mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
             }
             SetSeparateDisplay(false);
-            mUpdatePointRefRendering = true;
-            mUpdatePointFromRendering = true;
             //Update from marks
             for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
             {
@@ -1119,6 +1119,8 @@ namespace MagicApp
             }
             mUpdateMarkFromRendering = true;
             mUpdateMarkRefRendering = true;
+            mUpdatePointRefRendering = true;
+            mUpdatePointFromRendering = true;
         }
     }
 
@@ -1172,8 +1174,6 @@ namespace MagicApp
                 mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
             }
             SetSeparateDisplay(false);
-            mUpdatePointRefRendering = true;
-            mUpdatePointFromRendering = true;
             //Update from marks
             for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
             {
@@ -1181,6 +1181,8 @@ namespace MagicApp
             }
             mUpdateMarkRefRendering = true;
             mUpdateMarkFromRendering = true;
+            mUpdatePointRefRendering = true;
+            mUpdatePointFromRendering = true;
         }
     }
 
@@ -1244,15 +1246,15 @@ namespace MagicApp
                 mpPointCloudFrom->SetPointNormal(pid, resultTransform.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
             }
             SetSeparateDisplay(false);
-            mUpdatePointRefRendering = true;
-            mUpdateMarkRefRendering = true;
-            mUpdatePointFromRendering = true;
             //Update from marks
             for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
             {
                 (*markItr) = resultTransform.TransformPoint(*markItr);
             }
             mUpdateMarkFromRendering = true;
+            mUpdatePointRefRendering = true;
+            mUpdateMarkRefRendering = true;
+            mUpdatePointFromRendering = true;
         }
     }
 

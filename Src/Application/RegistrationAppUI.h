@@ -29,7 +29,7 @@ namespace MagicApp
         void CalculateRefNormalFront(MyGUI::Widget* pSender);
         void CalculateRefNormal(MyGUI::Widget* pSender);
         void FlipRefNormal(MyGUI::Widget* pSender);
-        //void SmoothRefNormal(MyGUI::Widget* pSender);
+        void RemoveOutlierRef(MyGUI::Widget* pSender);
         
         void RefFeaturePoint(MyGUI::Widget* pSender);
         void RefDeleteMark(MyGUI::Widget* pSender);
@@ -41,7 +41,7 @@ namespace MagicApp
         void CalculateFromNormalFront(MyGUI::Widget* pSender);
         void CalculateFromNormal(MyGUI::Widget* pSender);
         void FlipFromNormal(MyGUI::Widget* pSender);
-        //void SmoothFromNormal(MyGUI::Widget* pSender);
+        void RemoveOutlierFrom(MyGUI::Widget* pSender);
         
         void FromFeaturePoint(MyGUI::Widget* pSender);
         void FromDeleteMark(MyGUI::Widget* pSender);

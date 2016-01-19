@@ -31,7 +31,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalRefNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateRefNormalFront);
         mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateRefNormal);
         mRoot.at(0)->findWidget("But_FlipRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FlipRefNormal);
-        //mRoot.at(0)->findWidget("But_SmoothRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::SmoothRefNormal);
+        mRoot.at(0)->findWidget("But_RemoveOutlierRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RemoveOutlierRef);
         
         mRoot.at(0)->findWidget("But_RefFeaturePoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RefFeaturePoint);
         mRoot.at(0)->findWidget("But_RefDeleteMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RefDeleteMark);
@@ -42,7 +42,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalFromNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateFromNormalFront);
         mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateFromNormal);
         mRoot.at(0)->findWidget("But_FlipFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FlipFromNormal);
-        //mRoot.at(0)->findWidget("But_SmoothFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::SmoothFromNormal);
+        mRoot.at(0)->findWidget("But_RemoveOutlierFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RemoveOutlierFrom);
         
         mRoot.at(0)->findWidget("But_FromFeaturePoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FromFeaturePoint);
         mRoot.at(0)->findWidget("But_FromDeleteMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FromDeleteMark);
@@ -162,7 +162,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalRefNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_FlipRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);  
-        //mRoot.at(0)->findWidget("But_SmoothRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);  
+        mRoot.at(0)->findWidget("But_RemoveOutlierRef")->castType<MyGUI::Button>()->setVisible(!isVisible);  
     }
 
     void RegistrationAppUI::CalculateRefNormalFront(MyGUI::Widget* pSender)
@@ -192,14 +192,14 @@ namespace MagicApp
         }
     }
 
-    /*void RegistrationAppUI::SmoothRefNormal(MyGUI::Widget* pSender)
+    void RegistrationAppUI::RemoveOutlierRef(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->SmoothRefNormal();
+            registrationApp->RemoveOutlierRef();
         }
-    }*/
+    }
 
     void RegistrationAppUI::RefFeaturePoint(MyGUI::Widget* pSender)
     {
@@ -259,7 +259,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalFromNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_FlipFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        //mRoot.at(0)->findWidget("But_SmoothFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_RemoveOutlierFrom")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
     void RegistrationAppUI::CalculateFromNormalFront(MyGUI::Widget* pSender)
@@ -288,14 +288,14 @@ namespace MagicApp
         }
     }
 
-    /*void RegistrationAppUI::SmoothFromNormal(MyGUI::Widget* pSender)
+    void RegistrationAppUI::RemoveOutlierFrom(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->SmoothFromNormal();
+            registrationApp->RemoveOutlierFrom();
         }
-    }*/
+    }
 
     void RegistrationAppUI::FromFeaturePoint(MyGUI::Widget* pSender)
     {

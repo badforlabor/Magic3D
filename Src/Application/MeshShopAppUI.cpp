@@ -8,7 +8,8 @@
 namespace MagicApp
 {
     MeshShopAppUI::MeshShopAppUI() :
-        mIsProgressbarVisible(false)
+        mIsProgressbarVisible(false),
+        mTextInfo(NULL)
     {
     }
 
@@ -25,8 +26,10 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ConsolidateMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateMesh);
         mRoot.at(0)->findWidget("But_ConsolidateTopology")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateTopology);
         mRoot.at(0)->findWidget("But_ReverseDirection")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ReverseDirection);
+        mRoot.at(0)->findWidget("But_RemoveMeshIsolatePart")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::RemoveMeshIsolatePart);
         mRoot.at(0)->findWidget("But_ConsolidateGeometry")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateGeometry);
         mRoot.at(0)->findWidget("But_FilterMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::FilterMesh);
+        mRoot.at(0)->findWidget("But_RemoveMeshNoise")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::RemoveMeshNoise);
         mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SmoothMesh);
         mRoot.at(0)->findWidget("But_EnhanceMeshDetail")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnhanceMeshDetail);
         mRoot.at(0)->findWidget("But_SubdivideMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SubdivideMesh);
@@ -39,6 +42,9 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleSmooth);
         mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SampleMesh);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::BackToHomepage);
+
+        mTextInfo = mRoot.at(0)->findWidget("Text_Info")->castType<MyGUI::TextBox>();
+        mTextInfo->setTextColour(MyGUI::Colour(75.0 / 255.0, 131.0 / 255.0, 128.0 / 255.0));
     }
 
     void MeshShopAppUI::StartProgressbar(int range)
@@ -63,6 +69,28 @@ namespace MagicApp
     bool MeshShopAppUI::IsProgressbarVisible()
     {
         return mIsProgressbarVisible;
+    }
+
+    void MeshShopAppUI::SetMeshInfo(int vertexCount, int triangleCount)
+    {
+        std::string textString = "";
+        if (vertexCount > 0)
+        {
+            textString += "Vertex count = ";
+            std::stringstream ss;
+            ss << vertexCount;
+            std::string numberString;
+            ss >> numberString;
+            textString += numberString;
+            textString += "  Triangle count = ";
+            ss.clear();
+            ss << triangleCount;
+            numberString.clear();
+            ss >> numberString;
+            textString += numberString;
+            textString += "\n";
+        }
+        mTextInfo->setCaption(textString);
     }
 
     void MeshShopAppUI::Shutdown()
@@ -96,6 +124,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ConsolidateTopology")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_ReverseDirection")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_ConsolidateGeometry")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_RemoveMeshIsolatePart")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
     void MeshShopAppUI::ConsolidateTopology(MyGUI::Widget* pSender)
@@ -116,6 +145,15 @@ namespace MagicApp
         }
     }
 
+    void MeshShopAppUI::RemoveMeshIsolatePart(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->RemoveMeshIsolatePart();
+        }
+    }
+
     void MeshShopAppUI::ConsolidateGeometry(MyGUI::Widget* pSender)
     {
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
@@ -129,7 +167,17 @@ namespace MagicApp
     {
         bool isVisible = mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_SmoothMesh")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_RemoveMeshNoise")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_EnhanceMeshDetail")->castType<MyGUI::Button>()->setVisible(!isVisible);
+    }
+
+    void MeshShopAppUI::RemoveMeshNoise(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->RemoveMeshNoise();
+        }
     }
 
     void MeshShopAppUI::SmoothMesh(MyGUI::Widget* pSender)

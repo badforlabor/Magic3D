@@ -17,6 +17,9 @@
         <Widget type="Button" skin="But_Flip_CN" position="161 90 43 43" align="Left Top" name="But_FlipRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="Button" skin="But_Outlier_CN" position="204 90 43 43" align="Left Top" name="But_RemoveOutlierRef">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
         <Widget type="Button" skin="But_FeaturePoint_CN" position="15 145 60 60" align="Left Top" name="But_RefFeaturePoint"/>
         <Widget type="Button" skin="But_Open" position="75 155 43 43" align="Left Top" name="But_RefImportMark">
@@ -36,6 +39,9 @@
             <Property key="Visible" value="false"/>
         </Widget>
         <Widget type="Button" skin="But_Flip_CN" position="161 285 43 43" align="Left Top" name="But_FlipFromNormal">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Outlier_CN" position="204 285 43 43" align="Left Top" name="But_RemoveOutlierFrom">
             <Property key="Visible" value="false"/>
         </Widget>
 

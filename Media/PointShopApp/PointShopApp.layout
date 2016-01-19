@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Widget" skin="PanelEmpty" position="0 0 280 768" align="Left Top" layer="Back">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 10024 768" align="Left Top" layer="Back">
+        <Widget type="TextBox" skin="TextBox" position="150 15 700 300" align="Left Top" name="Text_Info"/>
+
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportPointCloud"/>
         <Widget type="Button" skin="But_Save" position="15 85 60 60" align="Left Top" name="But_ExportPointCloud"/>
 
@@ -28,10 +30,13 @@
         </Widget>
 
         <Widget type="Button" skin="But_Repair_CN" position="15 295 60 60" align="Left Top" name="But_ConsolidatePointCloud"></Widget>
-        <Widget type="Button" skin="But_RemoveNoise_CN" position="75 305 43 43" align="Left Top" name="But_RemovePointCloudOutlier">
+        <Widget type="Button" skin="But_Outlier_CN" position="75 305 43 43" align="Left Top" name="But_RemovePointCloudOutlier">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="118 305 43 43" align="Left Top" name="But_SmoothGeometryByNormal">
+        <Widget type="Button" skin="But_Isolate_CN" position="118 305 43 43" align="Left Top" name="But_RemoveIsolatePart">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_RemoveNoise_CN" position="161 305 43 43" align="Left Top" name="But_SmoothGeometryByNormal">
             <Property key="Visible" value="false"/>
         </Widget>
 

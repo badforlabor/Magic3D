@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Widget" skin="PanelEmpty" position="0 0 310 768" align="Left Top" layer="Back">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 1024 768" align="Left Top" layer="Back">
+        <Widget type="TextBox" skin="TextBox" position="150 15 700 300" align="Left Top" name="Text_Info"/>
+
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportMesh"/>
 
         <Widget type="Button" skin="But_Save" position="15 80 60 60" align="Left Top" name="But_ExportMesh"></Widget>
@@ -12,15 +14,21 @@
         <Widget type="Button" skin="But_Geometry_CN" position="118 155 43 43" align="Left Top" name="But_ConsolidateGeometry">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Flip_CN" position="161 155 43 43" align="Left Top" name="But_ReverseDirection">
+        <Widget type="Button" skin="But_Isolate_CN" position="161 155 43 43" align="Left Top" name="But_RemoveMeshIsolatePart">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Flip_CN" position="204 155 43 43" align="Left Top" name="But_ReverseDirection">
             <Property key="Visible" value="false"/>
         </Widget>
 
         <Widget type="Button" skin="But_Filter_CN" position="15 210 60 60" align="Left Top" name="But_FilterMesh"></Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="75 220 43 43" align="Left Top" name="But_SmoothMesh">
+        <Widget type="Button" skin="But_RemoveNoise_CN" position="75 220 43 43" align="Left Top" name="But_RemoveMeshNoise">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Enhance_CN" position="118 220 43 43" align="Left Top" name="But_EnhanceMeshDetail">
+        <Widget type="Button" skin="But_Smooth_CN" position="118 220 43 43" align="Left Top" name="But_SmoothMesh">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Enhance_CN" position="161 220 43 43" align="Left Top" name="But_EnhanceMeshDetail">
             <Property key="Visible" value="false"/>
         </Widget>
 

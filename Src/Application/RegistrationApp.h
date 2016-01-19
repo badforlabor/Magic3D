@@ -29,8 +29,6 @@ namespace MagicApp
             ALIGN_ICP,
             NORMAL_REF,
             NORMAL_FROM,
-            NORMAL_SMOOTH_REF,
-            NORMAL_SMOOTH_FROM,
             GLOBAL_REGISTRATE
         };
 
@@ -54,7 +52,7 @@ namespace MagicApp
         
         void CalculateRefNormal(bool isDepthImage, bool isSubThread = true);
         void FlipRefNormal(void);
-        void SmoothRefNormal(bool isSubThread = true);
+        void RemoveOutlierRef(void);
         
         void DeleteRefMark(void);
         void ImportRefMark(void);
@@ -63,7 +61,7 @@ namespace MagicApp
         
         void CalculateFromNormal(bool isDepthImage, bool isSubThread = true);
         void FlipFromNormal(void);
-        void SmoothFromNormal(bool isSubThread = true);
+        void RemoveOutlierFrom(void);
         
         void DeleteFromMark(void);
         void ImportFromMark(void);

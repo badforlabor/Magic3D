@@ -320,7 +320,6 @@ namespace MagicApp
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
         if (meshShop)
         {
-            copiedTriMesh->UpdateNormal();
             meshShop->SetMesh(copiedTriMesh, GPP::Vector3(1.0, 1.0, 1.0), 1.0);
         }
         else

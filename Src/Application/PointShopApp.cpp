@@ -151,6 +151,15 @@ namespace MagicApp
         {
             RunDumpInfo();
         }
+        else if (arg.key == OIS::KC_R) // A temporary command
+        {
+            if (mpPointCloud)
+            {
+                GPP::ConsolidatePointCloud::ConsolidateRawScanData(mpPointCloud, 1280, 1024, true);
+                UpdatePointCloudRendering();
+                mpUI->SetPointCloudInfo(mpPointCloud->GetPointCount());
+            }
+        }
         return true;
     }
 
@@ -219,6 +228,9 @@ namespace MagicApp
             case MagicApp::PointShopApp::OUTLIER:
                 RemovePointCloudOutlier(false);
                 break;
+            case MagicApp::PointShopApp::ISOLATE:
+                RemoveIsolatePart(false);
+                break;
             case MagicApp::PointShopApp::COORDSMOOTH:
                 SmoothPointCloudByNormal(false);
                 break;
@@ -253,10 +265,12 @@ namespace MagicApp
                 InfoLog << "Import Point Cloud: " << mpPointCloud->GetPointCount() << " points" << std::endl;
                 InitViewTool();
                 UpdatePointCloudRendering();
+                mpUI->SetPointCloudInfo(mpPointCloud->GetPointCount());
                 return true;
             }
             else
             {
+                mpUI->SetPointCloudInfo(0);
                 MessageBox(NULL, "点云导入失败, 目前支持导入格式：asc，obj", "温馨提示", MB_OK);
             }
         }
@@ -340,7 +354,6 @@ namespace MagicApp
             mIsCommandInProgress = true;
             GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(mpPointCloud);
             mIsCommandInProgress = false;
-            mUpdatePointCloudRendering = true;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -374,6 +387,60 @@ namespace MagicApp
         {
             return;
         }
+        if (isSubThread)
+        {
+            mCommandType = OUTLIER;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::Int pointCount = mpPointCloud->GetPointCount();
+            if (pointCount < 1)
+            {
+                MessageBox(NULL, "点云的点个数小于1，操作失败", "温馨提示", MB_OK);
+                return;
+            }
+            GPP::Real* uniformity = new GPP::Real[pointCount];
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(mpPointCloud, uniformity);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "点云去除飞点失败", "温馨提示", MB_OK);
+                GPPFREEARRAY(uniformity);
+                return;
+            }
+            GPP::Real cutValue = 0.8;
+            std::vector<GPP::Int> deleteIndex;
+            for (GPP::Int pid = 0; pid < pointCount; pid++)
+            {
+                if (uniformity[pid] > cutValue)
+                {
+                    deleteIndex.push_back(pid);
+                }
+            }
+            GPPFREEARRAY(uniformity);
+            res = DeletePointCloudElements(mpPointCloud, deleteIndex);
+            if (res != GPP_NO_ERROR)
+            {
+                return;
+            }
+            mUpdatePointCloudRendering = true;
+            mpUI->SetPointCloudInfo(mpPointCloud->GetPointCount());
+        }
+    }
+
+    void PointShopApp::RemoveIsolatePart(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
         else if (mpPointCloud->HasNormal() == false)
         {
             MessageBox(NULL, "请先给点云计算法向量", "温馨提示", MB_OK);
@@ -381,7 +448,7 @@ namespace MagicApp
         }
         if (isSubThread)
         {
-            mCommandType = OUTLIER;
+            mCommandType = ISOLATE;
             DoCommand(true);
         }
         else
@@ -403,7 +470,7 @@ namespace MagicApp
             }
             if (res != GPP_NO_ERROR)
             {
-                MessageBox(NULL, "点云去除飞点失败", "温馨提示", MB_OK);
+                MessageBox(NULL, "点云去除孤立项失败", "温馨提示", MB_OK);
                 GPPFREEARRAY(isolation);
                 return;
             }
@@ -417,15 +484,14 @@ namespace MagicApp
                     deleteIndex.push_back(pid);
                 }
             }
+            GPPFREEARRAY(isolation);
             res = DeletePointCloudElements(mpPointCloud, deleteIndex);
             if (res != GPP_NO_ERROR)
             {
-                GPPFREEARRAY(isolation);
                 return;
             }
-
-            GPPFREEARRAY(isolation);
             mUpdatePointCloudRendering = true;
+            mpUI->SetPointCloudInfo(mpPointCloud->GetPointCount());
         }
     }
 
@@ -459,6 +525,7 @@ namespace MagicApp
         mpPointCloud = samplePointCloud;
         mUpdatePointCloudRendering = true;
         GPPFREEARRAY(sampleIndex);
+        mpUI->SetPointCloudInfo(mpPointCloud->GetPointCount());
     }
 
     void PointShopApp::CalculatePointCloudNormal(bool isDepthImage, bool isSubThread)
@@ -542,7 +609,7 @@ namespace MagicApp
             std::vector<GPP::Real> vertexColorField;
             GPP::TriMesh* triMesh = new GPP::TriMesh;
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::PoissonReconstructMesh::Reconstruct(mpPointCloud, triMesh, GPP::RECONSTRUCT_QUALITY_MEDIUM, &pointColorFields, &vertexColorField);
+            GPP::ErrorCode res = GPP::PoissonReconstructMesh::Reconstruct(mpPointCloud, triMesh, GPP::RECONSTRUCT_QUALITY_MEDIUM, false, &pointColorFields, &vertexColorField);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -580,6 +647,10 @@ namespace MagicApp
         mScaleValue = scaleValue;
         InitViewTool();
         UpdatePointCloudRendering();
+        if (mpPointCloud)
+        {
+            mpUI->SetPointCloudInfo(mpPointCloud->GetPointCount());
+        }
     }
 
     int PointShopApp::GetPointCount()

@@ -17,6 +17,8 @@ namespace MagicApp
         void StopProgressbar(void);
         bool IsProgressbarVisible(void);
 
+        void SetMeshInfo(int vertexCount, int triangleCount);
+
     private:
         void ImportMesh(MyGUI::Widget* pSender);
         void ExportMesh(MyGUI::Widget* pSender);
@@ -24,7 +26,9 @@ namespace MagicApp
         void ConsolidateTopology(MyGUI::Widget* pSender);
         void ConsolidateGeometry(MyGUI::Widget* pSender);
         void ReverseDirection(MyGUI::Widget* pSender);
+        void RemoveMeshIsolatePart(MyGUI::Widget* pSender);
         void FilterMesh(MyGUI::Widget* pSender);
+        void RemoveMeshNoise(MyGUI::Widget* pSender);
         void SmoothMesh(MyGUI::Widget* pSender);
         void EnhanceMeshDetail(MyGUI::Widget* pSender);
         void SubdivideMesh(MyGUI::Widget* pSender);
@@ -41,5 +45,6 @@ namespace MagicApp
     private:
         MyGUI::VectorWidgetPtr mRoot;
         bool mIsProgressbarVisible;
+        MyGUI::TextBox* mTextInfo;
     };
 }

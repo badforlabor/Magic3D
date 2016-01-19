@@ -8,7 +8,8 @@
 namespace MagicApp
 {
     PointShopAppUI::PointShopAppUI() : 
-        mIsProgressbarVisible(false)
+        mIsProgressbarVisible(false),
+        mTextInfo(NULL)
     {
     }
 
@@ -34,10 +35,14 @@ namespace MagicApp
 
         mRoot.at(0)->findWidget("But_ConsolidatePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ConsolidatePointCloud);
         mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::RemovePointCloudOutlier);
+        mRoot.at(0)->findWidget("But_RemoveIsolatePart")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::RemoveIsolatePart);
         mRoot.at(0)->findWidget("But_SmoothGeometryByNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SmoothPointCloudByNormal);       
 
         mRoot.at(0)->findWidget("But_Reconstruction")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ReconstructMesh);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::BackToHomepage);
+
+        mTextInfo = mRoot.at(0)->findWidget("Text_Info")->castType<MyGUI::TextBox>();
+        mTextInfo->setTextColour(MyGUI::Colour(75.0 / 255.0, 131.0 / 255.0, 128.0 / 255.0));
     }
 
     void PointShopAppUI::StartProgressbar(int range)
@@ -62,6 +67,22 @@ namespace MagicApp
     bool PointShopAppUI::IsProgressbarVisible()
     {
         return mIsProgressbarVisible;
+    }
+
+    void PointShopAppUI::SetPointCloudInfo(int pointCount)
+    {
+        std::string textString = "";
+        if (pointCount > 0)
+        {
+            textString += "Point count = ";
+            std::stringstream ss;
+            ss << pointCount;
+            std::string numberString;
+            ss >> numberString;
+            textString += numberString;
+            textString += "\n";
+        }
+        mTextInfo->setCaption(textString);
     }
 
     void PointShopAppUI::Shutdown()
@@ -184,6 +205,7 @@ namespace MagicApp
     {
         bool isVisible = mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_RemoveIsolatePart")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_SmoothGeometryByNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
@@ -193,6 +215,15 @@ namespace MagicApp
         if (pointShop != NULL)
         {
             pointShop->RemovePointCloudOutlier();
+        }
+    }
+
+    void PointShopAppUI::RemoveIsolatePart(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->RemoveIsolatePart();
         }
     }
 

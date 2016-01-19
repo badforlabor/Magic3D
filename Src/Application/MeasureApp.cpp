@@ -349,7 +349,6 @@ namespace MagicApp
         }
         GPPFREEPOINTER(mpTriMeshRef);
         mpTriMeshRef = CopyTriMesh(mpDumpInfo->GetTriMesh());
-        mpTriMeshRef->UpdateNormal();
         InitViewTool();
         UpdateModelRefRendering();
     }

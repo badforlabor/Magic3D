@@ -17,6 +17,8 @@ namespace MagicApp
         void StopProgressbar(void);
         bool IsProgressbarVisible(void);
 
+        void SetPointCloudInfo(int pointCount);
+
     private:
         void ImportPointCloud(MyGUI::Widget* pSender);
         void ExportPointCloud(MyGUI::Widget* pSender);
@@ -32,6 +34,7 @@ namespace MagicApp
         
         void ConsolidatePointCloud(MyGUI::Widget* pSender);
         void RemovePointCloudOutlier(MyGUI::Widget* pSender);
+        void RemoveIsolatePart(MyGUI::Widget* pSender);
         void SmoothPointCloudByNormal(MyGUI::Widget* pSender);
 
         void ReconstructMesh(MyGUI::Widget* pSender);
@@ -40,5 +43,6 @@ namespace MagicApp
     private:
         MyGUI::VectorWidgetPtr mRoot;
         bool mIsProgressbarVisible;
+        MyGUI::TextBox* mTextInfo;
     };
 }
