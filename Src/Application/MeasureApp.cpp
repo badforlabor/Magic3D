@@ -741,14 +741,13 @@ namespace MagicApp
                 GPP::Real maxDistance = 0;
                 GPP::Int maxPointId = 0;
                 GPP::Int pointFromCount = pointListFrom->GetPointCount();
-                GPP::Real* fromDistance = new GPP::Real[pointFromCount];
+                std::vector<GPP::Real> fromDistance;
                 mIsCommandInProgress = true;
-                GPP::ErrorCode res = GPP::MeasurePointCloud::ComputeOneSideDistance(&pointListRef, pointListFrom, maxDistance, maxPointId, fromDistance);
+                GPP::ErrorCode res = GPP::MeasurePointCloud::ComputeOneSideDistance(&pointListRef, pointListFrom, maxDistance, maxPointId, &fromDistance);
                 mIsCommandInProgress = false;
                 GPPFREEPOINTER(pointListFrom);
                 if (res != GPP_NO_ERROR)
                 {
-                    GPPFREEARRAY(fromDistance);
                     MessageBox(NULL, "≤‚¡ø ß∞‹", "Œ¬‹∞Ã· æ", MB_OK);
                     return;
                 }
@@ -767,26 +766,8 @@ namespace MagicApp
                         mpPointCloudFrom->SetPointColor(pid, MagicCore::ToolKit::ColorCoding(0.4 + fromDistance[pid]));
                     }
                 }
-                GPPFREEARRAY(fromDistance);
                 mUpdateModelFromRendering = true;
             }
-            //std::vector<GPP::Int> pathVertexIds;
-            //GPP::Real distance = 0;
-            ////GPP::DumpOnce();
-            //mIsCommandInProgress = true;
-            //GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(mpTriMeshRef, mRefMarkIds, true, pathVertexIds, distance);
-            //mIsCommandInProgress = false;
-            //if (res != GPP_NO_ERROR)
-            //{
-            //    MessageBox(NULL, "≤‚¡ø ß∞‹", "Œ¬‹∞Ã· æ", MB_OK);
-            //    return;
-            //}
-            //mRefMarkPoints.clear();
-            //for (std::vector<GPP::Int>::iterator pathItr = pathVertexIds.begin(); pathItr != pathVertexIds.end(); ++pathItr)
-            //{
-            //    mRefMarkPoints.push_back(mpTriMeshRef->GetVertexCoord(*pathItr));
-            //}
-            //mUpdateMarkRefRendering = true;
         }
     }
 

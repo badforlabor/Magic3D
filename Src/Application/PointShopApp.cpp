@@ -400,9 +400,9 @@ namespace MagicApp
                 MessageBox(NULL, "点云的点个数小于1，操作失败", "温馨提示", MB_OK);
                 return;
             }
-            GPP::Real* uniformity = new GPP::Real[pointCount];
+            std::vector<GPP::Real> uniformity;
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(mpPointCloud, uniformity);
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(mpPointCloud, &uniformity);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -412,7 +412,6 @@ namespace MagicApp
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "点云去除飞点失败", "温馨提示", MB_OK);
-                GPPFREEARRAY(uniformity);
                 return;
             }
             GPP::Real cutValue = 0.8;
@@ -424,7 +423,6 @@ namespace MagicApp
                     deleteIndex.push_back(pid);
                 }
             }
-            GPPFREEARRAY(uniformity);
             res = DeletePointCloudElements(mpPointCloud, deleteIndex);
             if (res != GPP_NO_ERROR)
             {
@@ -459,9 +457,9 @@ namespace MagicApp
                 MessageBox(NULL, "点云的点个数小于1，操作失败", "温馨提示", MB_OK);
                 return;
             }
-            GPP::Real* isolation = new GPP::Real[pointCount];
+            std::vector<GPP::Real> isolation;
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(mpPointCloud, isolation);
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(mpPointCloud, &isolation);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -471,7 +469,6 @@ namespace MagicApp
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "点云去除孤立项失败", "温馨提示", MB_OK);
-                GPPFREEARRAY(isolation);
                 return;
             }
 
@@ -484,7 +481,6 @@ namespace MagicApp
                     deleteIndex.push_back(pid);
                 }
             }
-            GPPFREEARRAY(isolation);
             res = DeletePointCloudElements(mpPointCloud, deleteIndex);
             if (res != GPP_NO_ERROR)
             {

@@ -441,8 +441,8 @@ namespace MagicApp
             return;
         }
         GPP::Int pointCount = mpPointCloudRef->GetPointCount();
-        GPP::Real* uniformity = new GPP::Real[pointCount];
-        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(mpPointCloudRef, uniformity);
+        std::vector<GPP::Real> uniformity;
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(mpPointCloudRef, &uniformity);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -451,7 +451,6 @@ namespace MagicApp
         if (res != GPP_NO_ERROR)
         {
             MessageBox(NULL, "点云去除飞点失败", "温馨提示", MB_OK);
-            GPPFREEARRAY(uniformity);
             return;
         }
         GPP::Real cutValue = 0.8;
@@ -463,7 +462,6 @@ namespace MagicApp
                 deleteIndex.push_back(pid);
             }
         }
-        GPPFREEARRAY(uniformity);
         res = DeletePointCloudElements(mpPointCloudRef, deleteIndex);
         if (res != GPP_NO_ERROR)
         {
@@ -935,8 +933,8 @@ namespace MagicApp
             return;
         }
         GPP::Int pointCount = mpPointCloudFrom->GetPointCount();
-        GPP::Real* uniformity = new GPP::Real[pointCount];
-        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(mpPointCloudFrom, uniformity);
+        std::vector<GPP::Real> uniformity;
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(mpPointCloudFrom, &uniformity);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MagicCore::ToolKit::Get()->SetAppRunning(false);
@@ -945,7 +943,6 @@ namespace MagicApp
         if (res != GPP_NO_ERROR)
         {
             MessageBox(NULL, "点云去除飞点失败", "温馨提示", MB_OK);
-            GPPFREEARRAY(uniformity);
             return;
         }
         GPP::Real cutValue = 0.8;
@@ -957,7 +954,6 @@ namespace MagicApp
                 deleteIndex.push_back(pid);
             }
         }
-        GPPFREEARRAY(uniformity);
         res = DeletePointCloudElements(mpPointCloudFrom, deleteIndex);
         if (res != GPP_NO_ERROR)
         {

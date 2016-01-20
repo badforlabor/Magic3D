@@ -538,9 +538,9 @@ namespace MagicApp
                 MessageBox(NULL, "网格顶点个数小于1，操作失败", "温馨提示", MB_OK);
                 return;
             }
-            GPP::Real* isolation = new GPP::Real[vertexCount];
+            std::vector<GPP::Real> isolation;
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidateMesh::CalculateIsolation(mpTriMesh, isolation);
+            GPP::ErrorCode res = GPP::ConsolidateMesh::CalculateIsolation(mpTriMesh, &isolation);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -562,7 +562,6 @@ namespace MagicApp
                 }
             }
             GPPDebug << "MeshShopApp::RemoveOutlier deleteIndex size=" << deleteIndex.size() << std::endl;
-            GPPFREEARRAY(isolation);
             res = DeleteTriMeshVertices(mpTriMesh, deleteIndex);
             if (res != GPP_NO_ERROR)
             {
