@@ -47,6 +47,7 @@ namespace MagicApp
 
         void DoCommand(bool isSubThread);
 
+        void SwitchDisplayMode(void);
         bool ImportMesh(void);
         void ExportMesh(bool isSubThread = true);
         void ConsolidateTopology(bool isSubThread = true);
@@ -88,6 +89,7 @@ namespace MagicApp
         GPP::Vector3 mObjCenterCoord;
         GPP::Real mScaleValue;
         MagicCore::ViewTool* mpViewTool;
+        int mDisplayMode;
         GPP::DumpBase* mpDumpInfo;
         std::vector<std::vector<GPP::Int> > mShowHoleLoopIds;
         std::vector<GPP::Int>               mBoundarySeedIds;

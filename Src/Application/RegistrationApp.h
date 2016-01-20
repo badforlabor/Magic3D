@@ -29,6 +29,8 @@ namespace MagicApp
             ALIGN_ICP,
             NORMAL_REF,
             NORMAL_FROM,
+            OUTLIER_REF,
+            OUTLIER_FROM,
             GLOBAL_REGISTRATE
         };
 
@@ -52,7 +54,7 @@ namespace MagicApp
         
         void CalculateRefNormal(bool isDepthImage, bool isSubThread = true);
         void FlipRefNormal(void);
-        void RemoveOutlierRef(void);
+        void RemoveOutlierRef(bool isSubThread = true);
         
         void DeleteRefMark(void);
         void ImportRefMark(void);
@@ -61,7 +63,7 @@ namespace MagicApp
         
         void CalculateFromNormal(bool isDepthImage, bool isSubThread = true);
         void FlipFromNormal(void);
-        void RemoveOutlierFrom(void);
+        void RemoveOutlierFrom(bool isSubThread = true);
         
         void DeleteFromMark(void);
         void ImportFromMark(void);
@@ -124,5 +126,7 @@ namespace MagicApp
         std::vector<GPP::PointCloud*> mPointCloudList;
         std::vector<std::vector<GPP::Vector3> > mMarkList;
         double mGlobalRegistrateProgress;
+        bool mEnterPointShop;
+        bool mUpdateUIInfo;
     };
 }

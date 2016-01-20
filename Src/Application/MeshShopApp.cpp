@@ -28,6 +28,7 @@ namespace MagicApp
         mObjCenterCoord(),
         mScaleValue(0),
         mpViewTool(NULL),
+        mDisplayMode(0),
         mpDumpInfo(NULL),
         mShowHoleLoopIds(),
         mBoundarySeedIds(),
@@ -263,6 +264,27 @@ namespace MagicApp
             return false;
         }
         return true;
+    }
+
+    void MeshShopApp::SwitchDisplayMode()
+    {
+        mDisplayMode++;
+        if (mDisplayMode > 2)
+        {
+            mDisplayMode = 0;
+        }
+        if (mDisplayMode == 0)
+        {
+            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_SOLID);
+        }
+        else if (mDisplayMode == 1)
+        {
+            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_WIREFRAME);
+        }
+        else if (mDisplayMode == 2)
+        {
+            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_POINTS);
+        }
     }
 
     bool MeshShopApp::ImportMesh()

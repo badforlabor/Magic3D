@@ -20,6 +20,7 @@ namespace MagicApp
         void SetMeshInfo(int vertexCount, int triangleCount);
 
     private:
+        void SwitchDisplayMode(MyGUI::Widget* pSender);
         void ImportMesh(MyGUI::Widget* pSender);
         void ExportMesh(MyGUI::Widget* pSender);
         void ConsolidateMesh(MyGUI::Widget* pSender);
