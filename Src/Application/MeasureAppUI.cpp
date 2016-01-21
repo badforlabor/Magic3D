@@ -14,6 +14,8 @@ namespace MagicApp
         mRefTriangleCount(0),
         mFromVertexCount(0),
         mFromTriangleCount(0),
+        mRefArea(0),
+        mRefVolume(0),
         mGeodesicsDistance(0),
         mMaxDeviationDistance(0)
     {
@@ -29,10 +31,15 @@ namespace MagicApp
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("MeasureApp.layout");
         mRoot.at(0)->findWidget("But_SwitchDisplayMode")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::SwitchDisplayMode);
         mRoot.at(0)->findWidget("But_ImportModelRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ImportModelRef);
+        
         mRoot.at(0)->findWidget("But_Geodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::Geodesics);
         mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::DeleteMeshMarkRef);
         mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeApproximateGeodesics);
         mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeExactGeodesics);
+
+        mRoot.at(0)->findWidget("But_MeasureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefModel);
+        mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefArea);
+        mRoot.at(0)->findWidget("But_VolumeRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefVolume);
 
         mRoot.at(0)->findWidget("But_ImportModelFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ImportModelFrom);
         mRoot.at(0)->findWidget("But_Deviation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::Deviation);
@@ -86,6 +93,18 @@ namespace MagicApp
     {
         mFromVertexCount = vertexCount;
         mFromTriangleCount = triangleCount;
+        UpdateTextInfo();
+    }
+
+    void MeasureAppUI::SetRefModelArea(double area)
+    {
+        mRefArea = area;
+        UpdateTextInfo();
+    }
+
+    void MeasureAppUI::SetRefModelVolume(double volume)
+    {
+        mRefVolume = volume;
         UpdateTextInfo();
     }
 
@@ -154,6 +173,31 @@ namespace MagicApp
         }
     }
 
+    void MeasureAppUI::MeasureRefModel(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_VolumeRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
+    }
+
+    void MeasureAppUI::MeasureRefArea(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->MeasureRefArea();
+        }
+    }
+
+    void MeasureAppUI::MeasureRefVolume(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->MeasureRefVolume();
+        }
+    }
+
     void MeasureAppUI::ImportModelFrom(MyGUI::Widget* pSender)
     {
         MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
@@ -219,6 +263,39 @@ namespace MagicApp
             }
         }
 
+        if (mGeodesicsDistance > 0)
+        {
+            textString += "Geodesics distance = ";
+            std::stringstream ss;
+            ss << mGeodesicsDistance;
+            std::string numberString;
+            ss >> numberString;
+            textString += numberString;
+            textString += "\n";
+        }
+
+        if (mRefArea > 0)
+        {
+            textString += "Area = ";
+            std::stringstream ss;
+            ss << mRefArea;
+            std::string numberString;
+            ss >> numberString;
+            textString += numberString;
+            textString += "\n";
+        }
+
+        if (mRefVolume > 0)
+        {
+            textString += "Volume = ";
+            std::stringstream ss;
+            ss << mRefVolume;
+            std::string numberString;
+            ss >> numberString;
+            textString += numberString;
+            textString += "\n";
+        }
+
         if (mFromVertexCount > 0)
         {
             textString += "Float model vertex count = ";
@@ -242,17 +319,6 @@ namespace MagicApp
             {
                 textString += "\n";
             }
-        }
-
-        if (mGeodesicsDistance > 0)
-        {
-            textString += "Geodesics distance = ";
-            std::stringstream ss;
-            ss << mGeodesicsDistance;
-            std::string numberString;
-            ss >> numberString;
-            textString += numberString;
-            textString += "\n";
         }
 
         if (mMaxDeviationDistance > 0)

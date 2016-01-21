@@ -19,6 +19,8 @@ namespace MagicApp
 
         void SetRefModelInfo(int vertexCount, int triangleCount);
         void SetFromModelInfo(int vertexCount, int triangleCount);
+        void SetRefModelArea(double area);
+        void SetRefModelVolume(double volume);
         void SetGeodesicsInfo(double distance);
         void SetDeviationInfo(double maxDistance);
 
@@ -26,10 +28,15 @@ namespace MagicApp
         void SwitchDisplayMode(MyGUI::Widget* pSender);
 
         void ImportModelRef(MyGUI::Widget* pSender);
+
         void Geodesics(MyGUI::Widget* pSender);
         void DeleteMeshMarkRef(MyGUI::Widget* pSender);
         void ComputeApproximateGeodesics(MyGUI::Widget* pSender);
         void ComputeExactGeodesics(MyGUI::Widget* pSender);
+
+        void MeasureRefModel(MyGUI::Widget* pSender);
+        void MeasureRefArea(MyGUI::Widget* pSender);
+        void MeasureRefVolume(MyGUI::Widget* pSender);
 
         void ImportModelFrom(MyGUI::Widget* pSender);
         void Deviation(MyGUI::Widget* pSender);
@@ -48,6 +55,8 @@ namespace MagicApp
         int mRefTriangleCount;
         int mFromVertexCount;
         int mFromTriangleCount;
+        double mRefArea;
+        double mRefVolume;
         double mGeodesicsDistance;
         double mMaxDeviationDistance;
     };

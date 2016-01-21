@@ -45,9 +45,13 @@ namespace MagicApp
         void DoCommand(bool isSubThread);
 
         bool ImportModelRef(void);
+
         void DeleteMeshMarkRef(void);
         void ComputeApproximateGeodesics(bool isSubThread = true);
         void ComputeExactGeodesics(bool isSubThread = true);
+
+        void MeasureRefArea(void);
+        void MeasureRefVolume(void);
 
         bool ImportModelFrom(void);
         void ComputeDeviation(bool isSubThread = true);

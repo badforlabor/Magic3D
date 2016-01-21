@@ -18,16 +18,24 @@
 			<Property key="Visible" value="false"/>
 		</Widget>
 
-        <Widget type="Button" skin="But_Open" position="15 155 60 60" align="Left Top" name="But_ImportModelFrom"/>
-
-        <Widget type="Button" skin="But_Resize" position="15 225 60 60" align="Left Top" name="But_Deviation"></Widget>
-        <Widget type="Button" skin="But_Resize" position="75 235 43 43" align="Left Top" name="But_ComputeDeviation">
+        <Widget type="Button" skin="But_Measure_CN" position="15 155 60 60" align="Left Top" name="But_MeasureRef"></Widget>
+        <Widget type="Button" skin="But_Area_CN" position="75 165 43 43" align="Left Top" name="But_AreaRef">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Volume_CN" position="118 165 43 43" align="Left Top" name="But_VolumeRef">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Home" position="15 295 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Open" position="15 225 60 60" align="Left Top" name="But_ImportModelFrom"/>
+
+        <Widget type="Button" skin="But_Resize" position="15 295 60 60" align="Left Top" name="But_Deviation"></Widget>
+        <Widget type="Button" skin="But_Resize" position="75 305 43 43" align="Left Top" name="But_ComputeDeviation">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Home" position="15 365 60 60" align="Left Top" name="But_BackToHomepage"/>
         
-        <Widget type="ProgressBar" skin="ProgressBar" position="15 370 150 20" align="Left Top" name="APIProgress">
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 440 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>
             <Property key="FlowDirection" value="LeftToRight"/>
             <Property key="Visible" value="false"/>

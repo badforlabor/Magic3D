@@ -434,6 +434,8 @@ namespace MagicApp
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             mpUI->SetGeodesicsInfo(0);
+            mpUI->SetRefModelArea(0);
+            mpUI->SetRefModelVolume(0);
             size_t dotPos = fileName.rfind('.');
             if (dotPos == std::string::npos)
             {
@@ -612,6 +614,46 @@ namespace MagicApp
             mRefMarkPoints.swap(pathPoints);
             mUpdateMarkRefRendering = true;
         }
+    }
+
+    void MeasureApp::MeasureRefArea()
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (mpTriMeshRef == NULL)
+        {
+            MessageBox(NULL, "请导入需要测量的网格", "温馨提示", MB_OK);
+            return;
+        }
+        GPP::Real area = 0;
+        GPP::ErrorCode res = GPP::MeasureMesh::ComputeArea(mpTriMeshRef, area);
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        mpUI->SetRefModelArea(area / mScaleValue / mScaleValue);
+    }
+
+    void MeasureApp::MeasureRefVolume()
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (mpTriMeshRef == NULL)
+        {
+            MessageBox(NULL, "请导入需要测量的网格", "温馨提示", MB_OK);
+            return;
+        }
+        GPP::Real volume = 0;
+        GPP::ErrorCode res = GPP::MeasureMesh::ComputeVolume(mpTriMeshRef, volume);
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        mpUI->SetRefModelVolume(volume / mScaleValue / mScaleValue / mScaleValue);
     }
 
     bool MeasureApp::ImportModelFrom()

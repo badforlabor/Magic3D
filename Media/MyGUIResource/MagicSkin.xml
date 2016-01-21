@@ -669,4 +669,19 @@
             <State name="normal" offset="173 1693 84 84"/>
         </BasisSkin>
     </Resource>
+    <Resource type="ResourceSkin" name="But_Measure_CN" size="84 84" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 84 84" align="Stretch">
+            <State name="normal" offset="260 1693 84 84"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Area_CN" size="84 84" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 84 84" align="Stretch">
+            <State name="normal" offset="346 1693 84 84"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Volume_CN" size="84 84" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 84 84" align="Stretch">
+            <State name="normal" offset="431 1693 84 84"/>
+        </BasisSkin>
+    </Resource>
 </MyGUI>

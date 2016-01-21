@@ -648,7 +648,7 @@ namespace MagicApp
                 mpTriMesh->FuseVertex();
             }
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidateMesh::RemoveGeometryNoise(mpTriMesh, 1.0);
+            GPP::ErrorCode res = GPP::ConsolidateMesh::RemoveGeometryNoise(mpTriMesh, 70.0 * GPP::ONE_RADIAN, 1.0);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
