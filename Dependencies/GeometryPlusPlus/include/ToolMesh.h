@@ -29,4 +29,9 @@ namespace GPP
     // triMesh's normal is not updated here
     extern GPP_EXPORT ErrorCode DeleteTriMeshVertices(ITriMesh* triMesh, const std::vector<Int>& deleteIndex);
 
+    // triMesh's normal is not updated here
+    extern GPP_EXPORT ErrorCode DeleteTriMeshTriangles(ITriMesh* triMesh, const std::vector<Int>& deleteIndex, bool deleteIsolatedVertices);
+
+    extern GPP_EXPORT ErrorCode DeleteIsolatedVertices(ITriMesh* triMesh);
+
 }
