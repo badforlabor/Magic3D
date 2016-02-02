@@ -1,14 +1,7 @@
 #pragma once
 #include "AppBase.h"
-#include "Vector3.h"
+#include "GPP.h"
 #include <vector>
-
-namespace GPP
-{
-    class PointCloud;
-    class DumpBase;
-    class FusePointCloud;
-}
 
 namespace MagicCore
 {
@@ -60,6 +53,7 @@ namespace MagicApp
         void ImportRefMark(void);
 
         bool ImportPointCloudFrom(void);
+        void TransformPointCloudFrom(void);
         
         void CalculateFromNormal(bool isDepthImage, bool isSubThread = true);
         void FlipFromNormal(void);
@@ -74,7 +68,7 @@ namespace MagicApp
         
         void FuseRef(void);
 
-        void GlobalRegistrate(bool isSubThread = true);
+        void GlobalRegistrate(bool isInSequence, bool isSubThread = true);
 
         void EnterPointShop(void);
 
@@ -92,6 +86,7 @@ namespace MagicApp
         void UpdatePointCloudRefRendering(void);
         void UpdateMarkRefRendering(void);
         void UpdateMarkFromRendering(void);
+        void UpdatePointCloudListRendering(void);
         void SetPointCloudColor(GPP::PointCloud* pointCloud, const GPP::Vector3& color);
         bool IsCommandAvaliable(void);
 
@@ -107,6 +102,8 @@ namespace MagicApp
         bool mIsSeparateDisplay;
         MagicCore::PickTool* mpPickToolRef;
         MagicCore::PickTool* mpPickToolFrom;
+        GPP::Matrix4x4 mTransformFrom;
+        GPP::Matrix4x4 mTransformFromAccumulate;
         GPP::DumpBase* mpDumpInfo;
         GPP::PointCloud* mpPointCloudRef;
         GPP::PointCloud* mpPointCloudFrom;
@@ -128,5 +125,6 @@ namespace MagicApp
         double mGlobalRegistrateProgress;
         bool mEnterPointShop;
         bool mUpdateUIInfo;
+        bool mPointCloudInSequence;
     };
 }

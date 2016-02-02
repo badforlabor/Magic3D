@@ -155,7 +155,7 @@ namespace MagicApp
         {
             if (mpPointCloud)
             {
-                GPP::ConsolidatePointCloud::ConsolidateRawScanData(mpPointCloud, 1280, 1024, true);
+                GPP::ConsolidatePointCloud::ConsolidateRawScanData(mpPointCloud, 1280, 1024, false);
                 UpdatePointCloudRendering();
                 mpUI->SetPointCloudInfo(mpPointCloud->GetPointCount());
             }

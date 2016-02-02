@@ -50,5 +50,12 @@ namespace GPP
         static ErrorCode AlignPointCloudByMark(const IPointCloud* pointCloudRef, const std::vector<Vector3>* marksRef, 
             const IPointCloud* pointCloudFrom, const std::vector<Vector3>* marksFrom, Matrix4x4* resultTransform);
 
+        // pointCloud should have normals, if not, please calculate them first
+        // isInSequence: are point clouds in a sequence? If in sequence, the calculate speed will be fast
+        // needLoopClosure: if there are loops in sequence, please set it true
+        // initTransform == NULL if initTransform is identity
+        static ErrorCode GlobalRegistrate(const std::vector<IPointCloud*>* pointCloudList, bool isInSequence, bool needLoopCloure,
+            std::vector<Matrix4x4>* resultTransformList, std::vector<Matrix4x4>* initTransformList = NULL);
+
     };
 }

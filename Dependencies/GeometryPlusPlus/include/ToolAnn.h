@@ -1,5 +1,6 @@
 #pragma once
 #include "IPointList.h"
+#include "Matrix4x4.h"
 
 namespace GPP
 {
@@ -13,7 +14,7 @@ namespace GPP
         ErrorCode Init(Real* refData, Int refCount, Int refDim);
         // This constructor could eliminate date duplication
         // If you want to use IPointCloud or ITriMesh here, please use PointCloudPointList, TriMeshPointList instead
-        ErrorCode Init(const IPointList* pointList);
+        ErrorCode Init(const IPointList* pointList, const Matrix4x4* transform = NULL);
 
         // distanceRes: Be careful, it is Square Length!
         // if indexRes or distanceRes is not needed, please set it as NULL
