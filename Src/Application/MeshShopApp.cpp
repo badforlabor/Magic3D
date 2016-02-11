@@ -596,7 +596,7 @@ namespace MagicApp
                 }
             }
             DebugLog << "MeshShopApp::RemoveOutlier deleteIndex size=" << deleteIndex.size() << std::endl;
-            res = DeleteTriMeshVertices(mpTriMesh, deleteIndex);
+            res = GPP::DeleteTriMeshVertices(mpTriMesh, deleteIndex);
             if (res != GPP_NO_ERROR)
             {
                 return;

@@ -55,6 +55,8 @@ namespace MagicApp
         void FuseRef(MyGUI::Widget* pSender);
         
         void GlobalRegistrate(MyGUI::Widget* pSender);
+        void GlobalRegistrateInSequence(MyGUI::Widget* pSender);
+        void GlobalRegistrateUnOrder(MyGUI::Widget* pSender);
 
         void EnterPointShop(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);

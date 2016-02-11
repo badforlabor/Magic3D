@@ -104,6 +104,7 @@
     <ClInclude Include="..\Src\Application\ReliefAppUI.h" />
     <ClInclude Include="..\Src\Common\GUISystem.h" />
     <ClInclude Include="..\Src\Common\InputSystem.h" />
+    <ClInclude Include="..\Src\Common\LicenseSystem.h" />
     <ClInclude Include="..\Src\Common\LogSystem.h" />
     <ClInclude Include="..\Src\Common\MagicFramework.h" />
     <ClInclude Include="..\Src\Common\MagicListener.h" />
@@ -150,6 +151,7 @@
     <ClCompile Include="..\Src\Application\ReliefAppUI.cpp" />
     <ClCompile Include="..\Src\Common\GUISystem.cpp" />
     <ClCompile Include="..\Src\Common\InputSystem.cpp" />
+    <ClCompile Include="..\Src\Common\LicenseSystem.cpp" />
     <ClCompile Include="..\Src\Common\LogSystem.cpp" />
     <ClCompile Include="..\Src\Common\MagicFramework.cpp" />
     <ClCompile Include="..\Src\Common\MagicListener.cpp">

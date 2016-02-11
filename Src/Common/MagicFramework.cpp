@@ -3,6 +3,7 @@
 #include "InputSystem.h"
 #include "ToolKit.h"
 #include "ResourceManager.h"
+#include "LicenseSystem.h"
 #include "../Application/AppManager.h"
 #include "GUISystem.h"
 #include "LogSystem.h"
@@ -27,6 +28,7 @@ namespace MagicCore
     void MagicFramework::Init()
     {
         InfoLog << "MagicFramework init" << std::endl;
+        LicenseSystem::Init();
         RenderSystem::Get()->Init();
         ResourceManager::Init();
         GUISystem::Get()->Init(RenderSystem::Get()->GetRenderWindow(), RenderSystem::Get()->GetSceneManager(), "MyGUIResource");

@@ -176,6 +176,65 @@ namespace MagicCore
         }
     }
 
+    void RenderSystem::RenderPointCloudList(std::string pointCloudListName, std::string materialName, 
+        const std::vector<GPP::PointCloud*>& pointCloudList, bool hasNormal, ModelNodeType nodeType)
+    {
+        if (mpSceneManager == NULL)
+        {
+            InfoLog << "Error: RenderSystem::mpSceneMagager is NULL when RenderPointCloudList" << std::endl;
+            return;
+        }
+        Ogre::ManualObject* manualObj = NULL;
+        if (mpSceneManager->hasManualObject(pointCloudListName))
+        {
+            manualObj = mpSceneManager->getManualObject(pointCloudListName);
+            manualObj->clear();
+        }
+        else
+        {
+            manualObj = mpSceneManager->createManualObject(pointCloudListName);
+            AttachManualObjectToSceneNode(nodeType, manualObj);
+        }
+        if (pointCloudList.empty())
+        {
+            return;
+        }
+        for (std::vector<GPP::PointCloud*>::const_iterator pItr = pointCloudList.begin(); pItr != pointCloudList.end(); ++pItr)
+        {
+            if ((*pItr) == NULL)
+            {
+                continue;
+            }
+            int pointCount = (*pItr)->GetPointCount();
+            if (hasNormal)
+            {
+                manualObj->begin(materialName, Ogre::RenderOperation::OT_POINT_LIST);
+                for (int pid = 0; pid < pointCount; pid++)
+                {
+                    GPP::Vector3 coord = (*pItr)->GetPointCoord(pid);
+                    GPP::Vector3 normal = (*pItr)->GetPointNormal(pid);
+                    GPP::Vector3 color = (*pItr)->GetPointColor(pid);
+                    manualObj->position(coord[0], coord[1], coord[2]);
+                    manualObj->normal(normal[0], normal[1], normal[2]);
+                    manualObj->colour(color[0], color[1], color[2]);
+                }
+                manualObj->end();
+            }
+            else
+            {
+                manualObj->begin(materialName, Ogre::RenderOperation::OT_POINT_LIST);
+                for (int pid = 0; pid < pointCount; pid++)
+                {
+                    GPP::Vector3 coord = (*pItr)->GetPointCoord(pid);
+                    GPP::Vector3 color = (*pItr)->GetPointColor(pid);
+                    manualObj->position(coord[0], coord[1], coord[2]);
+                    manualObj->colour(color[0], color[1], color[2]);
+                }
+                manualObj->end();
+            }
+        }
+    }
+
     void RenderSystem::RenderPointList(std::string pointListName, std::string materialName, const GPP::Vector3& color, 
         const std::vector<GPP::Vector3>& pointCoords, ModelNodeType nodeType)
     {

@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+#include <string>
 
 #ifdef GPP_DLL_EXPORT
 #ifdef WIN32
@@ -42,6 +43,8 @@ namespace GPP
     typedef int ErrorCode;
     extern GPP_EXPORT const Real REAL_TOL;
     extern GPP_EXPORT const Real REAL_LARGE;
+    extern GPP_EXPORT const Int INT_LARGE;    
+    extern GPP_EXPORT const UInt UINT_LARGE;    
     extern GPP_EXPORT const Real PI;
     extern GPP_EXPORT const Real ONE_RADIAN;
 
@@ -57,4 +60,8 @@ namespace GPP
     // Set progress value in api implmentation
     // range: [0, 1]
     extern void SetApiProgress(Real value);
+
+    extern GPP_EXPORT std::string GetRegistrationKey(void);
+
+    extern GPP_EXPORT bool SetActivationKey(std::string key);
 }

@@ -123,6 +123,9 @@
     <ClInclude Include="..\Src\Application\ReliefAppUI.h">
       <Filter>Application\ReliefApp</Filter>
     </ClInclude>
+    <ClInclude Include="..\Src\Common\LicenseSystem.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -202,6 +205,9 @@
     </ClCompile>
     <ClCompile Include="..\Src\Application\ReliefAppUI.cpp">
       <Filter>Application\ReliefApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\LicenseSystem.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
