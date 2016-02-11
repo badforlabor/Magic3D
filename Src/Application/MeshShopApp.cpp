@@ -7,7 +7,9 @@
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
+#if DEBUGDUMPFILE
 #include "DumpFillMeshHole.h"
+#endif
 
 namespace MagicApp
 {
@@ -29,7 +31,9 @@ namespace MagicApp
         mScaleValue(0),
         mpViewTool(NULL),
         mDisplayMode(0),
+#if DEBUGDUMPFILE
         mpDumpInfo(NULL),
+#endif
         mShowHoleLoopIds(),
         mBoundarySeedIds(),
         mTargetVertexCount(0),
@@ -46,7 +50,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpViewTool);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
     }
 
     bool MeshShopApp::Enter()
@@ -150,7 +156,9 @@ namespace MagicApp
         }
         else if (arg.key == OIS::KC_D)
         {
+#if DEBUGDUMPFILE
             RunDumpInfo();
+#endif
         }
         return true;
     }
@@ -247,7 +255,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpViewTool);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
         mShowHoleLoopIds.clear();
     }
 
@@ -402,6 +412,7 @@ namespace MagicApp
         }
     }
 
+#if DEBUGDUMPFILE
     void MeshShopApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
     {
         if (dumpInfo == NULL)
@@ -472,6 +483,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpDumpInfo);
         
     }
+#endif
 
     bool MeshShopApp::IsCommandInProgress(void)
     {
@@ -583,8 +595,8 @@ namespace MagicApp
                     deleteIndex.push_back(vid);
                 }
             }
-            GPPDebug << "MeshShopApp::RemoveOutlier deleteIndex size=" << deleteIndex.size() << std::endl;
-            res = GPP::DeleteTriMeshVertices(mpTriMesh, deleteIndex);
+            DebugLog << "MeshShopApp::RemoveOutlier deleteIndex size=" << deleteIndex.size() << std::endl;
+            res = DeleteTriMeshVertices(mpTriMesh, deleteIndex);
             if (res != GPP_NO_ERROR)
             {
                 return;

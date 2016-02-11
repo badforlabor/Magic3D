@@ -35,9 +35,10 @@ namespace MagicApp
         bool ImportModel(void);
         void GenerateRelief(double compressRatio);
         void EnterMeshTool(void);
-
+#if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
+#endif
 
     private:
         void SetupScene(void);
@@ -52,7 +53,9 @@ namespace MagicApp
         ReliefAppUI* mpUI;
         GPP::TriMesh* mpTriMesh;
         MagicCore::ViewTool* mpViewTool;
+#if DEBUGDUMPFILE
         GPP::DumpBase* mpDumpInfo;
+#endif
         std::vector<GPP::Real> mHeightField;
         int mResolution;
     };

@@ -29,7 +29,9 @@ namespace MagicApp
         mObjCenterCoord(),
         mScaleValue(0),
         mpViewTool(NULL),
+#if DEBUGDUMPFILE
         mpDumpInfo(NULL),
+#endif
         mCommandType(NONE),
         mUpdatePointCloudRendering(false),
         mIsCommandInProgress(false),
@@ -43,7 +45,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpPointCloud);
         GPPFREEPOINTER(mpViewTool);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
     }
 
     bool PointShopApp::Enter(void)
@@ -149,13 +153,15 @@ namespace MagicApp
     {
         if (arg.key == OIS::KC_D)
         {
+#if DEBUGDUMPFILE
             RunDumpInfo();
+#endif
         }
         else if (arg.key == OIS::KC_R) // A temporary command
         {
             if (mpPointCloud)
             {
-                GPP::ConsolidatePointCloud::ConsolidateRawScanData(mpPointCloud, 1280, 1024, false);
+                GPP::ConsolidatePointCloud::ConsolidateRawScanData(mpPointCloud, 1280, 1024, true);
                 UpdatePointCloudRendering();
                 mpUI->SetPointCloudInfo(mpPointCloud->GetPointCount());
             }
@@ -199,7 +205,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpPointCloud);
         GPPFREEPOINTER(mpViewTool);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
     }
 
     void PointShopApp::DoCommand(bool isSubThread)
@@ -661,6 +669,7 @@ namespace MagicApp
         }
     }
 
+#if DEBUGDUMPFILE
     void PointShopApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
     {
         if (dumpInfo == NULL)
@@ -717,6 +726,7 @@ namespace MagicApp
             GPPFREEPOINTER(mpDumpInfo);
         }
     }
+#endif
 
     bool PointShopApp::IsCommandInProgress(void)
     {

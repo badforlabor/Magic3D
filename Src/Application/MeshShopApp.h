@@ -4,6 +4,9 @@
 #include "Vector3.h"
 #include <vector>
 #include "Gpp.h"
+#if DEBUGDUMPFILE
+#include "DumpBase.h"
+#endif
 
 namespace MagicCore
 {
@@ -66,9 +69,11 @@ namespace MagicApp
 
         void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
         int GetMeshVertexCount(void);
+        bool IsCommandInProgress(void);
+#if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
-        bool IsCommandInProgress(void);
+#endif
 
     private:
         void SetupScene(void);
@@ -90,7 +95,9 @@ namespace MagicApp
         GPP::Real mScaleValue;
         MagicCore::ViewTool* mpViewTool;
         int mDisplayMode;
+#if DEBUGDUMPFILE
         GPP::DumpBase* mpDumpInfo;
+#endif
         std::vector<std::vector<GPP::Int> > mShowHoleLoopIds;
         std::vector<GPP::Int>               mBoundarySeedIds;
         GPP::Int mTargetVertexCount;

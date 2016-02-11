@@ -7,6 +7,9 @@
 #include "GUISystem.h"
 #include "LogSystem.h"
 #include "DumpInfo.h"
+#if DEBUGDUMPFILE
+#include "DumpBase.h"
+#endif
 //#include "vld.h"
 
 namespace MagicCore
@@ -29,7 +32,9 @@ namespace MagicCore
         GUISystem::Get()->Init(RenderSystem::Get()->GetRenderWindow(), RenderSystem::Get()->GetSceneManager(), "MyGUIResource");
         InputSystem::Get()->Init(RenderSystem::Get()->GetRenderWindow());
         MagicApp::AppManager::Get()->Init();
+#if DEBUGDUMPFILE
         GPP::RegisterDumpInfo();
+#endif
     }
 
     void MagicFramework::Run()

@@ -15,7 +15,9 @@ namespace MagicApp
         mpUI(NULL),
         mpTriMesh(NULL),
         mpViewTool(NULL),
+#if DEBUGDUMPFILE
         mpDumpInfo(NULL),
+#endif
         mHeightField(),
         mResolution(650)
     {
@@ -26,7 +28,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpViewTool);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
     }
 
     bool ReliefApp::Enter()
@@ -119,7 +123,9 @@ namespace MagicApp
         }
         else if (arg.key == OIS::KC_D)
         {
+#if DEBUGDUMPFILE
             RunDumpInfo();
+#endif
         }
         return true;
     }
@@ -160,10 +166,13 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpViewTool);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
         mHeightField.clear();
     }
 
+#if DEBUGDUMPFILE
     void ReliefApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
     {
         if (dumpInfo == NULL)
@@ -193,9 +202,7 @@ namespace MagicApp
         GPP::ErrorCode res = mpDumpInfo->Run();
         if (res != GPP_NO_ERROR)
         {
-#if STOPFAILEDCOMMAND
             MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
             return;
         }
         //Copy result
@@ -209,6 +216,7 @@ namespace MagicApp
         UpdateModelRendering();
         GPPFREEPOINTER(mpDumpInfo);
     }
+#endif
 
     bool ReliefApp::ImportModel()
     {

@@ -42,7 +42,6 @@ namespace GPP
     typedef int ErrorCode;
     extern GPP_EXPORT const Real REAL_TOL;
     extern GPP_EXPORT const Real REAL_LARGE;
-    extern GPP_EXPORT const Int INT_LARGE;
     extern GPP_EXPORT const Real PI;
     extern GPP_EXPORT const Real ONE_RADIAN;
 

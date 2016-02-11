@@ -9,7 +9,10 @@
 #include "../Common/PickTool.h"
 #include "PointShopApp.h"
 #include "AppManager.h"
+#include "GPP.h"
+#if DEBUGDUMPFILE
 #include "DumpRegistratePointCloud.h"
+#endif
 #include <algorithm>
 
 namespace MagicApp
@@ -31,11 +34,11 @@ namespace MagicApp
         mIsSeparateDisplay(false),
         mpPickToolRef(NULL),
         mpPickToolFrom(NULL),
+#if DEBUGDUMPFILE
         mpDumpInfo(NULL),
+#endif
         mpPointCloudRef(NULL),
         mpPointCloudFrom(NULL),
-        mTransformFrom(),
-        mTransformFromAccumulate(),
         mpFusePointCloud(NULL),
         mObjCenterCoord(),
         mScaleValue(0),
@@ -53,8 +56,7 @@ namespace MagicApp
         mMarkList(),
         mGlobalRegistrateProgress(-1),
         mEnterPointShop(0),
-        mUpdateUIInfo(0),
-        mPointCloudInSequence(false)
+        mUpdateUIInfo(0)
     {
     }
 
@@ -64,7 +66,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpPickToolRef);
         GPPFREEPOINTER(mpPickToolFrom);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
         GPPFREEPOINTER(mpPointCloudRef);
         GPPFREEPOINTER(mpPointCloudFrom);
         GPPFREEPOINTER(mpFusePointCloud);
@@ -240,11 +244,9 @@ namespace MagicApp
     {
         if (arg.key == OIS::KC_D)
         {
+#if DEBUGDUMPFILE
             RunDumpInfo();
-        }
-        else if (arg.key == OIS::KC_R)
-        {
-            UpdatePointCloudListRendering();
+#endif
         }
         return true;
     }
@@ -291,7 +293,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpPickToolRef);
         GPPFREEPOINTER(mpPickToolFrom);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
         GPPFREEPOINTER(mpPointCloudRef);
         GPPFREEPOINTER(mpPointCloudFrom);
         GPPFREEPOINTER(mpFusePointCloud);
@@ -350,7 +354,7 @@ namespace MagicApp
                 RemoveOutlierFrom(false);
                 break;
             case MagicApp::RegistrationApp::GLOBAL_REGISTRATE:
-                GlobalRegistrate(mPointCloudInSequence, false);
+                GlobalRegistrate(false);
                 break;
             default:
                 break;
@@ -367,7 +371,6 @@ namespace MagicApp
         }
         std::string fileName;
         char filterName[] = "ASC Files(*.asc)\0*.asc\0OBJ Files(*.obj)\0*.obj\0";
-        //char filterName[] = "OBJ Files(*.obj)\0*.obj\0ASC Files(*.asc)\0*.asc\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
@@ -393,7 +396,6 @@ namespace MagicApp
                     MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudFrom_RegistrationApp");
                 }
                 GPPFREEPOINTER(mpFusePointCloud);
-                mTransformFromAccumulate.InitIdentityTransform();
 
                 mRefMarks.clear();
                 UpdateMarkRefRendering();
@@ -591,7 +593,7 @@ namespace MagicApp
             MessageBox(NULL, "请先给点云计算法线", "温馨提示", MB_OK);
             return;
         }
-        GPP::Real markTol = 3.0 / 1024.0;
+        GPP::Real markTol = 3.0 / 2048.0;
         GPP::ErrorCode res = GPP_NO_ERROR;
         if (mpFusePointCloud == NULL)
         {
@@ -621,7 +623,6 @@ namespace MagicApp
             }
 
             GPP::PointCloud* pointCloudRefAligned = GPP::CopyPointCloud(mpPointCloudRef);
-            SetPointCloudColor(pointCloudRefAligned, GPP::Vector3(0, 0.86, 0));
             mPointCloudList.push_back(pointCloudRefAligned);
             mMarkList.push_back(mRefMarks);
         }
@@ -710,7 +711,6 @@ namespace MagicApp
                 mRefMarks.push_back(*fromItr);
             }
         }
-        mTransformFromAccumulate = mTransformFrom * mTransformFromAccumulate;
         mFromMarks.clear();
         SetSeparateDisplay(false);
         mUpdatePointRefRendering = true;
@@ -720,7 +720,7 @@ namespace MagicApp
         mUpdateUIInfo = true;
     }
 
-    void RegistrationApp::GlobalRegistrate(bool isInSequence, bool isSubThread)
+    void RegistrationApp::GlobalRegistrate(bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -738,32 +738,14 @@ namespace MagicApp
         }
         if (isSubThread)
         {
-            GPPDebug << "Global Registrate App in Main Thread..." << std::endl;
             mCommandType = GLOBAL_REGISTRATE;
-            mPointCloudInSequence = isInSequence;
             DoCommand(true);
         }
         else
         {
-            GPPDebug << "Global Registrate App in SubThread..." << std::endl;
-            std::vector<GPP::Matrix4x4> resultTransform;
-            std::vector<GPP::IPointCloud*> pointCloudList;
-            for (std::vector<GPP::PointCloud*>::iterator itr = mPointCloudList.begin(); itr != mPointCloudList.end(); ++itr)
-            {
-                pointCloudList.push_back(*itr);
-            }
-            mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::RegistratePointCloud::GlobalRegistrate(&pointCloudList, mPointCloudInSequence, true, &resultTransform, NULL);
-            if (res != GPP_NO_ERROR)
-            {
-                MessageBox(NULL, "全局注册失败", "温馨提示", MB_OK);
-                mIsCommandInProgress = false;
-                return;
-            }
-
-            GPP::PointCloudPointList pointList(mpPointCloudRef);
+            GPP::PointCloudPointList pointCloudList(mpPointCloudRef);
             GPP::Vector3 bboxMin, bboxMax;
-            res = GPP::CalculatePointListBoundingBox(&pointList, bboxMin, bboxMax);
+            GPP::ErrorCode res = GPP::CalculatePointListBoundingBox(&pointCloudList, bboxMin, bboxMax);
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "包围盒计算失败", "温馨提示", MB_OK);
@@ -772,22 +754,41 @@ namespace MagicApp
             GPP::Vector3 deltaVector(0.25, 0.25, 0.25);
             bboxMin -= deltaVector;
             bboxMax += deltaVector;
-            GPPInfo << "Global registration app: bboxMin=" << bboxMin[0] << " " << bboxMin[1] << " " << bboxMin[2] << 
+            DebugLog << "Global registration app: bboxMin=" << bboxMin[0] << " " << bboxMin[1] << " " << bboxMin[2] << 
                 " bboxMax=" << bboxMax[0] << " " << bboxMax[1] << " " << bboxMax[2] << std::endl;
             GPPFREEPOINTER(mpFusePointCloud);
             double gridSize = 0.004;
             int resolutionX = (bboxMax[0] - bboxMin[0]) / gridSize;
             int resolutionY = (bboxMax[1] - bboxMin[1]) / gridSize;
             int resolutionZ = (bboxMax[2] - bboxMin[2]) / gridSize;
-            GPPInfo << "Global registration app: resolution " << resolutionX << " " << resolutionY << " " << resolutionZ << std::endl;
+            DebugLog << "Global registration app: resolution " << resolutionX << " " << resolutionY << " " << resolutionZ << std::endl;
             mpFusePointCloud = new GPP::FusePointCloud(resolutionX, resolutionY, resolutionZ, bboxMin, bboxMax);
             int pointCloudCount = mPointCloudList.size();
+            mIsCommandInProgress = true;
             for (int pid = 0; pid < pointCloudCount; pid++)
             {
                 mGlobalRegistrateProgress = double(pid) / double(pointCloudCount);
                 GPP::PointCloud* pointCloudFrom = mPointCloudList.at(pid);
                 GPP::Int pointCountFrom = pointCloudFrom->GetPointCount();
- 
+                std::vector<GPP::Vector3>* marksRef = NULL;
+                if (mRefMarks.size() > 0)
+                {
+                    marksRef = &mRefMarks;
+                }
+                std::vector<GPP::Vector3>* marksFrom = NULL;
+                if (mMarkList.at(pid).size() > 0)
+                {
+                    marksFrom = &(mMarkList.at(pid));
+                }
+                GPP::Matrix4x4 resultTransform;
+                GPP::ErrorCode res = GPP::RegistratePointCloud::ICPRegistrate(mpPointCloudRef, marksRef, pointCloudFrom, marksFrom, &resultTransform);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "全局注册失败", "温馨提示", MB_OK);
+                    mGlobalRegistrateProgress = -1;
+                    mIsCommandInProgress = false;
+                    return;
+                }
                 if (mpPointCloudRef->HasColor())
                 {
                     std::vector<GPP::Real> pointColorFieldsFrom(pointCountFrom * 3);
@@ -799,7 +800,7 @@ namespace MagicApp
                         pointColorFieldsFrom.at(baseId + 1) = color[1];
                         pointColorFieldsFrom.at(baseId + 2) = color[2];
                     }
-                    res = mpFusePointCloud->UpdateFuseFunction(pointCloudFrom, &resultTransform.at(pid), &pointColorFieldsFrom);
+                    res = mpFusePointCloud->UpdateFuseFunction(pointCloudFrom, &resultTransform, &pointColorFieldsFrom);
                     if (res != GPP_NO_ERROR)
                     {
                         MessageBox(NULL, "点云融合失败", "温馨提示", MB_OK);
@@ -810,7 +811,7 @@ namespace MagicApp
                 }
                 else
                 {
-                    res = mpFusePointCloud->UpdateFuseFunction(pointCloudFrom, &resultTransform.at(pid), NULL);
+                    res = mpFusePointCloud->UpdateFuseFunction(pointCloudFrom, &resultTransform, NULL);
                     if (res != GPP_NO_ERROR)
                     {
                         MessageBox(NULL, "点云融合失败", "温馨提示", MB_OK);
@@ -820,6 +821,7 @@ namespace MagicApp
                     }
                 }
             }
+            mGlobalRegistrateProgress = 1.0;
             if (mpPointCloudRef->HasColor())
             {
                 GPP::PointCloud* extractPointCloud = new GPP::PointCloud;
@@ -860,14 +862,6 @@ namespace MagicApp
                 SetPointCloudColor(mpPointCloudRef, GPP::Vector3(0.86, 0, 0));
             }
             GPPFREEPOINTER(mpFusePointCloud);
-            mGlobalRegistrateProgress = -1.0;
-            res = GPP::ConsolidatePointCloud::SmoothGeometryByNormal(mpPointCloudRef);
-            if (res != GPP_NO_ERROR)
-            {
-                MessageBox(NULL, "点云去噪失败", "温馨提示", MB_OK);
-                mIsCommandInProgress = false;
-                return;
-            }
             ResetGlobalRegistrationData();
             mRefMarks.clear();
             mUpdateMarkRefRendering = true;
@@ -892,7 +886,6 @@ namespace MagicApp
         }
         std::string fileName;
         char filterName[] = "ASC Files(*.asc)\0*.asc\0OBJ Files(*.obj)\0*.obj\0";
-        //char filterName[] = "OBJ Files(*.obj)\0*.obj\0ASC Files(*.asc)\0*.asc\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
@@ -922,8 +915,6 @@ namespace MagicApp
                 mpPickToolFrom = new MagicCore::PickTool;
                 mpPickToolFrom->SetPickParameter(MagicCore::PM_POINT, false, mpPointCloudFrom, NULL, "ModelNodeRight");
 
-                mTransformFrom.InitIdentityTransform();
-
                 return true;
             }
             else
@@ -932,25 +923,6 @@ namespace MagicApp
             }
         }
         return false;
-    }
-
-    void RegistrationApp::TransformPointCloudFrom()
-    {
-        if (mpPointCloudFrom)
-        {
-            GPP::Int fromPointCount = mpPointCloudFrom->GetPointCount();
-            for (GPP::Int pid = 0; pid < fromPointCount; pid++)
-            {
-                mpPointCloudFrom->SetPointCoord(pid, mTransformFromAccumulate.TransformPoint(mpPointCloudFrom->GetPointCoord(pid)));
-                mpPointCloudFrom->SetPointNormal(pid, mTransformFromAccumulate.RotateVector(mpPointCloudFrom->GetPointNormal(pid)));
-            }
-            for (std::vector<GPP::Vector3>::iterator markItr = mFromMarks.begin(); markItr != mFromMarks.end(); ++markItr)
-            {
-                (*markItr) = mTransformFromAccumulate.TransformPoint(*markItr);
-            }
-            mUpdatePointFromRendering = true;
-            mUpdateMarkFromRendering = true;
-        }
     }
 
     void RegistrationApp::CalculateFromNormal(bool isDepthImage, bool isSubThread)
@@ -1204,7 +1176,6 @@ namespace MagicApp
                 MessageBox(NULL, "快速对齐失败", "温馨提示", MB_OK);
                 return;
             }
-            mTransformFrom = resultTransform * mTransformFrom;
             //Update mpPointCloudFrom
             GPP::Int fromPointCount = mpPointCloudFrom->GetPointCount();
             for (GPP::Int pid = 0; pid < fromPointCount; pid++)
@@ -1267,7 +1238,6 @@ namespace MagicApp
                 MessageBox(NULL, "精细对齐失败", "温馨提示", MB_OK);
                 return;
             }
-            mTransformFrom = resultTransform * mTransformFrom;
             //Update mpPointCloudFrom
             GPP::Int fromPointCount = mpPointCloudFrom->GetPointCount();
             for (GPP::Int pid = 0; pid < fromPointCount; pid++)
@@ -1340,7 +1310,6 @@ namespace MagicApp
                 MessageBox(NULL, "ICP对齐失败", "温馨提示", MB_OK);
                 return;
             }
-            mTransformFrom = resultTransform * mTransformFrom;
             //Update mpPointCloudFrom
             GPP::Int fromPointCount = mpPointCloudFrom->GetPointCount();
             for (GPP::Int pid = 0; pid < fromPointCount; pid++)
@@ -1408,6 +1377,7 @@ namespace MagicApp
         }
     }
 
+#if DEBUGDUMPFILE
     void RegistrationApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
     {
         if (dumpInfo == NULL)
@@ -1454,9 +1424,7 @@ namespace MagicApp
         GPP::ErrorCode res = mpDumpInfo->Run();
         if (res != GPP_NO_ERROR)
         {
-#if STOPFAILEDCOMMAND
             MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
             return;
         }
         if (mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_ICP || mpDumpInfo->GetApiName() == GPP::POINT_REGISTRATION_ALIGNPOINTCLOUD)
@@ -1472,6 +1440,7 @@ namespace MagicApp
         }
         GPPFREEPOINTER(mpDumpInfo);
     }
+#endif
 
     void RegistrationApp::UpdatePointCloudFromRendering()
     {
@@ -1527,22 +1496,6 @@ namespace MagicApp
                 MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloudRef_RegistrationApp", "SimplePoint", mpPointCloudRef, MagicCore::RenderSystem::MODEL_NODE_CENTER);
             }
         }
-    }
-
-    void RegistrationApp::UpdatePointCloudListRendering()
-    {
-        static bool isOn = true;
-        if (isOn)
-        {
-            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudRef_RegistrationApp");
-            MagicCore::RenderSystem::Get()->RenderPointCloudList("PointCloudList_RegistrationApp", "CookTorrancePoint", 
-                mPointCloudList, true, MagicCore::RenderSystem::MODEL_NODE_CENTER);
-        }
-        else
-        {
-            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudList_RegistrationApp");
-        }
-        isOn = !isOn;
     }
 
     void RegistrationApp::UpdateMarkRefRendering()

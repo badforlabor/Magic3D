@@ -56,8 +56,10 @@ namespace MagicApp
         bool ImportModelFrom(void);
         void ComputeDeviation(bool isSubThread = true);
 
+#if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
+#endif
         bool IsCommandInProgress(void);
 
         void SwitchSeparateDisplay(void);
@@ -90,7 +92,9 @@ namespace MagicApp
         bool mIsSeparateDisplay;
         MagicCore::PickTool* mpPickToolRef;
         MagicCore::PickTool* mpPickToolFrom;
+#if DEBUGDUMPFILE
         GPP::DumpBase* mpDumpInfo;
+#endif
         std::vector<GPP::Int> mRefMarkIds;
         std::vector<GPP::Vector3> mRefMarkPoints;
         std::vector<GPP::Int> mFromMarkIds;

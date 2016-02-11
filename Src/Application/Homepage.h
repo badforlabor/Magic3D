@@ -16,7 +16,9 @@ namespace MagicApp
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
 
     private:
+#if DEBUGDUMPFILE
         void LoadDumpFile(void);
+#endif
 
     private:
         HomepageUI* mpUI;

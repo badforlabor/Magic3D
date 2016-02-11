@@ -5,7 +5,7 @@
 
 namespace GPP
 {
-    class GPP_EXPORT Triplet
+    class Triplet
     {
     public:
         Triplet();
@@ -25,7 +25,7 @@ namespace GPP
     };
 
     class SparseMatrixImpl;
-    class GPP_EXPORT SparseMatrix
+    class SparseMatrix
     {
     public:
         SparseMatrix();
@@ -58,7 +58,7 @@ namespace GPP
     };
 
     class LinearSparseLUSolverImpl;
-    class GPP_EXPORT LinearSparseLUSolver
+    class LinearSparseLUSolver
     {
     public:
         LinearSparseLUSolver();
@@ -73,7 +73,7 @@ namespace GPP
     };
 
     class LeastSquareSparseLUSolverImpl;
-    class GPP_EXPORT LeastSquareSparseLUSolver
+    class LeastSquareSparseLUSolver
     {
     public:
         LeastSquareSparseLUSolver();

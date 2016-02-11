@@ -1,7 +1,14 @@
 #pragma once
 #include "AppBase.h"
-#include "GPP.h"
+#include "Vector3.h"
 #include <vector>
+
+namespace GPP
+{
+    class PointCloud;
+    class DumpBase;
+    class FusePointCloud;
+}
 
 namespace MagicCore
 {
@@ -53,7 +60,6 @@ namespace MagicApp
         void ImportRefMark(void);
 
         bool ImportPointCloudFrom(void);
-        void TransformPointCloudFrom(void);
         
         void CalculateFromNormal(bool isDepthImage, bool isSubThread = true);
         void FlipFromNormal(void);
@@ -68,12 +74,14 @@ namespace MagicApp
         
         void FuseRef(void);
 
-        void GlobalRegistrate(bool isInSequence, bool isSubThread = true);
+        void GlobalRegistrate(bool isSubThread = true);
 
         void EnterPointShop(void);
 
+#if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
+#endif
         bool IsCommandInProgress(void);
 
         void SwitchSeparateDisplay(void);
@@ -86,7 +94,6 @@ namespace MagicApp
         void UpdatePointCloudRefRendering(void);
         void UpdateMarkRefRendering(void);
         void UpdateMarkFromRendering(void);
-        void UpdatePointCloudListRendering(void);
         void SetPointCloudColor(GPP::PointCloud* pointCloud, const GPP::Vector3& color);
         bool IsCommandAvaliable(void);
 
@@ -102,9 +109,9 @@ namespace MagicApp
         bool mIsSeparateDisplay;
         MagicCore::PickTool* mpPickToolRef;
         MagicCore::PickTool* mpPickToolFrom;
-        GPP::Matrix4x4 mTransformFrom;
-        GPP::Matrix4x4 mTransformFromAccumulate;
+#if DEBUGDUMPFILE
         GPP::DumpBase* mpDumpInfo;
+#endif
         GPP::PointCloud* mpPointCloudRef;
         GPP::PointCloud* mpPointCloudFrom;
         GPP::FusePointCloud* mpFusePointCloud;
@@ -125,6 +132,5 @@ namespace MagicApp
         double mGlobalRegistrateProgress;
         bool mEnterPointShop;
         bool mUpdateUIInfo;
-        bool mPointCloudInSequence;
     };
 }

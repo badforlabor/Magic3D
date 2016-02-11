@@ -56,11 +56,14 @@ namespace MagicApp
     {
         if (arg.key == OIS::KC_D)
         {
+#if DEBUGDUMPFILE
             LoadDumpFile();
+#endif
         }
         return true;
     }
 
+#if DEBUGDUMPFILE
     void Homepage::LoadDumpFile(void)
     {
         std::string fileName;
@@ -149,4 +152,5 @@ namespace MagicApp
             }
         }
     }
+#endif
 }

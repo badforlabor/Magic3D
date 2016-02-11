@@ -26,13 +26,6 @@
 #include "ToolPointCloud.h"
 
 #include "DumpInfo.h"
-#include "GeneralMatrix.h"
-#include "GeometryField.h"
 #include "Matrix4x4.h"
-#include "SparseMatrix.h"
-#include "Plane3.h"
 #include "Vector2.h"
 #include "Vector3.h"
-#include "ToolAnn.h"
-#include "ToolLog.h"
-#include "ToolOctree.h"

@@ -8,7 +8,9 @@
 #include "../Common/ViewTool.h"
 #include "../Common/PickTool.h"
 #include "../Common/RenderSystem.h"
+#if DEBUGDUMPFILE
 #include "DumpMeasureMesh.h"
+#endif
 
 namespace MagicApp
 {
@@ -35,7 +37,9 @@ namespace MagicApp
         mIsSeparateDisplay(false),
         mpPickToolRef(NULL),
         mpPickToolFrom(NULL),
+#if DEBUGDUMPFILE
         mpDumpInfo(NULL),
+#endif
         mRefMarkIds(),
         mRefMarkPoints(),
         mFromMarkIds(),
@@ -59,7 +63,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpPickToolRef);
         GPPFREEPOINTER(mpPickToolFrom);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
     }
 
     bool MeasureApp::Enter()
@@ -216,7 +222,9 @@ namespace MagicApp
         }
         else if (arg.key == OIS::KC_D)
         {
+#if DEBUGDUMPFILE
             RunDumpInfo();
+#endif
         }
         return true;
     }
@@ -275,7 +283,9 @@ namespace MagicApp
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpPickToolRef);
         GPPFREEPOINTER(mpPickToolFrom);
+#if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
+#endif
         mRefMarkIds.clear();
         mRefMarkPoints.clear();
         mFromMarkIds.clear();
@@ -335,6 +345,7 @@ namespace MagicApp
         return true;
     }
 
+#if DEBUGDUMPFILE
     void MeasureApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
     {
         if (dumpInfo == NULL)
@@ -362,9 +373,7 @@ namespace MagicApp
         GPP::ErrorCode res = mpDumpInfo->Run();
         if (res != GPP_NO_ERROR)
         {
-#if STOPFAILEDCOMMAND
             MagicCore::ToolKit::Get()->SetAppRunning(false);
-#endif
             return;
         }
 
@@ -386,6 +395,7 @@ namespace MagicApp
         UpdateModelRefRendering();
         GPPFREEPOINTER(mpDumpInfo);
     }
+#endif
 
     bool MeasureApp::IsCommandInProgress()
     {

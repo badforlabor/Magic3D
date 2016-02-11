@@ -1,6 +1,9 @@
 #pragma once
 #include "AppBase.h"
 #include "Gpp.h"
+#if DEBUGDUMPFILE
+#include "DumpBase.h"
+#endif
 
 namespace MagicCore
 {
@@ -55,8 +58,11 @@ namespace MagicApp
 
         void SetPointCloud(GPP::PointCloud* pointCloud, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
         int GetPointCount(void);
+
+#if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);
+#endif
         bool IsCommandInProgress(void);
 
     private:
@@ -75,7 +81,9 @@ namespace MagicApp
         GPP::Vector3 mObjCenterCoord;
         GPP::Real mScaleValue;
         MagicCore::ViewTool* mpViewTool;
+#if DEBUGDUMPFILE
         GPP::DumpBase* mpDumpInfo;
+#endif
         CommandType mCommandType;
         bool mUpdatePointCloudRendering;
         bool mIsCommandInProgress;

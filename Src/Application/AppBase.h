@@ -1,7 +1,7 @@
 #pragma once
 #include "OIS.h"
 
-#define STOPFAILEDCOMMAND 0
+#define DEBUGDUMPFILE 0
 
 namespace Ogre
 {
