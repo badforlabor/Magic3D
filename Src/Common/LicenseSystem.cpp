@@ -2,6 +2,7 @@
 #include "Gpp.h"
 #include "LogSystem.h"
 #include <fstream>
+#include <windows.h>
 
 namespace MagicCore
 {
@@ -24,13 +25,9 @@ namespace MagicCore
             res = GPP::SetActivationKey(keyStr);
         }
         fin.close();
-        if (res)
+        if (!res)
         {
-            DebugLog << "license passed" << std::endl;
-        }
-        else
-        {
-            DebugLog << "license failed" << std::endl;
+            MessageBox(NULL, "软件激活失败, 试用软件", "温馨提示", MB_OK);
         }
         return res;
     }

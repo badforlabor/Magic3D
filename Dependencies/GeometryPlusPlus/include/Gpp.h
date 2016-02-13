@@ -5,13 +5,12 @@
 #include "FilterMesh.h"
 #include "MeasureMesh.h"
 #include "MeasurePointCloud.h"
-#include "ParameterizeMesh.h"
 #include "SimplifyMesh.h"
 #include "SubdivideMesh.h"
 
 #include "ConsolidatePointCloud.h"
 #include "FusePointCloud.h"
-#include "PoissonReconstructMesh.h"
+#include "ReconstructMesh.h"
 #include "RegistratePointCloud.h"
 #include "SamplePointCloud.h"
 
