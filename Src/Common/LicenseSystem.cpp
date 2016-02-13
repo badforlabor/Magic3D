@@ -16,8 +16,13 @@ namespace MagicCore
 
     bool LicenseSystem::Init(void)
     {
+        // Generate Registration Key
+        std::ofstream fout("RegistrationKey.txt");
+        fout << GPP::GetRegistrationKey() << std::endl;
+        fout.close();
+        // Verify Activation Key
         bool res = false;
-        std::ifstream fin("key.txt");
+        std::ifstream fin("ActivationKey.txt");
         char pLine[512];
         if (fin.getline(pLine, 512))
         {
