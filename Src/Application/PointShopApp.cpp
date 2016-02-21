@@ -613,7 +613,7 @@ namespace MagicApp
             std::vector<GPP::Real> vertexColorField;
             GPP::TriMesh* triMesh = new GPP::TriMesh;
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::PoissonReconstructMesh::Reconstruct(mpPointCloud, triMesh, GPP::RECONSTRUCT_QUALITY_MEDIUM, false, &pointColorFields, &vertexColorField);
+            GPP::ErrorCode res = GPP::ReconstructMesh::Reconstruct(mpPointCloud, triMesh, GPP::RECONSTRUCT_QUALITY_MEDIUM, false, &pointColorFields, &vertexColorField);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {

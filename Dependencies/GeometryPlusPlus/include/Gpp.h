@@ -11,7 +11,7 @@
 
 #include "ConsolidatePointCloud.h"
 #include "FusePointCloud.h"
-#include "PoissonReconstructMesh.h"
+#include "ReconstructMesh.h"
 #include "RegistratePointCloud.h"
 #include "SamplePointCloud.h"
 

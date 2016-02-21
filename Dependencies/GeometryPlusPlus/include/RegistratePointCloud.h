@@ -54,7 +54,7 @@ namespace GPP
         // needLoopClosure: if there are loops in sequence, please set it true
         // initTransform == NULL if initTransform is identity
         static ErrorCode GlobalRegistrate(const std::vector<IPointCloud*>* pointCloudList, bool isInSequence, bool needLoopCloure,
-            std::vector<Matrix4x4>* resultTransformList, std::vector<Matrix4x4>* initTransformList = NULL);
+            std::vector<Matrix4x4>* resultTransformList, const std::vector<Matrix4x4>* initTransformList = NULL);
 
     };
 }
