@@ -19,6 +19,8 @@ namespace MagicCore
         void MouseMoved(int mouseCoordX, int mouseCoordY, MouseMode mm);
         void MouseReleased();
         void SetScale(double scale);
+        void SetLeftNodeFixed(bool fixed);
+        void SetRightNodeFixed(bool fixed);
         ~ViewTool();
 
     private:
@@ -26,5 +28,7 @@ namespace MagicCore
         int mMouseCoordY;
         double mScale;
         bool mIsMousePressed;
+        bool mLeftNodeFixed;
+        bool mRightNodeFixed;
     };
 }

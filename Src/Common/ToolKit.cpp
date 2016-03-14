@@ -1,5 +1,6 @@
 #include "ToolKit.h"
 #include <windows.h>
+#include "LogSystem.h"
 
 namespace MagicCore
 {
@@ -51,6 +52,42 @@ namespace MagicCore
         if(::GetOpenFileName(&file))
         {
             selectFileName = szFileName;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool ToolKit::MultiFileOpenDlg(std::vector<std::string>& selectFileNames, char* filterName)
+    {
+        char szOpenFileNames[MAX_PATH * 128] = "";
+        char szPath[MAX_PATH];
+        char* p;
+        OPENFILENAME file = { 0 };
+        file.lStructSize = sizeof(file);
+        file.lpstrFile = szOpenFileNames;
+        file.nMaxFile = sizeof(szOpenFileNames);
+        file.lpstrFilter = filterName;
+        file.lpstrFile[0] = '\0';
+        file.Flags = OFN_EXPLORER|OFN_ALLOWMULTISELECT|OFN_NOCHANGEDIR;
+        if(::GetOpenFileName(&file))
+        {
+            selectFileNames.clear();
+            lstrcpyn(szPath, szOpenFileNames, file.nFileOffset);
+            szPath[ file.nFileOffset ] = '\0';
+            int nLen = lstrlen(szPath);
+            if( szPath[nLen-1] != '\\' )   //如果选了多个文件,则必须加上'\\'
+            {
+                lstrcat(szPath, TEXT("\\"));
+            }
+            p = szOpenFileNames + file.nFileOffset; //把指针移到第一个文件
+            while( *p )
+            {
+                selectFileNames.push_back(std::string(szPath) + std::string(p)); 
+                p += lstrlen(p) +1;     //移至下一个文件
+            }
             return true;
         }
         else

@@ -20,7 +20,7 @@
 #include "OgreRoot.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
-//#include "OgreTextureManager.h"
+#include "OgreTextureManager.h"
 //#include "OgreVector2.h"
 #include "OgreViewport.h"
 #include "OgreWindowEventUtilities.h"

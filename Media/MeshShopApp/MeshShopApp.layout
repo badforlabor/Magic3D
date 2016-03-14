@@ -62,7 +62,19 @@
             <Property key="Visible" value="false"/>
         </Widget>/>
 
-        <Widget type="Button" skin="But_Sampling_CN" position="15 535 60 60" align="Left Top" name="But_SampleMesh"/>
+        <Widget type="Button" skin="But_Flip" position="15 535 60 60" align="Left Top" name="But_AppJump"/>
+        <Widget type="Button" skin="But_PointShop" position="75 545 43 43" align="Left Top" name="But_SampleMesh">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Relief" position="118 545 43 43" align="Left Top" name="But_ReliefApp">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_ImageTool" position="161 545 43 43" align="Left Top" name="But_TextureApp">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Resize" position="205 545 43 43" align="Left Top" name="But_MeasureApp">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
         <Widget type="Button" skin="But_Home" position="15 600 60 60" align="Left Top" name="But_BackToHomepage"/>
 

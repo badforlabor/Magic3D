@@ -40,6 +40,9 @@
     <Filter Include="Application\ReliefApp">
       <UniqueIdentifier>{46b670e7-4025-4edc-a4be-1471ada72e2f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Application\TextureApp">
+      <UniqueIdentifier>{12e4edff-c07a-48dc-9aaa-ec578f911498}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -126,6 +129,12 @@
     <ClInclude Include="..\Src\Common\LicenseSystem.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\Src\Application\TextureApp.h">
+      <Filter>Application\TextureApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\TextureAppUI.h">
+      <Filter>Application\TextureApp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -208,6 +217,12 @@
     </ClCompile>
     <ClCompile Include="..\Src\Common\LicenseSystem.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\TextureApp.cpp">
+      <Filter>Application\TextureApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\TextureAppUI.cpp">
+      <Filter>Application\TextureApp</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

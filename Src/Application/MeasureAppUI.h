@@ -37,11 +37,13 @@ namespace MagicApp
         void MeasureRefModel(MyGUI::Widget* pSender);
         void MeasureRefArea(MyGUI::Widget* pSender);
         void MeasureRefVolume(MyGUI::Widget* pSender);
+        void MeasureRefCurvature(MyGUI::Widget* pSender);
 
         void ImportModelFrom(MyGUI::Widget* pSender);
         void Deviation(MyGUI::Widget* pSender);
         void ComputeDeviation(MyGUI::Widget* pSender);
 
+        void EnterMeshTool(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
 
         void UpdateTextInfo(void);

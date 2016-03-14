@@ -52,9 +52,12 @@ namespace MagicApp
 
         void MeasureRefArea(void);
         void MeasureRefVolume(void);
+        void MeasureRefCurvature(void);
 
         bool ImportModelFrom(void);
         void ComputeDeviation(bool isSubThread = true);
+
+        void EnterMeshTool(void);
 
 #if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -63,6 +66,8 @@ namespace MagicApp
         bool IsCommandInProgress(void);
 
         void SwitchSeparateDisplay(void);
+
+        void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
 
     private:
         void SetupScene(void);

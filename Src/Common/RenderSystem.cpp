@@ -301,6 +301,82 @@ namespace MagicCore
         manualObj->end();
     }
 
+    void RenderSystem::RenderTextureMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh, ModelNodeType nodeType)
+    {
+        Ogre::ManualObject* manualObj = NULL;
+        if (mpSceneManager->hasManualObject(meshName))
+        {
+            manualObj = mpSceneManager->getManualObject(meshName);
+            manualObj->clear();
+        }
+        else
+        {
+            manualObj = mpSceneManager->createManualObject(meshName);
+            AttachManualObjectToSceneNode(nodeType, manualObj);
+        }
+        if (mesh == NULL)
+        {
+            return;
+        }
+        manualObj->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
+        int vertexCount = mesh->GetVertexCount();
+        for (int vid = 0; vid < vertexCount; vid++)
+        {
+            GPP::Vector3 coord = mesh->GetVertexCoord(vid);
+            GPP::Vector3 normal = mesh->GetVertexNormal(vid);
+            GPP::Vector3 textureCoord = mesh->GetVertexTexcoord(vid);
+            manualObj->position(coord[0], coord[1], coord[2]);
+            manualObj->normal(normal[0], normal[1], normal[2]);
+            manualObj->textureCoord(textureCoord[0], textureCoord[1]);
+        }
+        int triangleCount = mesh->GetTriangleCount();
+        for (int fid = 0; fid < triangleCount; fid++)
+        {
+            int vertexIds[3];
+            mesh->GetTriangleVertexIds(fid, vertexIds);
+            manualObj->triangle(vertexIds[0], vertexIds[1], vertexIds[2]);
+        }
+        manualObj->end();
+    }
+
+    void RenderSystem::RenderUVMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh, ModelNodeType nodeType)
+    {
+        Ogre::ManualObject* manualObj = NULL;
+        if (mpSceneManager->hasManualObject(meshName))
+        {
+            manualObj = mpSceneManager->getManualObject(meshName);
+            manualObj->clear();
+        }
+        else
+        {
+            manualObj = mpSceneManager->createManualObject(meshName);
+            AttachManualObjectToSceneNode(nodeType, manualObj);
+        }
+        if (mesh == NULL)
+        {
+            return;
+        }
+        manualObj->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
+        int vertexCount = mesh->GetVertexCount();
+        for (int vid = 0; vid < vertexCount; vid++)
+        {
+            GPP::Vector3 textureCoord = mesh->GetVertexTexcoord(vid);
+            GPP::Vector3 normal = mesh->GetVertexNormal(vid);
+            GPP::Vector3 color = mesh->GetVertexColor(vid);
+            manualObj->position(textureCoord[0], textureCoord[1], textureCoord[2]);
+            manualObj->normal(normal[0], normal[1], normal[2]);
+            manualObj->colour(color[0], color[1], color[2]);
+        }
+        int triangleCount = mesh->GetTriangleCount();
+        for (int fid = 0; fid < triangleCount; fid++)
+        {
+            int vertexIds[3];
+            mesh->GetTriangleVertexIds(fid, vertexIds);
+            manualObj->triangle(vertexIds[0], vertexIds[1], vertexIds[2]);
+        }
+        manualObj->end();
+    }
+
     /*void RenderSystem::RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords)
     {
         Ogre::ManualObject* manualObj = NULL;

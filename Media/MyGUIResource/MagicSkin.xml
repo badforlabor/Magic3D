@@ -694,4 +694,24 @@
             <State name="normal" offset="603 1693 84 84"/>
         </BasisSkin>
     </Resource>
+    <Resource type="ResourceSkin" name="But_CutLine_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="87 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Unfold_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="173 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Optimise_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="259 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Curvature_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="345 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
 </MyGUI>

@@ -40,11 +40,13 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_MeasureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefModel);
         mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefArea);
         mRoot.at(0)->findWidget("But_VolumeRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefVolume);
+        mRoot.at(0)->findWidget("But_CurvatureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefCurvature);
 
         mRoot.at(0)->findWidget("But_ImportModelFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ImportModelFrom);
         mRoot.at(0)->findWidget("But_Deviation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::Deviation);
         mRoot.at(0)->findWidget("But_ComputeDeviation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeDeviation);
 
+        mRoot.at(0)->findWidget("But_EnterMeshTool")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::EnterMeshTool);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::BackToHomepage);
 
         mTextInfo = mRoot.at(0)->findWidget("Text_Info")->castType<MyGUI::TextBox>();
@@ -178,6 +180,7 @@ namespace MagicApp
         bool isVisible = mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_VolumeRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_CurvatureRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
     void MeasureAppUI::MeasureRefArea(MyGUI::Widget* pSender)
@@ -195,6 +198,15 @@ namespace MagicApp
         if (measureShop != NULL)
         {
             measureShop->MeasureRefVolume();
+        }
+    }
+
+    void MeasureAppUI::MeasureRefCurvature(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->MeasureRefCurvature();
         }
     }
 
@@ -219,6 +231,15 @@ namespace MagicApp
         if (measureShop != NULL)
         {
             measureShop->ComputeDeviation();
+        }
+    }
+
+    void MeasureAppUI::EnterMeshTool(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->EnterMeshTool();
         }
     }
 

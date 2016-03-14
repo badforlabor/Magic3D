@@ -5,4 +5,8 @@ xcopy /y .\Dependencies\OGRE\bin\release\OIS.dll .\bin\release\
 xcopy /y .\Dependencies\OGRE\bin\release\RenderSystem_GL.dll .\bin\release\
 xcopy /y .\Dependencies\MyGUI\bin\release\MyGUIEngine.dll .\bin\release\
 xcopy /y .\Dependencies\OGRE\config\release\plugins.cfg .\bin\release\
+xcopy /y .\Dependencies\OpenCV\bin\release\opencv_core247.dll .\bin\release\
+xcopy /y .\Dependencies\OpenCV\bin\release\opencv_highgui247.dll .\bin\release\
+xcopy /y .\Dependencies\OpenCV\bin\release\opencv_imgproc247.dll .\bin\release\
 xcopy /y .\Dependencies\GeometryPlusPlus\bin\release\geometryplusplus.dll .\bin\release\
+

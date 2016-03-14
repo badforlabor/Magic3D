@@ -330,8 +330,8 @@ namespace MagicApp
             mUpdatePointCloudRendering = true;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -364,8 +364,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -378,8 +378,8 @@ namespace MagicApp
             mUpdatePointCloudRendering = true;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -414,8 +414,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -471,8 +471,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -509,8 +509,8 @@ namespace MagicApp
         GPP::ErrorCode res = GPP::SamplePointCloud::UniformSample(mpPointCloud, targetPointCount, sampleIndex, 0);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
             MagicCore::ToolKit::Get()->SetAppRunning(false);
-            MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
         }
         if (res != GPP_NO_ERROR)
         {
@@ -552,8 +552,8 @@ namespace MagicApp
             mUpdatePointCloudRendering = true;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -617,8 +617,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {

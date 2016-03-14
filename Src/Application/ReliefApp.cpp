@@ -296,6 +296,11 @@ namespace MagicApp
         }
         std::vector<GPP::Real> compressedHeightField = mHeightField;
         GPP::ErrorCode res = GPP::FilterMesh::CompressHeightField(&compressedHeightField, mResolution, mResolution, compressRatio);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
         if (res != GPP_NO_ERROR)
         {
             MessageBox(NULL, "浮雕生成失败", "温馨提示", MB_OK);
@@ -320,7 +325,7 @@ namespace MagicApp
     {
         if (mpTriMesh == NULL)
         {
-            MessageBox(NULL, "请先导入网格生成浮雕", "温馨提示", MB_OK);
+            AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
             return;
         }
         GPP::TriMesh* copiedTriMesh = GPP::CopyTriMesh(mpTriMesh);
@@ -332,9 +337,23 @@ namespace MagicApp
         }
         else
         {
-            delete copiedTriMesh;
-            copiedTriMesh = NULL;
+            GPPFREEPOINTER(copiedTriMesh);
         }
+    }
+
+    void ReliefApp::SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue)
+    {
+        if (triMesh == NULL)
+        {
+            return;
+        }
+        GPPFREEPOINTER(mpTriMesh);
+        mpTriMesh = triMesh;
+        mpTriMesh->UnifyCoords(2.5);
+        mpTriMesh->UpdateNormal();
+        InitViewTool();
+        UpdateModelRendering();
+        mHeightField.clear();
     }
 
     void ReliefApp::InitViewTool()
@@ -360,10 +379,11 @@ namespace MagicApp
     GPP::TriMesh* ReliefApp::GenerateTriMeshFromHeightField(const std::vector<GPP::Real>& heightField, int resolutionX, int resolutionY)
     {
         GPP::TriMesh* triMesh = new GPP::TriMesh;
-        double minX = -1.0;
-        double maxX = 1.0;
-        double minY = -1.0;
-        double maxY = 1.0;
+        double scaleValue = 1.0;
+        double minX = -1.0 * scaleValue;
+        double maxX = 1.0 * scaleValue;
+        double minY = -1.0 * scaleValue;
+        double maxY = 1.0 * scaleValue;
         double deltaX = (maxX - minX) / resolutionX;
         double deltaY = (maxY - minY) / resolutionY;
         for (int xid = 0; xid < resolutionX; xid++)

@@ -32,7 +32,7 @@ namespace MagicCore
         fin.close();
         if (!res)
         {
-            MessageBox(NULL, "软件激活失败, 试用软件", "温馨提示", MB_OK);
+            MessageBox(NULL, "软件试用版：每次使用时限30分钟", "温馨提示", MB_OK);
         }
         return res;
     }

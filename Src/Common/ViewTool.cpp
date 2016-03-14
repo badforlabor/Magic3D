@@ -8,7 +8,10 @@ namespace MagicCore
     ViewTool::ViewTool() : 
         mMouseCoordX(0),
         mMouseCoordY(0),
-        mScale(1.0)
+        mScale(1.0),
+        mIsMousePressed(false),
+        mLeftNodeFixed(false),
+        mRightNodeFixed(false)
     {
     }
 
@@ -47,12 +50,12 @@ namespace MagicCore
                 RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->yaw(Ogre::Degree(mouseDiffX) * 0.2, Ogre::Node::TS_PARENT);
                 RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->pitch(Ogre::Degree(mouseDiffY) * 0.2, Ogre::Node::TS_PARENT);
             }
-            if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNodeLeft"))
+            if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNodeLeft") && (!mLeftNodeFixed))
             {
                 RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeLeft")->yaw(Ogre::Degree(mouseDiffX) * 0.2, Ogre::Node::TS_PARENT);
                 RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeLeft")->pitch(Ogre::Degree(mouseDiffY) * 0.2, Ogre::Node::TS_PARENT);
             }
-            if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNodeRight"))
+            if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNodeRight") && (!mRightNodeFixed))
             {
                 RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeRight")->yaw(Ogre::Degree(mouseDiffX) * 0.2, Ogre::Node::TS_PARENT);
                 RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeRight")->pitch(Ogre::Degree(mouseDiffY) * 0.2, Ogre::Node::TS_PARENT);
@@ -83,5 +86,15 @@ namespace MagicCore
     void ViewTool::SetScale(double scale)
     {
         mScale = scale;
+    }
+
+    void ViewTool::SetLeftNodeFixed(bool fixed)
+    {
+        mLeftNodeFixed = fixed;
+    }
+
+    void ViewTool::SetRightNodeFixed(bool fixed)
+    {
+        mRightNodeFixed = fixed;
     }
 }

@@ -37,10 +37,14 @@ namespace MagicApp
         void DoRefineMesh(MyGUI::Widget* pSender);
         void SimplifyMesh(MyGUI::Widget* pSender);
         void DoSimplifyMesh(MyGUI::Widget* pSender);
-        void SampleMesh(MyGUI::Widget* pSender);
         void FillHole(MyGUI::Widget* pSender);
         void DoFillHoleFlat(MyGUI::Widget* pSender);
         void DoFillHoleSmooth(MyGUI::Widget* pSender);
+        void AppJump(MyGUI::Widget* pSender);
+        void SampleMesh(MyGUI::Widget* pSender);
+        void EnterReliefApp(MyGUI::Widget* pSender);
+        void EnterTextureApp(MyGUI::Widget* pSender);
+        void EnterMeasureApp(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
 
     private:

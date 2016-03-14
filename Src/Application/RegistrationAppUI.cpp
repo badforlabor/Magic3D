@@ -56,8 +56,6 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_FusePointCloudRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseRef);
         
         mRoot.at(0)->findWidget("But_GlobalRegistrate")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::GlobalRegistrate);
-        mRoot.at(0)->findWidget("But_GlobalRegistrateInSequence")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::GlobalRegistrateInSequence);
-        mRoot.at(0)->findWidget("But_GlobalRegistrateUnOrder")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::GlobalRegistrateUnOrder);
         
         mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::EnterPointShop);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::BackToHomepage);
@@ -242,26 +240,10 @@ namespace MagicApp
 
     void RegistrationAppUI::GlobalRegistrate(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_GlobalRegistrateInSequence")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_GlobalRegistrateInSequence")->castType<MyGUI::Button>()->setVisible(!isVisible);  
-        mRoot.at(0)->findWidget("But_GlobalRegistrateUnOrder")->castType<MyGUI::Button>()->setVisible(!isVisible);
-    }
-
-    void RegistrationAppUI::GlobalRegistrateInSequence(MyGUI::Widget* pSender)
-    {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->GlobalRegistrate(true, true);
-        }
-    }
-
-    void RegistrationAppUI::GlobalRegistrateUnOrder(MyGUI::Widget* pSender)
-    {
-        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
-        if (registrationApp != NULL)
-        {
-            registrationApp->GlobalRegistrate(false, true);
+            registrationApp->GlobalRegistrate(true);
         }
     }
 

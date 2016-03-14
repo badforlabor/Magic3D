@@ -2,6 +2,9 @@
 #include "AppBase.h"
 #include "GPP.h"
 #include <vector>
+#if DEBUGDUMPFILE
+#include "DumpBase.h"
+#endif
 
 namespace MagicCore
 {
@@ -68,9 +71,11 @@ namespace MagicApp
         
         void FuseRef(void);
 
-        void GlobalRegistrate(bool isInSequence, bool isSubThread = true);
+        void GlobalRegistrate(bool isSubThread = true);
 
         void EnterPointShop(void);
+
+        void ImportPointCloudList(void);
 
 #if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -129,6 +134,5 @@ namespace MagicApp
         double mGlobalRegistrateProgress;
         bool mEnterPointShop;
         bool mUpdateUIInfo;
-        bool mPointCloudInSequence;
     };
 }

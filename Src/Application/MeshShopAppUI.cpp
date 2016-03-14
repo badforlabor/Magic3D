@@ -41,7 +41,11 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_FillHole")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::FillHole);
         mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleFlat);
         mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleSmooth);
+        mRoot.at(0)->findWidget("But_AppJump")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::AppJump);
         mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SampleMesh);
+        mRoot.at(0)->findWidget("But_ReliefApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnterReliefApp);
+        mRoot.at(0)->findWidget("But_TextureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnterTextureApp);
+        mRoot.at(0)->findWidget("But_MeasureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnterMeasureApp);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::BackToHomepage);
 
         mTextInfo = mRoot.at(0)->findWidget("Text_Info")->castType<MyGUI::TextBox>();
@@ -307,12 +311,49 @@ namespace MagicApp
         }
     }
 
+    void MeshShopAppUI::AppJump(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->isVisible();
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_ReliefApp")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_TextureApp")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_MeasureApp")->castType<MyGUI::Button>()->setVisible(isVisible);
+    }
+
     void MeshShopAppUI::SampleMesh(MyGUI::Widget* pSender)
     {
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
         if (meshShop != NULL)
         {
             meshShop->SampleMesh();
+        }
+    }
+
+    void MeshShopAppUI::EnterReliefApp(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->EnterReliefApp();
+        }
+    }
+        
+    void MeshShopAppUI::EnterTextureApp(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->EnterTextureApp();
+        }
+    }
+    
+    void MeshShopAppUI::EnterMeasureApp(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->EnterMeasureApp();
         }
     }
 

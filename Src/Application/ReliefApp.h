@@ -35,6 +35,8 @@ namespace MagicApp
         bool ImportModel(void);
         void GenerateRelief(double compressRatio);
         void EnterMeshTool(void);
+        void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
+
 #if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
         void RunDumpInfo(void);

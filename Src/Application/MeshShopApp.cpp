@@ -3,6 +3,9 @@
 #include "MeshShopApp.h"
 #include "MeshShopAppUI.h"
 #include "PointShopApp.h"
+#include "ReliefApp.h"
+#include "TextureApp.h"
+#include "MeasureApp.h"
 #include "AppManager.h"
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
@@ -339,7 +342,7 @@ namespace MagicApp
             return;
         }
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0PLY Files(*.ply)\0*.ply\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0PLY Files(*.ply)\0*.ply\0OFF Files(*.off)\0*.off\0";
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
             if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
@@ -512,8 +515,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -578,8 +581,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -629,8 +632,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -664,8 +667,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -699,8 +702,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -734,8 +737,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -787,8 +790,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -844,12 +847,12 @@ namespace MagicApp
             }
             std::vector<GPP::Real> insertedVertexFields;
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::SubdivideMesh::RefineMesh(mpTriMesh, targetVertexCount, &vertexFields, &insertedVertexFields);
+            GPP::ErrorCode res = GPP::SubdivideMesh::DensifyMesh(mpTriMesh, targetVertexCount, &vertexFields, &insertedVertexFields);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -895,8 +898,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {
@@ -917,13 +920,20 @@ namespace MagicApp
 
     void MeshShopApp::SampleMesh()
     {
-        if (IsCommandAvaliable() == false)
+        if (mIsCommandInProgress)
         {
+            MessageBox(NULL, "请等待当前命令执行完", "温馨提示", MB_OK);
+            return;
+        }
+        if (mpTriMesh == NULL)
+        {
+            AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
             return;
         }
         GPP::Int vertexCount = mpTriMesh->GetVertexCount();
-        if (vertexCount < 3)
+        if (vertexCount < 1)
         {
+            AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
             return;
         }
         GPP::PointCloud* pointCloud = new GPP::PointCloud;
@@ -943,6 +953,84 @@ namespace MagicApp
         {
             delete pointCloud;
             pointCloud = NULL;
+        }
+    }
+
+    void MeshShopApp::EnterReliefApp()
+    {
+        if (mIsCommandInProgress)
+        {
+            MessageBox(NULL, "请等待当前命令执行完", "温馨提示", MB_OK);
+            return;
+        }
+        if (mpTriMesh == NULL)
+        {
+            AppManager::Get()->EnterApp(new ReliefApp, "ReliefApp");
+            return;
+        }
+        GPP::TriMesh* copyMesh = GPP::CopyTriMesh(mpTriMesh);
+        AppManager::Get()->EnterApp(new ReliefApp, "ReliefApp");
+        ReliefApp* reliefApp = dynamic_cast<ReliefApp*>(AppManager::Get()->GetApp("ReliefApp"));
+        if (reliefApp)
+        {
+            reliefApp->SetMesh(copyMesh, mObjCenterCoord, mScaleValue);
+            copyMesh = NULL;
+        }
+        else
+        {
+            GPPFREEPOINTER(copyMesh);
+        }
+    }
+
+    void MeshShopApp::EnterTextureApp()
+    {
+        if (mIsCommandInProgress)
+        {
+            MessageBox(NULL, "请等待当前命令执行完", "温馨提示", MB_OK);
+            return;
+        }
+        if (mpTriMesh == NULL)
+        {
+            AppManager::Get()->EnterApp(new TextureApp, "TextureApp");
+            return;
+        }
+        GPP::TriMesh* copyMesh = GPP::CopyTriMesh(mpTriMesh);
+        AppManager::Get()->EnterApp(new TextureApp, "TextureApp");
+        TextureApp* textureApp = dynamic_cast<TextureApp*>(AppManager::Get()->GetApp("TextureApp"));
+        if (textureApp)
+        {
+            textureApp->SetMesh(copyMesh, mObjCenterCoord, mScaleValue);
+            copyMesh = NULL;
+        }
+        else
+        {
+            GPPFREEPOINTER(copyMesh);
+        }
+    }
+
+    void MeshShopApp::EnterMeasureApp()
+    {
+        if (mIsCommandInProgress)
+        {
+            MessageBox(NULL, "请等待当前命令执行完", "温馨提示", MB_OK);
+            return;
+        }
+        if (mpTriMesh == NULL)
+        {
+            AppManager::Get()->EnterApp(new MeasureApp, "MeasureApp");
+            return;
+        }
+        GPP::TriMesh* copyMesh = GPP::CopyTriMesh(mpTriMesh);
+        AppManager::Get()->EnterApp(new MeasureApp, "MeasureApp");
+        MeasureApp* measureApp = dynamic_cast<MeasureApp*>(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureApp)
+        {
+            measureApp->SetMesh(copyMesh, mObjCenterCoord, mScaleValue);
+            copyMesh = NULL;
+        }
+        else
+        {
+            GPPFREEPOINTER(copyMesh);
         }
     }
 
@@ -969,8 +1057,8 @@ namespace MagicApp
         GPP::ErrorCode res = GPP::FillMeshHole::FindHoles(mpTriMesh, &holeIds);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
             MagicCore::ToolKit::Get()->SetAppRunning(false);
-            MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
         }
         if (res != GPP_NO_ERROR)
         {
@@ -1018,8 +1106,8 @@ namespace MagicApp
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
                 MagicCore::ToolKit::Get()->SetAppRunning(false);
-                MessageBox(NULL, "GeometryPlusPlus API到期，软件即将关闭", "温馨提示", MB_OK);
             }
             if (res != GPP_NO_ERROR)
             {

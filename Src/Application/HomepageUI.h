@@ -18,6 +18,7 @@ namespace MagicApp
         void EnterRegistrationApp(MyGUI::Widget* pSender);
         void EnterMeasureApp(MyGUI::Widget* pSender);
         void EnterReliefApp(MyGUI::Widget* pSender);
+        void EnterTextureApp(MyGUI::Widget* pSender);
         void Contact(MyGUI::Widget* pSender);
 
     private:

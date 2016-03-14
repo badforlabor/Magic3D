@@ -25,6 +25,9 @@
         <Widget type="Button" skin="But_Volume_CN" position="118 165 43 43" align="Left Top" name="But_VolumeRef">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="Button" skin="But_Curvature_CN" position="161 165 43 43" align="Left Top" name="But_CurvatureRef">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
         <Widget type="Button" skin="But_Open" position="15 225 60 60" align="Left Top" name="But_ImportModelFrom"/>
 
@@ -33,7 +36,9 @@
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Home" position="15 365 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_MeshTool" position="15 365 60 60" align="Left Top" name="But_EnterMeshTool"/>
+
+        <Widget type="Button" skin="But_Home" position="15 435 60 60" align="Left Top" name="But_BackToHomepage"/>
         
         <Widget type="ProgressBar" skin="ProgressBar" position="15 440 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>

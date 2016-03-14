@@ -3,6 +3,7 @@
 #include "MeasureApp.h"
 #include "MeasureAppUI.h"
 #include "AppManager.h"
+#include "MeshShopApp.h"
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
@@ -433,6 +434,26 @@ namespace MagicApp
         }
     }
 
+    void MeasureApp::SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue)
+    {
+        GPPFREEPOINTER(mpTriMeshRef);
+        mpTriMeshRef = triMesh;
+        mObjCenterCoord = objCenterCoord;
+        mScaleValue = scaleValue;
+        //SetMeshColor(mpTriMeshRef, GPP::Vector3(0.6, 0.85, 0.75));
+        mpUI->SetRefModelInfo(mpTriMeshRef->GetVertexCount(), mpTriMeshRef->GetTriangleCount());
+        InitViewTool();
+        UpdateModelRefRendering();
+        // set up pick tool
+        GPPFREEPOINTER(mpPickToolRef);
+        mpPickToolRef = new MagicCore::PickTool;
+        mpPickToolRef->SetPickParameter(MagicCore::PM_POINT, true, NULL, mpTriMeshRef, "ModelNode");
+        if (mIsSeparateDisplay)
+        {
+            mpPickToolRef->SetModelNodeName("ModelNodeLeft");
+        }
+    }
+
     bool MeasureApp::ImportModelRef()
     {
         if (IsCommandAvaliable() == false)
@@ -563,6 +584,11 @@ namespace MagicApp
             mIsCommandInProgress = true;
             GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(mpTriMeshRef, mRefMarkIds, true, pathVertexIds, distance);
             mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
@@ -614,6 +640,11 @@ namespace MagicApp
             mIsCommandInProgress = true;
             GPP::ErrorCode res = GPP::MeasureMesh::ComputeExactGeodesics(mpTriMeshRef, mRefMarkIds, true, pathPoints, distance);
             mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
@@ -639,6 +670,11 @@ namespace MagicApp
         }
         GPP::Real area = 0;
         GPP::ErrorCode res = GPP::MeasureMesh::ComputeArea(mpTriMeshRef, area);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
         if (res != GPP_NO_ERROR)
         {
             return;
@@ -659,11 +695,46 @@ namespace MagicApp
         }
         GPP::Real volume = 0;
         GPP::ErrorCode res = GPP::MeasureMesh::ComputeVolume(mpTriMeshRef, volume);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
         if (res != GPP_NO_ERROR)
         {
             return;
         }
         mpUI->SetRefModelVolume(volume / mScaleValue / mScaleValue / mScaleValue);
+    }
+
+    void MeasureApp::MeasureRefCurvature()
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (mpTriMeshRef == NULL)
+        {
+            MessageBox(NULL, "请导入需要测量的网格", "温馨提示", MB_OK);
+            return;
+        }
+        std::vector<GPP::Real> curvature;
+        GPP::ErrorCode res = GPP::MeasureMesh::ComputeMeanCurvature(mpTriMeshRef, curvature);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        GPP::Int vertexCount = mpTriMeshRef->GetVertexCount();
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            mpTriMeshRef->SetVertexColor(vid, MagicCore::ToolKit::ColorCoding(0.6 + curvature.at(vid) / 10.0));
+        }
+        UpdateModelRefRendering();
     }
 
     bool MeasureApp::ImportModelFrom()
@@ -798,6 +869,11 @@ namespace MagicApp
                 GPP::ErrorCode res = GPP::MeasurePointCloud::ComputeOneSideDistance(&pointListRef, pointListFrom, maxDistance, maxPointId, &fromDistance);
                 mIsCommandInProgress = false;
                 GPPFREEPOINTER(pointListFrom);
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
@@ -820,6 +896,27 @@ namespace MagicApp
                 }
                 mUpdateModelFromRendering = true;
             }
+        }
+    }
+
+    void MeasureApp::EnterMeshTool(void)
+    {
+        if (mpTriMeshRef == NULL)
+        {
+            AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
+            return;
+        }
+        GPP::TriMesh* copiedTriMesh = GPP::CopyTriMesh(mpTriMeshRef);
+        AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop)
+        {
+            meshShop->SetMesh(copiedTriMesh, mObjCenterCoord, mScaleValue);
+            copiedTriMesh = NULL;
+        }
+        else
+        {
+            GPPFREEPOINTER(copiedTriMesh);
         }
     }
 

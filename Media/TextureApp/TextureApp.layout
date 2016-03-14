@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MyGUI type="Layout" version="3.2.0">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 1024 768" align="Left Top" layer="Back">
+        <Widget type="TextBox" skin="TextBox" position="200 15 700 300" align="Left Top" name="Text_Info"/>
+        
+        <Widget type="Button" skin="But_Viewer" position="120 15 40 40" align="Left Top" name="But_DisplayMode"/>
+
+        <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportTriMesh"/>
+        
+        <Widget type="Button" skin="But_Save" position="15 85 60 60" align="Left Top" name="But_ExportTriMesh"/>
+
+        <Widget type="Button" skin="But_CutLine_CN" position="15 155 60 60" align="Left Top" name="But_Geodesics"></Widget>
+        <Widget type="Button" skin="But_OK_CN" position="75 165 43 43" align="Left Top" name="But_ConfirmGeodesics">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Delete_CN" position="118 165 43 43" align="Left Top" name="But_DeleteGeodesics">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Viewer" position="161 165 43 43" align="Left Top" name="But_SwitchMarkDisplay">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Unfold_CN" position="15 225 60 60" align="Left Top" name="But_UnFoldTriMesh"/>
+
+        <Widget type="Button" skin="But_Optimise_CN" position="15 295 60 60" align="Left Top" name="But_Optimize2Isometric"/>
+
+        <Widget type="Button" skin="But_MeshTool" position="15 365 60 60" align="Left Top" name="But_EnterMeshToolApp"/>
+
+    	<Widget type="Button" skin="But_Home" position="15 435 60 60" align="Left Top" name="But_BackToHomepage"/>
+
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 510 150 20" align="Left Top" name="APIProgress">
+            <Property key="AutoTrack" value="false"/>
+            <Property key="FlowDirection" value="LeftToRight"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+    </Widget>
+</MyGUI>

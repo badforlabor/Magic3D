@@ -1,7 +1,6 @@
 #pragma once
 #include "AppBase.h"
 #include "../Common/RenderSystem.h"
-#include "Vector3.h"
 #include <vector>
 #include "Gpp.h"
 #if DEBUGDUMPFILE
@@ -64,6 +63,9 @@ namespace MagicApp
         void RefineMesh(int targetVertexCount, bool isSubThread = true);
         void SimplifyMesh(int targetVertexCount, bool isSubThread = true);
         void SampleMesh(void);
+        void EnterReliefApp(void);
+        void EnterTextureApp(void);
+        void EnterMeasureApp(void);
         void FindHole(bool isShowHole);
         void FillHole(bool isFillFlat, bool isSubThread = true);
 
