@@ -40,6 +40,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_DoSimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoSimplifyMesh);
         mRoot.at(0)->findWidget("But_FillHole")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::FillHole);
         mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleFlat);
+        mRoot.at(0)->findWidget("But_FillHoleTangent")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleTangent);
         mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleSmooth);
         mRoot.at(0)->findWidget("But_AppJump")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::AppJump);
         mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SampleMesh);
@@ -362,6 +363,7 @@ namespace MagicApp
         bool isVisible = mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->getVisible();
         isVisible = !isVisible;
         mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_FillHoleTangent")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->setVisible(isVisible);
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
         if (meshShop != NULL)
@@ -375,7 +377,16 @@ namespace MagicApp
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
         if (meshShop != NULL)
         {
-            meshShop->FillHole(true);
+            meshShop->FillHole(0);
+        }
+    }
+
+    void MeshShopAppUI::DoFillHoleTangent(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->FillHole(1);
         }
     }
 
@@ -384,7 +395,7 @@ namespace MagicApp
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
         if (meshShop != NULL)
         {
-            meshShop->FillHole(false);
+            meshShop->FillHole(2);
         }
     }
 

@@ -1,5 +1,12 @@
+/*==================================================================================================
+
+                       Copyright (c) 2016 GeometryPlusPlus, ThreePark
+                             Unpublished - All rights reserved
+
+====================================================================================================*/
 #pragma once
 #include "GppDefines.h"
+#include "Vector3.h"
 #include <vector>
 
 namespace GPP
@@ -24,6 +31,14 @@ namespace GPP
     // vertex coord, normal, color; triangle id, normal
     extern GPP_EXPORT TriMesh* CopyTriMesh(const TriMesh* triMesh);
 
+    // Deep Copy
+    // vertex coord, normal; triangle id, normal
+    extern GPP_EXPORT ErrorCode CopyTriMesh(const ITriMesh* triMesh, ITriMesh* copyMesh);
+
+    // Deep Copy
+    // vertex texture coordinates.
+    extern GPP_EXPORT ErrorCode CopyTriMeshTextureCoordinates(const TriMesh* srcTriMesh, TriMesh* targetTriMesh);
+
     // Related triangles will also be deleted
     // triMesh's normal is not updated here
     extern GPP_EXPORT ErrorCode DeleteTriMeshVertices(ITriMesh* triMesh, const std::vector<Int>& deleteIndex);
@@ -36,8 +51,6 @@ namespace GPP
     // This api will delete vertices whose degree is zero
     extern GPP_EXPORT ErrorCode DeleteIsolatedVertices(ITriMesh* triMesh);
 
-    // splitted triMesh's normal is not updated here
-    // splitLines.at(lineid) is a line vertex list
-    extern GPP_EXPORT TriMesh* SplitTriMesh(const ITriMesh* triMesh, const std::vector<std::vector<Int> >& splitLines);
+    extern ErrorCode ConsolidateDegenerateTriangles(const ITriMesh* triMesh, std::vector<Vector3>& vertexCoords);
 
 }

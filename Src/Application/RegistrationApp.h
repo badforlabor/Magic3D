@@ -50,16 +50,17 @@ namespace MagicApp
         
         void CalculateRefNormal(bool isDepthImage, bool isSubThread = true);
         void FlipRefNormal(void);
+        void ReversePatchNormalRef(void);
         void RemoveOutlierRef(bool isSubThread = true);
         
         void DeleteRefMark(void);
         void ImportRefMark(void);
 
         bool ImportPointCloudFrom(void);
-        void TransformPointCloudFrom(void);
         
         void CalculateFromNormal(bool isDepthImage, bool isSubThread = true);
         void FlipFromNormal(void);
+        void ReversePatchNormalFrom(void);
         void RemoveOutlierFrom(bool isSubThread = true);
         
         void DeleteFromMark(void);
@@ -71,7 +72,7 @@ namespace MagicApp
         
         void FuseRef(void);
 
-        void GlobalRegistrate(bool isSubThread = true);
+        void GlobalRegistrate(int maxIterationCount, bool isSubThread = true);
 
         void EnterPointShop(void);
 
@@ -102,6 +103,7 @@ namespace MagicApp
         void ShutdownScene(void);
         void ClearData(void);
         void ResetGlobalRegistrationData(void);
+        void ClearPairwiseRegistrationData(void);
 
     private:
         RegistrationAppUI* mpUI;
@@ -109,14 +111,12 @@ namespace MagicApp
         bool mIsSeparateDisplay;
         MagicCore::PickTool* mpPickToolRef;
         MagicCore::PickTool* mpPickToolFrom;
-        GPP::Matrix4x4 mTransformFrom;
-        GPP::Matrix4x4 mTransformFromAccumulate;
 #if DEBUGDUMPFILE
         GPP::DumpBase* mpDumpInfo;
 #endif
         GPP::PointCloud* mpPointCloudRef;
         GPP::PointCloud* mpPointCloudFrom;
-        GPP::FusePointCloud* mpFusePointCloud;
+        GPP::SumPointCloud* mpFusePointCloud;
         GPP::Vector3 mObjCenterCoord;
         GPP::Real mScaleValue;
         std::vector<GPP::Vector3> mRefMarks;
@@ -127,6 +127,7 @@ namespace MagicApp
         bool mUpdatePointFromRendering;
         bool mUpdateMarkRefRendering;
         bool mUpdateMarkFromRendering;
+        bool mUpdatePointCloudListRendering;
         bool mIsDepthImageRef;
         bool mIsDepthImageFrom;
         std::vector<GPP::PointCloud*> mPointCloudList;
@@ -134,5 +135,9 @@ namespace MagicApp
         double mGlobalRegistrateProgress;
         bool mEnterPointShop;
         bool mUpdateUIInfo;
+        bool mReversePatchNormalRef;
+        bool mReversePatchNormalFrom;
+        int mMaxGlobalIterationCount;
+        bool mSaveGlobalRegistrateResult;
     };
 }

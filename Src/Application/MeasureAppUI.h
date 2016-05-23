@@ -32,6 +32,7 @@ namespace MagicApp
         void Geodesics(MyGUI::Widget* pSender);
         void DeleteMeshMarkRef(MyGUI::Widget* pSender);
         void ComputeApproximateGeodesics(MyGUI::Widget* pSender);
+        void FastComputeExactGeodesics(MyGUI::Widget* pSender);
         void ComputeExactGeodesics(MyGUI::Widget* pSender);
 
         void MeasureRefModel(MyGUI::Widget* pSender);

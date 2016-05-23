@@ -1,3 +1,9 @@
+/*==================================================================================================
+
+                       Copyright (c) 2016 GeometryPlusPlus, ThreePark
+                             Unpublished - All rights reserved
+
+====================================================================================================*/
 #pragma once
 #include <fstream>
 #include <string>
@@ -59,10 +65,6 @@ namespace GPP
     // Get progress value when running api
     // progress value range: [0, 1]
     extern GPP_EXPORT Real GetApiProgress(void);
-
-    // Set progress value in api implmentation
-    // range: [0, 1]
-    extern void SetApiProgress(Real value);
 
     // Active library steps:
     // 1. Get registrationKey from your computer: std::string registrationKey = GetRegistrationKey();

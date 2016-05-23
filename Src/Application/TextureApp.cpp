@@ -4,6 +4,7 @@
 #include "TextureAppUI.h"
 #include "AppManager.h"
 #include "MeshShopApp.h"
+#include "PointShopApp.h"
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
@@ -41,8 +42,15 @@ namespace MagicApp
         mUpdateDisplay(false),
         mHideMarks(false),
         mpPickTool(NULL),
-        mCurMarkIds(),
-        mCutLineList()
+        mLastCutVertexId(-1),
+        mCurPointsOnEdge(),
+        mCurMarkCoords(),
+        mCutLineList(),
+        mInitChartCount(1),
+        mTextureImageNames(),
+        mCurrentTextureImageId(0),
+        mPointCloudList(),
+        mUpdatePointCloudRendering(false)
     {
     }
 
@@ -54,20 +62,42 @@ namespace MagicApp
         GPPFREEPOINTER(mpImageFrameMesh);
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpPickTool);
+        for (std::vector<GPP::PointCloud*>::iterator itr = mPointCloudList.begin(); itr != mPointCloudList.end(); ++itr)
+        {
+            GPPFREEPOINTER(*itr);
+        }
+        mPointCloudList.clear();
     }
 
     void TextureApp::ClearData()
     {
         GPPFREEPOINTER(mpUI);
+        GPPFREEPOINTER(mpViewTool);
+        ClearMeshData();
+        ClearPointCloudData();
+    }
+
+    void TextureApp::ClearMeshData()
+    {
         GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpUVMesh);
         GPPFREEPOINTER(mpImageFrameMesh);
-        GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpPickTool);
         mDisplayMode = TRIMESH_SOLID;
         mDistortionImage.release();
-        mCurMarkIds.clear();
+        mLastCutVertexId = -1;
+        mCurPointsOnEdge.clear();
+        mCurMarkCoords.clear();
         mCutLineList.clear();
+    }
+ 
+    void TextureApp::ClearPointCloudData()
+    {
+        for (std::vector<GPP::PointCloud*>::iterator itr = mPointCloudList.begin(); itr != mPointCloudList.end(); ++itr)
+        {
+            GPPFREEPOINTER(*itr);
+        }
+        mPointCloudList.clear();
     }
 
     bool TextureApp::IsCommandAvaliable()
@@ -110,6 +140,11 @@ namespace MagicApp
             mHideMarks = false;
             UpdateMarkDisplay(false);
         }
+        if (mUpdatePointCloudRendering)
+        {
+            mUpdatePointCloudRendering = false;
+            UpdatePointCloudRendering();
+        }
         return true;
     }
 
@@ -131,6 +166,10 @@ namespace MagicApp
         {
             mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_MIDDLE_DOWN);
         }
+        else if (arg.state.buttonDown(OIS::MB_Left) && arg.state.buttonDown(OIS::MB_Right) && mpViewTool != NULL)
+        {
+            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_RIGHT_DOWN);
+        }
         else if (arg.state.buttonDown(OIS::MB_Left) && mpViewTool != NULL)
         {
             mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_LEFT_DOWN);
@@ -145,7 +184,7 @@ namespace MagicApp
         {
             mpViewTool->MousePressed(arg.state.X.abs, arg.state.Y.abs);
         }
-        else if (arg.state.buttonDown(OIS::MB_Right) && mIsCommandInProgress == false && mpPickTool)
+        else if (!arg.state.buttonDown(OIS::MB_Left) && arg.state.buttonDown(OIS::MB_Right) && mIsCommandInProgress == false && mpPickTool)
         {
             mpPickTool->MousePressed(arg.state.X.abs, arg.state.Y.abs);
         }
@@ -158,40 +197,145 @@ namespace MagicApp
         {
             mpViewTool->MouseReleased();
         }
-        if (mIsCommandInProgress == false && id == OIS::MB_Right && mpPickTool)
+        if (!arg.state.buttonDown(OIS::MB_Left) && mIsCommandInProgress == false && id == OIS::MB_Right && mpPickTool)
         {
             mpPickTool->MouseReleased(arg.state.X.abs, arg.state.Y.abs);
             GPP::Int pickedId = mpPickTool->GetPickVertexId();;
             mpPickTool->ClearPickedIds();
             if (pickedId != -1)
             {
-                if (mCurMarkIds.empty())
+                if (mLastCutVertexId == -1)
                 {
-                    mCurMarkIds.push_back(pickedId);
+                    mLastCutVertexId = pickedId;
                 }
                 else
                 {
                     std::vector<GPP::Int> sectionVertexIds;
-                    sectionVertexIds.push_back(mCurMarkIds.at(mCurMarkIds.size() - 1));
+                    sectionVertexIds.push_back(mLastCutVertexId);
                     sectionVertexIds.push_back(pickedId);
-                    std::vector<GPP::Int> pathVertexIds;
+                    std::vector<GPP::Vector3> pathCoords;
+                    std::vector<GPP::PointOnEdge> pathInfos;
                     GPP::Real distance = 0;
-                    GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(mpTriMesh, sectionVertexIds, false, 
-                        pathVertexIds, distance);
+                    GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(mpTriMesh, sectionVertexIds, false, 
+                        pathCoords, distance, &pathInfos, 0.5);
                     if (res != GPP_NO_ERROR)
                     {
                         MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
                         return true;
                     }
-                    for (int pvid = 1; pvid < pathVertexIds.size(); pvid++)
+                    int startId = 1;
+                    if (mCurPointsOnEdge.empty())
                     {
-                        mCurMarkIds.push_back(pathVertexIds.at(pvid));
+                        startId = 0;
                     }
+                    for (int pvid = startId; pvid < pathInfos.size(); pvid++)
+                    {
+                        mCurPointsOnEdge.push_back(pathInfos.at(pvid));
+                    }
+                    for (int pvid = startId; pvid < pathCoords.size(); pvid++)
+                    {
+                        mCurMarkCoords.push_back(pathCoords.at(pvid));
+                    }
+                    mLastCutVertexId = pickedId;
                 }
                 UpdateMarkDisplay(true);
             }
         }
         return true;
+    }
+
+    static void UnifyTextureCoords(std::vector<GPP::Real>& texCoords)
+    {
+        int vertexCount = texCoords.size() / 2;
+        GPP::Real texCoordMax_X = texCoords.at(0);
+        GPP::Real texCoordMax_Y = texCoords.at(1);
+        GPP::Real texCoordMin_X = texCoords.at(0);
+        GPP::Real texCoordMin_Y = texCoords.at(1);
+        for (GPP::Int vid = 1; vid < vertexCount; vid++)
+        {
+            if (texCoords.at(vid * 2) > texCoordMax_X)
+            {
+                texCoordMax_X = texCoords.at(vid * 2);
+            }
+            else if (texCoords.at(vid * 2) < texCoordMin_X)
+            {
+                texCoordMin_X = texCoords.at(vid * 2);
+            }
+            if (texCoords.at(vid * 2 + 1) > texCoordMax_Y)
+            {
+                texCoordMax_Y = texCoords.at(vid * 2 + 1);
+            }
+            else if (texCoords.at(vid * 2 + 1) < texCoordMin_Y)
+            {
+                texCoordMin_Y = texCoords.at(vid * 2 + 1);
+            }
+        }
+
+        GPP::Real range_X = texCoordMax_X - texCoordMin_X;
+        GPP::Real range_Y = texCoordMax_Y - texCoordMin_Y;
+        GPP::Real range_max = range_X > range_Y ? range_X : range_Y;
+        if (range_max > GPP::REAL_TOL)
+        {
+            GPP::Real scaleV = 1.0 / range_max;
+            GPP::Real center_X = (texCoordMax_X + texCoordMin_X) / 2.0;
+            GPP::Real center_Y = (texCoordMax_Y + texCoordMin_Y) / 2.0;
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                texCoords.at(vid * 2) = (texCoords.at(vid * 2) - texCoordMin_X) * scaleV;
+                texCoords.at(vid * 2 + 1) = (texCoords.at(vid * 2 + 1) - texCoordMin_Y) * scaleV;
+            }
+        }
+    }
+
+    static void GenerateTextureImage(const GPP::TriMesh* mesh)
+    {
+        int imageWidth = 1024;
+        int imageHeight = 1024;
+        std::vector<GPP::Vector3> imageData;
+        std::vector<GPP::Real> textureCoords;
+        std::vector<GPP::Vector3> colors;
+        std::vector<GPP::Int> textureIds;
+        if (mesh)
+        {
+            GPP::Int faceCount = mesh->GetTriangleCount();
+            colors.resize(faceCount * 3);
+            textureCoords.resize(faceCount * 3 * 2);
+            textureIds.resize(faceCount * 3);
+            for (GPP::Int fid = 0; fid < faceCount; ++fid)
+            {
+                GPP::Int vertexIds[3];
+                mesh->GetTriangleVertexIds(fid, vertexIds);
+                for (int ii = 0; ii < 3; ++ii)
+                {
+                    GPP::Int id = fid * 3 + ii;
+                    colors.at(id) = mesh->GetVertexColor(vertexIds[ii]);
+                    //mesh->SetTriangleTexcoord(fid, ii, mesh->GetVertexTexcoord(vertexIds[ii]));
+                    textureCoords.at(id * 2) = mesh->GetVertexTexcoord(vertexIds[ii])[0];
+                    textureCoords.at(id * 2 + 1) = mesh->GetVertexTexcoord(vertexIds[ii])[1];
+                    textureIds.at(id) = id;
+                }
+            }
+            UnifyTextureCoords(textureCoords);
+        }
+        GPP::ErrorCode res = GPP::TextureImage::CreateTextureImage(textureCoords, colors, textureIds, 1024, 1024, imageData);
+        if (res != GPP_NO_ERROR)
+        {
+            return;
+        }
+        cv::Mat image(imageHeight, imageWidth, CV_8UC4);
+        for (int y = 0; y < imageHeight; ++y)
+        {
+            for (int x = 0; x < imageWidth; ++x)
+            {
+                cv::Vec4b& col = image.at<cv::Vec4b>(imageHeight - 1 - y, x);
+                GPP::Vector3 vCol = imageData.at(x + y * imageWidth);
+                col[0] = vCol[2] * 255;
+                col[1] = vCol[1] * 255;
+                col[2] = vCol[0] * 255;
+                col[3] = 255;
+            }
+        }
+        cv::imshow("TextureImage", image);
     }
 
     bool TextureApp::KeyPressed( const OIS::KeyEvent &arg )
@@ -200,61 +344,38 @@ namespace MagicApp
         {
             GPP::TriMeshPointList pointList(mpTriMesh);
             GPP::Int vertexCount = pointList.GetPointCount();
-            GPP::Int sampleCount = 10;
+            GPP::Int sampleCount = 128;
             GPP::Int* sampleIndex = new GPP::Int[sampleCount];
-            GPP::ErrorCode res = GPP::SamplePointCloud::UniformSamplePointList(&pointList, sampleCount, sampleIndex, 100, GPP::SAMPLE_QUALITY_HIGH);
+            GPP::ErrorCode res = GPP::SamplePointCloud::_UniformSamplePointList(&pointList, sampleCount, sampleIndex, 100, GPP::SAMPLE_QUALITY_HIGH);
             if (res != GPP_NO_ERROR)
             {
                 GPPFREEARRAY(sampleIndex);
                 MessageBox(NULL, "网格顶点采样失败", "温馨提示", MB_OK);
                 return true;
             }
-            if (mCurMarkIds.size() > 0)
+            std::vector<GPP::Real> meanCurvature;
+            //GPP::MeasureMesh::ComputeMeanCurvature(mpTriMesh, meanCurvature);
+            GPP::MeasureMesh::ComputeGaussCurvature(mpTriMesh, meanCurvature);
+            std::multimap<GPP::Real, int> curvatureMap;
+            for (int markid = 0; markid < sampleCount; markid++)
             {
-                sampleCount = mCurMarkIds.size();
-                GPPFREEARRAY(sampleIndex);
-                sampleIndex = new GPP::Int[sampleCount];
-                for (int sid = 0; sid < sampleCount; sid++)
-                {
-                    sampleIndex[sid] = mCurMarkIds.at(sid);
-                }
-            }
-            std::vector<GPP::Int> seedVertexIds;
-            for (int sid = 0; sid < sampleCount; sid++)
-            {
-                seedVertexIds.push_back(sampleIndex[sid]);
-            }
-            std::vector<GPP::Int> segmentRes;
-            res = GPP::SegmentMesh::RegionGrowingFromSeeds(mpTriMesh, &seedVertexIds, &segmentRes);
-            if (res != GPP_NO_ERROR)
-            {
-                GPPFREEARRAY(sampleIndex);
-                MessageBox(NULL, "网格分割失败", "温馨提示", MB_OK);
-                return true;
-            }
-            double colorDelta = 1.0 / sampleCount;
-            for (GPP::Int vid = 0; vid < vertexCount; vid++)
-            {
-                GPP::Vector3 vColor = MagicCore::ToolKit::ColorCoding(0.2 + segmentRes.at(vid) * colorDelta);
-                mpTriMesh->SetVertexColor(vid, vColor);
-            }
-            for (int sid = 0; sid < sampleCount; sid++)
-            {
-                mpTriMesh->SetVertexColor(sampleIndex[sid], GPP::Vector3(0, 0, 0));
+                curvatureMap.insert(std::pair<GPP::Real, int>(1.0 / (1.0 + fabs(meanCurvature.at(sampleIndex[markid]))), sampleIndex[markid]));
             }
             GPPFREEARRAY(sampleIndex);
-            UpdateDisplay();
-        }
-        else if (arg.key == OIS::KC_C)
-        {
-            std::vector<GPP::Real> curvature;
-            GPP::MeasureMesh::ComputeMeanCurvature(mpTriMesh, curvature);
-            GPP::Int vertexCount = mpTriMesh->GetVertexCount();
-            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            mCurMarkCoords.clear();
+            int markCount = 16;
+            std::multimap<GPP::Real, int>::iterator mapItr = curvatureMap.begin();
+            for (int markid = 1; markid < markCount; markid++)
             {
-                mpTriMesh->SetVertexColor(vid, MagicCore::ToolKit::ColorCoding(0.6 + curvature.at(vid) / 10.0));
+                mCurMarkCoords.push_back(mpTriMesh->GetVertexCoord(mapItr->second));
+                mapItr++;
             }
-            UpdateDisplay();
+            
+            UpdateMarkDisplay(true);
+        }
+        else if (arg.key == OIS::KC_Y)
+        {
+            GenerateTextureImage(mpUVMesh);
         }
         return true;
     }
@@ -279,16 +400,16 @@ namespace MagicApp
             mpImageFrameMesh->UpdateNormal();
         }
 
-        mDistortionImage.release();
-        mDistortionImage = cv::imread("../../Media/TextureApp/grid.png");
-        if (mDistortionImage.data != NULL)
-        {
-            mTextureImageSize = mDistortionImage.rows;
-        }
-        else
-        {
-            MessageBox(NULL, "图片打开失败", "温馨提示", MB_OK);
-        }
+        mTextureImageNames.clear();
+        mTextureImageNames.push_back("../../Media/TextureApp/grid.png");
+        mTextureImageNames.push_back("../../Media/TextureApp/pattern0.jpg");
+        mTextureImageNames.push_back("../../Media/TextureApp/pattern1.jpg");
+        mTextureImageNames.push_back("../../Media/TextureApp/pattern2.jpg");
+        mTextureImageNames.push_back("../../Media/TextureApp/pattern3.jpg");
+        mTextureImageNames.push_back("../../Media/TextureApp/pattern4.jpg");
+        mTextureImageNames.push_back("../../Media/TextureApp/pattern5.jpg");
+        SwitchTextureImage();
+
         InitViewTool();
     }
 
@@ -303,6 +424,7 @@ namespace MagicApp
             MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->resetToInitialState();
         }
         MagicCore::RenderSystem::Get()->HideRenderingObject("TriMesh_TextureApp");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudList_TextureApp");
         UpdateMarkDisplay(false);
     }
 
@@ -336,10 +458,14 @@ namespace MagicApp
                 mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, NULL, mpTriMesh, "ModelNode");
                 // Clear data
                 GPPFREEPOINTER(mpUVMesh);
-                mCurMarkIds.clear();
+                mLastCutVertexId = -1;
+                mCurPointsOnEdge.clear();
+                mCurMarkCoords.clear();
                 mCutLineList.clear();
                 UpdateMarkDisplay(false);
                 mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+                ClearPointCloudData();
+                mUpdatePointCloudRendering = true;
             }
             else
             {
@@ -431,29 +557,38 @@ namespace MagicApp
 
     void TextureApp::ConfirmGeodesics()
     {
-        if (mCurMarkIds.size() > 0)
+        if (mCurPointsOnEdge.size() > 0)
         {
-            mCutLineList.push_back(mCurMarkIds);
-            mCurMarkIds.clear();
+            mCurMarkCoords.clear();
+            mLastCutVertexId = -1;
+            std::vector<GPP::Int> newSplitLineIds;
+            GPP::ErrorCode res = GPP::UnfoldMesh::InsertSplitLineOnTriMesh(mpTriMesh, mCurPointsOnEdge, &newSplitLineIds);
+            mCurPointsOnEdge.clear();
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "割线不能自交", "温馨提示", MB_OK);
+                return;
+            }
+            mpTriMesh->UpdateNormal();
+            mCutLineList.push_back(newSplitLineIds);
             UpdateMarkDisplay(true);
+            UpdateDisplay();
+            mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
         }
     }
 
     void TextureApp::DeleteGeodesics()
     {
-        if (mCurMarkIds.empty())
+        mLastCutVertexId = -1;
+        if (!mCurMarkCoords.empty())
         {
-            if (mCutLineList.size() > 0)
-            {
-                mCutLineList.pop_back();
-                UpdateMarkDisplay(true);
-            }
+            mCurMarkCoords.clear();
         }
-        else
+        if (!mCurPointsOnEdge.empty())
         {
-            mCurMarkIds.clear();
-            UpdateMarkDisplay(true);
+            mCurPointsOnEdge.clear();
         }
+        UpdateMarkDisplay(true);
     }
 
     void TextureApp::SwitchMarkDisplay()
@@ -483,6 +618,9 @@ namespace MagicApp
             case MagicApp::TextureApp::OPTIMIZE_ISOMETRIC:
                 Optimize2Isometric(false);
                 break;
+            case MagicApp::TextureApp::GENERATE_UV_ATLAS:
+                GenerateUVAtlas(mInitChartCount, false);
+                break;
             default:
                 break;
             }
@@ -508,6 +646,18 @@ namespace MagicApp
         }
         else
         {
+            if (GPP::ConsolidateMesh::_IsTriMeshManifold(mpTriMesh) == false)
+            {
+                MessageBox(NULL, "网格展开失败：网格有非流形结构，请先拓扑修复", "温馨提示", MB_OK);
+                return;
+            }
+            if (GPP::ConsolidateMesh::_IsGeometryDegenerate(mpTriMesh) == false)
+            {
+                if (MessageBox(NULL, "警告：网格有退化几何，继续计算可能得到无效结果，可以先几何修复，是否继续？", "温馨提示", MB_OKCANCEL) != IDOK)
+                {
+                    return;
+                }
+            }
             GenerateUVMesh();
             // Generate fixed vertex
             std::vector<std::vector<GPP::Int> > holeIds;
@@ -525,6 +675,28 @@ namespace MagicApp
             if (holeIds.empty())
             {
                 MessageBox(NULL, "网格没有边界，不能展开", "温馨提示", MB_OK);
+                return;
+            }
+            // Is single connected region
+            std::vector<GPP::Real> isolation;
+            GPP::Int uvVertexCount = mpUVMesh->GetVertexCount();
+            res = GPP::ConsolidateMesh::CalculateIsolation(mpUVMesh, &isolation);
+            for (GPP::Int vid = 0; vid < uvVertexCount; vid++)
+            {
+                if (isolation.at(vid) < 1)
+                {
+                    MessageBox(NULL, "网格展开失败：网格需要是单连通区域", "温馨提示", MB_OK);
+                    return;
+                }
+            }
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格展开失败：网格连同区域检测失败", "温馨提示", MB_OK);
                 return;
             }
             std::vector<GPP::Int> fixedVertexIndices(2);
@@ -549,6 +721,7 @@ namespace MagicApp
                 MessageBox(NULL, "网格展开失败", "温馨提示", MB_OK);
                 return;
             }
+            UnifyTextureCoords(texCoords, 2.4);
             GPP::Int vertexCount = mpUVMesh->GetVertexCount();
             for (GPP::Int vid = 0; vid < vertexCount; vid++)
             {
@@ -583,6 +756,40 @@ namespace MagicApp
         }
         else
         {
+            if (GPP::ConsolidateMesh::_IsTriMeshManifold(mpUVMesh) == false)
+            {
+                MessageBox(NULL, "网格展开失败：网格有非流形结构，请先拓扑修复", "温馨提示", MB_OK);
+                return;
+            }
+            if (GPP::ConsolidateMesh::_IsGeometryDegenerate(mpUVMesh) == false)
+            {
+                if (MessageBox(NULL, "警告：网格有退化几何，继续计算可能得到无效结果，可以先几何修复，是否继续？", "温馨提示", MB_OKCANCEL) != IDOK)
+                {
+                    return;
+                }
+            }
+            // Is single connected region
+            std::vector<GPP::Real> isolation;
+            GPP::Int uvVertexCount = mpUVMesh->GetVertexCount();
+            GPP::ErrorCode res = GPP::ConsolidateMesh::CalculateIsolation(mpUVMesh, &isolation);
+            for (GPP::Int vid = 0; vid < uvVertexCount; vid++)
+            {
+                if (isolation.at(vid) < 1)
+                {
+                    MessageBox(NULL, "网格展开失败：网格需要是单连通区域", "温馨提示", MB_OK);
+                    return;
+                }
+            }
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格展开失败：网格连同区域检测失败", "温馨提示", MB_OK);
+                return;
+            }
             GPP::Int vertexCount = mpUVMesh->GetVertexCount();
             std::vector<GPP::Real> texCoords(vertexCount * 2);
             for (GPP::Int vid = 0; vid < vertexCount; vid++)
@@ -591,13 +798,8 @@ namespace MagicApp
                 texCoords.at(vid * 2) = texCoord[0];
                 texCoords.at(vid * 2 + 1) = texCoord[1];
             }
-            std::vector<GPP::Int> fixedVertexIndex;
-            GPP::Int vertexIds[3] = {-1};
-            mpUVMesh->GetTriangleVertexIds(0, vertexIds);
-            fixedVertexIndex.push_back(vertexIds[0]);
-            fixedVertexIndex.push_back(vertexIds[1]);
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::UnfoldMesh::OptimizeIsometric(mpUVMesh, &texCoords, 10, &fixedVertexIndex);
+            res = GPP::UnfoldMesh::OptimizeIsometric(mpUVMesh, &texCoords, 10, NULL);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -609,11 +811,100 @@ namespace MagicApp
                 MessageBox(NULL, "网格UV优化失败", "温馨提示", MB_OK);
                 return;
             }
+            UnifyTextureCoords(texCoords, 2.4);
             for (GPP::Int vid = 0; vid < vertexCount; vid++)
             {
                 mpUVMesh->SetVertexTexcoord(vid, GPP::Vector3(texCoords.at(vid * 2), texCoords.at(vid * 2 + 1), 0));
+                //mpTriMesh->SetVertexCoord(vid, GPP::Vector3(texCoords.at(vid * 2), texCoords.at(vid * 2 + 1), 0));
             }
+            mpTriMesh->UpdateNormal();
             mUpdateDisplay = true;
+        }
+    }
+
+    void TextureApp::GenerateUVAtlas(int initChartCount, bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (mpTriMesh == NULL)
+        {
+            MessageBox(NULL, "请导入需要UV展开的网格", "温馨提示", MB_OK);
+            return;
+        }
+        if (isSubThread)
+        {
+            mInitChartCount = initChartCount;
+            mCommandType = GENERATE_UV_ATLAS;
+            DoCommand(true);
+        }
+        else
+        {
+            if (GPP::ConsolidateMesh::_IsTriMeshManifold(mpTriMesh) == false)
+            {
+                MessageBox(NULL, "网格展开失败：网格有非流形结构，请先拓扑修复", "温馨提示", MB_OK);
+                return;
+            }
+            if (GPP::ConsolidateMesh::_IsGeometryDegenerate(mpTriMesh) == false)
+            {
+                if (MessageBox(NULL, "警告：网格有退化几何，继续计算可能得到无效结果，可以先几何修复，是否继续？", "温馨提示", MB_OKCANCEL) != IDOK)
+                {
+                    return;
+                }
+            }
+            GenerateUVMesh(true);
+            std::vector<GPP::Real> texCoords;
+            std::vector<GPP::Int> faceTexIds;
+            bool needInitSplit = mCutLineList.empty();
+            bool needSplitFoldOver = needInitSplit;
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::UnfoldMesh::GenerateUVAtlas(mpUVMesh, initChartCount, needInitSplit, needSplitFoldOver, &texCoords, &faceTexIds);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "UV Atlas 生成失败", "温馨提示", MB_OK);
+                return;
+            }
+            GPPFREEPOINTER(mpUVMesh);
+            UnifyTextureCoords(texCoords, 2.4);
+            mpUVMesh = new GPP::TriMesh;
+            int uvVertexCount = texCoords.size() / 2;
+            std::vector<GPP::Vector3> uvVertexCoords(uvVertexCount);
+            std::vector<GPP::Vector3> uvVertexColors(uvVertexCount);
+            int uvFaceCount = faceTexIds.size() / 3;
+            int vertexIds[3] = {-1};
+            for (int fid = 0; fid < uvFaceCount; fid++)
+            {
+                mpTriMesh->GetTriangleVertexIds(fid, vertexIds);
+                for (int localId = 0; localId < 3; localId++)
+                {
+                    GPP::Int tid = faceTexIds.at(fid * 3 + localId);
+                    uvVertexCoords.at(faceTexIds.at(fid * 3 + localId)) = mpTriMesh->GetVertexCoord(vertexIds[localId]);
+                    uvVertexColors.at(faceTexIds.at(fid * 3 + localId)) = mpTriMesh->GetVertexColor(vertexIds[localId]);
+                    mpTriMesh->SetTriangleTexcoord(fid, localId, GPP::Vector3(texCoords.at(tid * 2), texCoords.at(tid * 2 + 1), 0));
+                }
+            }
+            for (int vid = 0; vid < uvVertexCount; vid++)
+            {
+                mpUVMesh->InsertVertex(uvVertexCoords.at(vid));
+                mpUVMesh->SetVertexTexcoord(vid, GPP::Vector3(texCoords.at(vid * 2), texCoords.at(vid * 2 + 1), 0));
+                mpUVMesh->SetVertexColor(vid, uvVertexColors.at(vid));
+            }
+            for (int fid = 0; fid < uvFaceCount; fid++)
+            {
+                mpUVMesh->InsertTriangle(faceTexIds.at(fid * 3), faceTexIds.at(fid * 3 + 1), faceTexIds.at(fid * 3 + 2));
+            }
+            mpUVMesh->UpdateNormal();
+            
+            mDisplayMode = UVMESH_WIREFRAME;
+            mUpdateDisplay = true;
+            mHideMarks = true;
         }
     }
 
@@ -642,6 +933,133 @@ namespace MagicApp
         }
     }
 
+    void TextureApp::OptimizeColorConsistency()
+    {
+        std::vector<std::string> fileNames;
+        char filterName[] = "Geometry++ Point Cloud(*.gpc)\0*.gpc\0";
+        if (MagicCore::ToolKit::MultiFileOpenDlg(fileNames, filterName))
+        {
+            if (fileNames.size() > 0)
+            {
+                for (std::vector<GPP::PointCloud*>::iterator pitr = mPointCloudList.begin(); pitr != mPointCloudList.end(); ++pitr)
+                {
+                    GPPFREEPOINTER(*pitr);
+                }
+                mPointCloudList.clear();
+                for (int fileId = 0; fileId < fileNames.size(); fileId++)
+                {
+                    GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileNames.at(fileId));
+                    if (pointCloud != NULL)
+                    {
+                        if (mPointCloudList.empty())
+                        {
+                            pointCloud->UnifyCoords(2.0, &mScaleValue, &mObjCenterCoord);
+                        }
+                        else
+                        {
+                            pointCloud->UnifyCoords(mScaleValue, mObjCenterCoord);
+                        }
+                        mPointCloudList.push_back(pointCloud);
+                    }
+                }
+                //
+                std::vector<GPP::IPointCloud*> pointCloudList;
+                GPP::Int pointCountTotal = 0;
+                for (std::vector<GPP::PointCloud*>::iterator itr = mPointCloudList.begin(); itr != mPointCloudList.end(); ++itr)
+                {
+                    pointCountTotal += (*itr)->GetPointCount();
+                    pointCloudList.push_back(*itr);
+                }
+                std::vector<GPP::Real> colorList;
+                colorList.reserve(pointCountTotal * 3);
+                for (std::vector<GPP::PointCloud*>::iterator itr = mPointCloudList.begin(); itr != mPointCloudList.end(); ++itr)
+                {
+                    GPP::Int pointCountLocal = (*itr)->GetPointCount();
+                    for (GPP::Int pid = 0; pid < pointCountLocal; pid++)
+                    {
+                        GPP::Vector3 color = (*itr)->GetPointColor(pid);
+                        colorList.push_back(color[0]);
+                        colorList.push_back(color[1]);
+                        colorList.push_back(color[2]);
+                    }
+                }
+                std::vector<GPP::Real> albedoList, shadingList;
+                GPP::ErrorCode res = GPP::IntrinsicColor::DecomposePointCloudColor(pointCloudList, colorList, albedoList, shadingList);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "颜色分解失败", "温馨提示", MB_OK);
+                    return;
+                }
+                GPP::Int pointId = 0;
+                GPP::Real r, g, b;
+                for (std::vector<GPP::PointCloud*>::iterator itr = mPointCloudList.begin(); itr != mPointCloudList.end(); ++itr)
+                {
+                    GPP::Int pointCountLocal = (*itr)->GetPointCount();
+                    for (GPP::Int pid = 0; pid < pointCountLocal; pid++)
+                    {
+                        r = albedoList.at(pointId * 3);
+                        r = r > 1 ? 1 : (r < 0 ? 0 : r);
+                        g = albedoList.at(pointId * 3 + 1);
+                        g = g > 1 ? 1 : (g < 0 ? 0 : g);
+                        b = albedoList.at(pointId * 3 + 2);
+                        b = b > 1 ? 1 : (b < 0 ? 0 : b);
+                        (*itr)->SetPointColor(pid, GPP::Vector3(r, g, b));
+                        pointId++;
+                    }
+                }
+                //
+                mUpdatePointCloudRendering = true;
+                ClearMeshData();
+                mUpdateDisplay = true;
+                mHideMarks = true;
+            }
+            else
+            {
+                return;
+            }
+        }
+        else
+        {
+            return;
+        }
+
+    }
+
+    void TextureApp::EnterPointToolApp(void)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (mPointCloudList.empty())
+        {
+            AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
+            return;
+        }
+        GPP::PointCloud* pointCloud = new GPP::PointCloud;
+        for (std::vector<GPP::PointCloud*>::iterator pitr = mPointCloudList.begin(); pitr != mPointCloudList.end(); ++pitr)
+        {
+            GPP::Int pointCount = (*pitr)->GetPointCount();
+            for (GPP::Int pid = 0; pid < pointCount; pid++)
+            {
+                pointCloud->InsertPoint((*pitr)->GetPointCoord(pid), (*pitr)->GetPointNormal(pid));
+                pointCloud->SetPointColor(pid, (*pitr)->GetPointColor(pid));
+            }
+        }
+        pointCloud->SetHasNormal(true);
+        pointCloud->SetHasColor(true);
+        AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
+        PointShopApp* pointShop = dynamic_cast<PointShopApp*>(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop)
+        {
+            pointShop->SetPointCloud(pointCloud, mObjCenterCoord, mScaleValue);
+        }
+        else
+        {
+            GPPFREEPOINTER(pointCloud);
+        }
+    }
+
     void TextureApp::SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue)
     {
         if (triMesh == NULL)
@@ -660,7 +1078,9 @@ namespace MagicApp
         mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, NULL, mpTriMesh, "ModelNode");
         // Clear data
         GPPFREEPOINTER(mpUVMesh);
-        mCurMarkIds.clear();
+        mLastCutVertexId = -1;
+        mCurPointsOnEdge.clear();
+        mCurMarkCoords.clear();
         mCutLineList.clear();
         UpdateMarkDisplay(false);
         mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
@@ -695,6 +1115,22 @@ namespace MagicApp
         UpdateDisplay();
     }
 
+    void TextureApp::SwitchTextureImage()
+    {
+        mDistortionImage.release();
+        mDistortionImage = cv::imread(mTextureImageNames.at(mCurrentTextureImageId));
+        mCurrentTextureImageId = (mCurrentTextureImageId + 1) % mTextureImageNames.size();
+        if (mDistortionImage.data != NULL)
+        {
+            mTextureImageSize = mDistortionImage.rows;
+        }
+        else
+        {
+            MessageBox(NULL, "图片打开失败", "温馨提示", MB_OK);
+        }
+        UpdateDisplay();
+    }
+
     void TextureApp::InitViewTool()
     {
         if (mpViewTool == NULL)
@@ -710,6 +1146,7 @@ namespace MagicApp
         {
             if (mpTriMesh == NULL)
             {
+                MagicCore::RenderSystem::Get()->HideRenderingObject("TriMesh_TextureApp");
                 return;
             }
             MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_SOLID);
@@ -719,6 +1156,7 @@ namespace MagicApp
         {
             if (mpTriMesh == NULL)
             {
+                MagicCore::RenderSystem::Get()->HideRenderingObject("TriMesh_TextureApp");
                 return;
             }
             MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_WIREFRAME);
@@ -728,6 +1166,7 @@ namespace MagicApp
         {
             if (mpTriMesh == NULL)
             {
+                MagicCore::RenderSystem::Get()->HideRenderingObject("TriMesh_TextureApp");
                 return;
             }
             MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_SOLID);
@@ -738,6 +1177,7 @@ namespace MagicApp
         {
             if (mpUVMesh == NULL)
             {
+                MagicCore::RenderSystem::Get()->HideRenderingObject("TriMesh_TextureApp");
                 return;
             }
             MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_WIREFRAME);
@@ -760,9 +1200,13 @@ namespace MagicApp
             MagicCore::RenderSystem::Get()->RenderPointList("CutLine_TextureApp", "SimplePoint_Large", GPP::Vector3(1, 0, 0), cutLines, MagicCore::RenderSystem::MODEL_NODE_CENTER);
         
             std::vector<GPP::Vector3> cutVertices;
-            for (std::vector<GPP::Int>::iterator vertexItr = mCurMarkIds.begin(); vertexItr != mCurMarkIds.end(); ++vertexItr)
+            for (std::vector<GPP::Vector3>::iterator coordItr = mCurMarkCoords.begin(); coordItr != mCurMarkCoords.end(); ++coordItr)
             {
-                cutVertices.push_back(mpTriMesh->GetVertexCoord(*vertexItr));
+                cutVertices.push_back(*coordItr);
+            }
+            if (mLastCutVertexId != -1)
+            {
+                cutVertices.push_back(mpTriMesh->GetVertexCoord(mLastCutVertexId));
             }
             MagicCore::RenderSystem::Get()->RenderPointList("CutVertex_TextureApp", "SimplePoint_Large", GPP::Vector3(1, 1, 0), cutVertices, MagicCore::RenderSystem::MODEL_NODE_CENTER);
         }
@@ -770,6 +1214,20 @@ namespace MagicApp
         {
             MagicCore::RenderSystem::Get()->HideRenderingObject("CutLine_TextureApp");
             MagicCore::RenderSystem::Get()->HideRenderingObject("CutVertex_TextureApp");
+        }
+    }
+
+    void TextureApp::UpdatePointCloudRendering()
+    {
+        if (mPointCloudList.empty())
+        {
+            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudList_TextureApp");
+        }
+        else
+        {
+            MagicCore::RenderSystem::Get()->HideRenderingObject("PointCloudList_TextureApp");
+            MagicCore::RenderSystem::Get()->RenderPointCloudList("PointCloudList_TextureApp", "SimplePoint_Large", 
+                mPointCloudList, false, MagicCore::RenderSystem::MODEL_NODE_CENTER);
         }
     }
 
@@ -787,7 +1245,10 @@ namespace MagicApp
                 Ogre::PF_B8G8R8A8,   // pixel format  
                 Ogre::TU_DYNAMIC_WRITE_ONLY_DISCARDABLE // usage, for textures updated very often  
                 );
+        }
 
+        if (mDistortionImage.data != NULL)
+        {
             // Get the pixel buffer  
             Ogre::HardwarePixelBufferSharedPtr pixelBuffer = mpTriMeshTexture->getBuffer();  
             cv::Mat textureImage = mDistortionImage;;
@@ -819,9 +1280,9 @@ namespace MagicApp
                 }  
             }  
             // Unlock the pixel buffer  
-            pixelBuffer->unlock();  
+            pixelBuffer->unlock();
         }
-        
+          
         if (Ogre::MaterialManager::getSingleton().getByName("TextureMeshMaterial", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME).isNull())
         {
             Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create("TextureMeshMaterial", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME); 
@@ -832,16 +1293,17 @@ namespace MagicApp
         }
     }
 
-    void TextureApp::GenerateUVMesh()
+    void TextureApp::GenerateUVMesh(bool bWithTextureCoords)
     {
         GPPFREEPOINTER(mpUVMesh);
-        if (mCutLineList.empty())
+        mpUVMesh = GPP::CopyTriMesh(mpTriMesh);
+        if (bWithTextureCoords)
         {
-            mpUVMesh = GPP::CopyTriMesh(mpTriMesh);
+            GPP::CopyTriMeshTextureCoordinates(mpTriMesh, mpUVMesh);
         }
-        else
+        if (!mCutLineList.empty())
         {
-            mpUVMesh = GPP::SplitTriMesh(mpTriMesh, mCutLineList);
+            GPP::UnfoldMesh::SplitTriMesh(mpUVMesh, mCutLineList);
             mpUVMesh->UpdateNormal();
         }
     }
@@ -865,6 +1327,49 @@ namespace MagicApp
             for (int localId = 0; localId < 3; localId++)
             {
                 mpTriMesh->SetTriangleTexcoord(fid, localId, mpUVMesh->GetVertexTexcoord(vertexIds[localId]));
+            }
+        }
+    }
+
+    void TextureApp::UnifyTextureCoords(std::vector<double>& texCoords, double scaleValue)
+    {
+        int vertexCount = texCoords.size() / 2;
+        GPP::Real texCoordMax_X = texCoords.at(0);
+        GPP::Real texCoordMax_Y = texCoords.at(1);
+        GPP::Real texCoordMin_X = texCoords.at(0);
+        GPP::Real texCoordMin_Y = texCoords.at(1);
+        for (GPP::Int vid = 1; vid < vertexCount; vid++)
+        {
+            if (texCoords.at(vid * 2) > texCoordMax_X)
+            {
+                texCoordMax_X = texCoords.at(vid * 2);
+            }
+            else if (texCoords.at(vid * 2) < texCoordMin_X)
+            {
+                texCoordMin_X = texCoords.at(vid * 2);
+            }
+            if (texCoords.at(vid * 2 + 1) > texCoordMax_Y)
+            {
+                texCoordMax_Y = texCoords.at(vid * 2 + 1);
+            }
+            else if (texCoords.at(vid * 2 + 1) < texCoordMin_Y)
+            {
+                texCoordMin_Y = texCoords.at(vid * 2 + 1);
+            }
+        }
+
+        GPP::Real range_X = texCoordMax_X - texCoordMin_X;
+        GPP::Real range_Y = texCoordMax_Y - texCoordMin_Y;
+        GPP::Real range_max = range_X > range_Y ? range_X : range_Y;
+        if (range_max > GPP::REAL_TOL)
+        {
+            GPP::Real scaleV = scaleValue / range_max;
+            GPP::Real center_X = (texCoordMax_X + texCoordMin_X) / 2.0;
+            GPP::Real center_Y = (texCoordMax_Y + texCoordMin_Y) / 2.0;
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                texCoords.at(vid * 2) = (texCoords.at(vid * 2) - center_X) * scaleV;
+                texCoords.at(vid * 2 + 1) = (texCoords.at(vid * 2 + 1) - center_Y) * scaleV;
             }
         }
     }

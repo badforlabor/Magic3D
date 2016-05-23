@@ -17,7 +17,10 @@
         <Widget type="Button" skin="But_Flip_CN" position="161 90 43 43" align="Left Top" name="But_FlipRefNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Outlier_CN" position="204 90 43 43" align="Left Top" name="But_RemoveOutlierRef">
+        <Widget type="Button" skin="But_Repair_CN" position="204 90 43 43" align="Left Top" name="But_ReversePatchNormalRef">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Outlier_CN" position="247 90 43 43" align="Left Top" name="But_RemoveOutlierRef">
             <Property key="Visible" value="false"/>
         </Widget>
 
@@ -41,7 +44,10 @@
         <Widget type="Button" skin="But_Flip_CN" position="161 285 43 43" align="Left Top" name="But_FlipFromNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Outlier_CN" position="204 285 43 43" align="Left Top" name="But_RemoveOutlierFrom">
+        <Widget type="Button" skin="But_Repair_CN" position="204 285 43 43" align="Left Top" name="But_ReversePatchNormalFrom">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Outlier_CN" position="247 285 43 43" align="Left Top" name="But_RemoveOutlierFrom">
             <Property key="Visible" value="false"/>
         </Widget>
 
@@ -69,6 +75,13 @@
         <Widget type="Button" skin="But_Fuse_CN" position="15 470 60 60" align="Left Top" name="But_FusePointCloudRef"/>
 
         <Widget type="Button" skin="But_Global_CN" position="15 535 60 60" align="Left Top" name="But_GlobalRegistrate"/>
+        <Widget type="EditBox" skin="EditBox" position="75 550 40 30" align="Left Top" name="Edit_GlobalIterationCount">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_OK_CN" position="115 545 43 43" align="Left Top" name="But_DoGlobalRegistrate">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
         <Widget type="Button" skin="But_PointShop" position="15 600 60 60" align="Left Top" name="But_EnterPointShop"/>
 

@@ -57,10 +57,13 @@
         <Widget type="Button" skin="But_FillHole_CN" position="15 470 60 60" align="Left Top" name="But_FillHole"/>
         <Widget type="Button" skin="But_Flat_CN" position="75 480 43 43" align="Left Top" name="But_FillHoleFlat">
             <Property key="Visible" value="false"/>
-        </Widget>/>
-        <Widget type="Button" skin="But_Curvature_CN" position="118 480 43 43" align="Left Top" name="But_FillHoleSmooth">
+        </Widget>
+		<Widget type="Button" skin="But_Smooth_CN" position="118 480 43 43" align="Left Top" name="But_FillHoleTangent">
+			<Property key="Visible" value="fales"/>
+		</Widget>
+        <Widget type="Button" skin="But_Curvature_CN" position="161 480 43 43" align="Left Top" name="But_FillHoleSmooth">
             <Property key="Visible" value="false"/>
-        </Widget>/>
+        </Widget>
 
         <Widget type="Button" skin="But_Flip" position="15 535 60 60" align="Left Top" name="But_AppJump"/>
         <Widget type="Button" skin="But_PointShop" position="75 545 43 43" align="Left Top" name="But_SampleMesh">

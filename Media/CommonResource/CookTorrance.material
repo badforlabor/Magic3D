@@ -66,7 +66,38 @@ material CookTorrancePoint
     {
         pass
         {
-            point_size 2
+            point_size 1
+
+            vertex_program_ref VCookTorrancePoint
+            {
+                param_named_auto worldViewProj    worldviewproj_matrix
+                param_named_auto worldMatrix      world_matrix
+                param_named_auto worldMatrix_IT   inverse_transpose_world_matrix
+            }
+            
+            fragment_program_ref FCookTorrancePoint
+            {
+                param_named_auto    globalAmbient  ambient_light_colour
+                param_named_auto    eyePosition    camera_position
+                param_named_auto    lightPosition  light_position 0
+                param_named_auto    lightColor     light_diffuse_colour 0
+                param_named         Ka             float3    0.3 0.3 0.3 
+                param_named         Ks             float3    0.0001 0.0001 0.0001
+                param_named         f              float     0.5
+                param_named         m              float     0.03
+            }
+
+        }
+    }
+}
+
+material CookTorrancePointLarge
+{
+    technique
+    {
+        pass
+        {
+            point_size 7
 
             vertex_program_ref VCookTorrancePoint
             {

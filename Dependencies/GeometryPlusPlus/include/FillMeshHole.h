@@ -1,3 +1,9 @@
+/*==================================================================================================
+
+                       Copyright (c) 2016 GeometryPlusPlus, ThreePark
+                             Unpublished - All rights reserved
+
+====================================================================================================*/
 #pragma once
 #include "ITriMesh.h"
 #include <vector>
@@ -7,6 +13,7 @@ namespace GPP
     enum FillMeshHoleType
     {
         FILL_MESH_HOLE_FLAT = 0,
+        FILL_MESH_HOLE_TANGENT,
         FILL_MESH_HOLE_SMOOTH
     };
 

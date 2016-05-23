@@ -39,6 +39,7 @@ namespace MagicApp
         void DoSimplifyMesh(MyGUI::Widget* pSender);
         void FillHole(MyGUI::Widget* pSender);
         void DoFillHoleFlat(MyGUI::Widget* pSender);
+        void DoFillHoleTangent(MyGUI::Widget* pSender);
         void DoFillHoleSmooth(MyGUI::Widget* pSender);
         void AppJump(MyGUI::Widget* pSender);
         void SampleMesh(MyGUI::Widget* pSender);

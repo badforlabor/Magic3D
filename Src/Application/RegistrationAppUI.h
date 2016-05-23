@@ -29,6 +29,7 @@ namespace MagicApp
         void CalculateRefNormalFront(MyGUI::Widget* pSender);
         void CalculateRefNormal(MyGUI::Widget* pSender);
         void FlipRefNormal(MyGUI::Widget* pSender);
+        void ReversePatchNormalRef(MyGUI::Widget* pSender);
         void RemoveOutlierRef(MyGUI::Widget* pSender);
         
         void RefFeaturePoint(MyGUI::Widget* pSender);
@@ -41,6 +42,7 @@ namespace MagicApp
         void CalculateFromNormalFront(MyGUI::Widget* pSender);
         void CalculateFromNormal(MyGUI::Widget* pSender);
         void FlipFromNormal(MyGUI::Widget* pSender);
+        void ReversePatchNormalFrom(MyGUI::Widget* pSender);
         void RemoveOutlierFrom(MyGUI::Widget* pSender);
         
         void FromFeaturePoint(MyGUI::Widget* pSender);
@@ -55,6 +57,7 @@ namespace MagicApp
         void FuseRef(MyGUI::Widget* pSender);
         
         void GlobalRegistrate(MyGUI::Widget* pSender);
+        void DoGlobalRegistrate(MyGUI::Widget* pSender);
 
         void EnterPointShop(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);

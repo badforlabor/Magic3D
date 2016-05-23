@@ -35,6 +35,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_Geodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::Geodesics);
         mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::DeleteMeshMarkRef);
         mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeApproximateGeodesics);
+        mRoot.at(0)->findWidget("But_QuickExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::FastComputeExactGeodesics);
         mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeExactGeodesics);
 
         mRoot.at(0)->findWidget("But_MeasureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefModel);
@@ -143,9 +144,18 @@ namespace MagicApp
     void MeasureAppUI::Geodesics(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_QuickExactGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_GeodesicAccuracy")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::string textString = "0.5";
+            mRoot.at(0)->findWidget("Edit_GeodesicAccuracy")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_GeodesicAccuracy")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
     }
 
     void MeasureAppUI::DeleteMeshMarkRef(MyGUI::Widget* pSender)
@@ -163,6 +173,23 @@ namespace MagicApp
         if (measureShop != NULL)
         {
             measureShop->ComputeApproximateGeodesics();
+        }
+    }
+
+    void MeasureAppUI::FastComputeExactGeodesics(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            std::string textString = mRoot.at(0)->findWidget("Edit_GeodesicAccuracy")->castType<MyGUI::EditBox>()->getOnlyText();
+            double accuary = std::atof(textString.c_str());
+            if (accuary <= 0 || accuary > 1)
+            {
+                std::string newStr = "0.5";
+                mRoot.at(0)->findWidget("Edit_GeodesicAccuracy")->castType<MyGUI::EditBox>()->setOnlyText(newStr);
+                return;
+            }
+            measureShop->FastComputeExactGeodesics(accuary);
         }
     }
 

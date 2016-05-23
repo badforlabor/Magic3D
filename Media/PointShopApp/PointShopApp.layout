@@ -15,36 +15,72 @@
             <Property key="Visible" value="false"/>
         </Widget>
         
-        <Widget type="Button" skin="But_Normal_CN" position="15 225 60 60" align="Left Top" name="But_Normal"/>
-        <Widget type="Button" skin="But_Front" position="75 235 43 43" align="Left Top" name="But_CalNormalFront">
+        <Widget type="Button" skin="But_Simplify_CN" position="15 225 60 60" align="Left Top" name="But_SimplifyPointCloud"/>
+        <Widget type="EditBox" skin="EditBox" position="75 240 80 30" align="Left Top" name="Edit_SimplifyResolution">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Calculate_CN" position="118 235 43 43" align="Left Top" name="But_CalNormal">
-            <Property key="Visible" value="false"/>
-        </Widget>
-        <Widget type="Button" skin="But_Flip_CN" position="161 235 43 43" align="Left Top" name="But_FlipNormal">
-            <Property key="Visible" value="false"/>
-        </Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="204 235 43 43" align="Left Top" name="But_SmoothNormal">
+        <Widget type="Button" skin="But_OK_CN" position="155 235 43 43" align="Left Top" name="But_DoSimplifyPointCloud">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Repair_CN" position="15 295 60 60" align="Left Top" name="But_ConsolidatePointCloud"></Widget>
-        <Widget type="Button" skin="But_Outlier_CN" position="75 305 43 43" align="Left Top" name="But_RemovePointCloudOutlier">
+        <Widget type="Button" skin="But_Normal_CN" position="15 295 60 60" align="Left Top" name="But_Normal"/>
+        <Widget type="Button" skin="But_Front" position="75 305 43 43" align="Left Top" name="But_CalNormalFront">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Isolate_CN" position="118 305 43 43" align="Left Top" name="But_RemoveIsolatePart">
+        <Widget type="Button" skin="But_Calculate_CN" position="118 305 43 43" align="Left Top" name="But_CalNormal">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_RemoveNoise_CN" position="161 305 43 43" align="Left Top" name="But_SmoothGeometryByNormal">
+        <Widget type="Button" skin="But_Flip_CN" position="161 305 43 43" align="Left Top" name="But_FlipNormal">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Repair_CN" position="204 305 43 43" align="Left Top" name="But_ReversePatchNormal">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="247 305 43 43" align="Left Top" name="But_SmoothNormal">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Triangle_CN" position="15 365 60 60" align="Left Top" name="But_Reconstruction"/>
+        <Widget type="Button" skin="But_Repair_CN" position="15 365 60 60" align="Left Top" name="But_ConsolidatePointCloud"></Widget>
+        <Widget type="Button" skin="But_Outlier_CN" position="75 375 43 43" align="Left Top" name="But_RemovePointCloudOutlier">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Isolate_CN" position="118 375 43 43" align="Left Top" name="But_RemoveIsolatePart">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_RemoveNoise_CN" position="161 375 43 43" align="Left Top" name="But_SmoothGeometryByNormal">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
-    	<Widget type="Button" skin="But_Home" position="15 435 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Select" position="15 435 60 60" align="Left Top" name="But_Selection"/>
+        <Widget type="Button" skin="But_Rectangle" position="75 445 43 43" align="Left Top" name="But_SelectByRectangle">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Erase" position="118 445 43 43" align="Left Top" name="But_EraseByRectangle">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Delete" position="161 445 43 43" align="Left Top" name="But_DeleteSelections">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Front" position="204 445 43 43" align="Left Top" name="But_IgnoreBack">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Select" position="247 445 43 43" align="Left Top" name="But_MoveModel">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
-        <Widget type="ProgressBar" skin="ProgressBar" position="15 515 150 20" align="Left Top" name="APIProgress">
+        <Widget type="Button" skin="But_Triangle_CN" position="15 505 60 60" align="Left Top" name="But_Reconstruction"/>
+        <Widget type="EditBox" skin="EditBox" position="75 515 40 30" align="Left Top" name="Edit_ReconstructionQuality">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_OK_CN" position="115 510 43 43" align="Left Top" name="But_DoReconstruction">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+    	<Widget type="Button" skin="But_Home" position="15 575 60 60" align="Left Top" name="But_BackToHomepage"/>
+
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 665 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>
             <Property key="FlowDirection" value="LeftToRight"/>
             <Property key="Visible" value="false"/>

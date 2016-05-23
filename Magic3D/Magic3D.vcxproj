@@ -88,6 +88,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Src\Application\AnimationApp.h" />
+    <ClInclude Include="..\Src\Application\AnimationAppUI.h" />
     <ClInclude Include="..\Src\Application\AppBase.h" />
     <ClInclude Include="..\Src\Application\AppManager.h" />
     <ClInclude Include="..\Src\Application\Homepage.h" />
@@ -120,6 +122,10 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Src\Application\AnimationApp.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\AnimationAppUI.cpp" />
     <ClCompile Include="..\Src\Application\AppBase.cpp" />
     <ClCompile Include="..\Src\Application\AppManager.cpp" />
     <ClCompile Include="..\Src\Application\Homepage.cpp">

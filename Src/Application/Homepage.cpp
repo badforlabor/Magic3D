@@ -80,7 +80,7 @@ namespace MagicApp
                 return;
             }
             dumpInfo->LoadDumpFile(fileName);
-            if (dumpApiName == GPP::POINT_REGISTRATION_ALIGNPOINTPAIR || dumpApiName == GPP::POINT_REGISTRATION_ICP || 
+            if (dumpApiName == GPP::POINT_REGISTRATION__AlignPointPair || dumpApiName == GPP::POINT_REGISTRATION_ICP || 
                 dumpApiName == GPP::POINT_REGISTRATION_ALIGNPOINTCLOUD || dumpApiName == GPP::POINT_REGISTRATION_ALIGNPOINTCLOUD_MARK)
             {
                 AppManager::Get()->EnterApp(new RegistrationApp, "RegistrationApp");
@@ -94,7 +94,8 @@ namespace MagicApp
                     GPPFREEPOINTER(dumpInfo);
                 }
             }
-            else if (dumpApiName == GPP::MESH_MEASURE_SECTION_APPROXIMATE || dumpApiName == GPP::MESH_MEASURE_SECTION_EXACT)
+            else if (dumpApiName == GPP::MESH_MEASURE_SECTION_APPROXIMATE || dumpApiName == GPP::MESH_MEASURE_SECTION_EXACT ||
+                dumpApiName == GPP::MESH_MEASURE_SECTION_FAST_EXACT)
             {
                 AppManager::Get()->EnterApp(new MeasureApp, "MeasureApp");
                 MeasureApp* measureApp = dynamic_cast<MeasureApp*>(AppManager::Get()->GetApp("MeasureApp"));
@@ -120,7 +121,7 @@ namespace MagicApp
                     GPPFREEPOINTER(dumpInfo);
                 }
             }
-            else if (dumpInfo->GetPointCloud() != NULL)
+            else if (dumpInfo->GetPointCloud() != NULL || dumpApiName == GPP::POINT_FUSE_UPDATE || dumpApiName == GPP::POINT_FUSE_EXTRACT)
             {
                 AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
                 PointShopApp* pointShop = dynamic_cast<PointShopApp*>(AppManager::Get()->GetApp("PointShopApp"));

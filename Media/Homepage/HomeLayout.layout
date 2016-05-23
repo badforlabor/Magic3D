@@ -4,8 +4,9 @@
         <Widget type="ImageBox" skin="Image_Title" position="309 310 405 108" align="Left Top" name="Title"/>
         <Widget type="Button" skin="But_PointShop" position="150 320 86 84" align="Left Top" name="But_PointShop"/>
         <Widget type="Button" skin="But_MeshTool" position="790 320 86 84" align="Left Top" name="But_MeshShop"/>
-        <Widget type="Button" skin="But_Relief" position="370 160 86 84" align="Left Top" name="But_ReliefApp"/>
-        <Widget type="Button" skin="But_ImageTool" position="570 160 86 84" align="Left Top" name="But_TextureApp"/>
+        <Widget type="Button" skin="But_Relief" position="310 190 86 84" align="Left Top" name="But_ReliefApp"/>
+        <Widget type="Button" skin="But_Deform" position="470 80 86 84" align="Left Top" name="But_AnimationApp"/>
+        <Widget type="Button" skin="But_ImageTool" position="630 190 86 84" align="Left Top" name="But_TextureApp"/>
         <Widget type="Button" skin="But_Align" position="370 480 86 84" align="Left Top" name="But_RegistrationApp"/>
         <Widget type="Button" skin="But_Resize" position="570 480 86 84" align="Left Top" name="But_MeasureApp"/>
         <Widget type="Button" skin="But_Contact" position="949 690 60 60" align="Right Bottom" name="But_Contact"/>

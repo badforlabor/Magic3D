@@ -50,7 +50,8 @@ namespace MagicApp
         mUpdateModelRefRendering(false),
         mUpdateMarkRefRendering(false),
         mUpdateModelFromRendering(false),
-        mUpdateMarkFromRendering(false)
+        mUpdateMarkFromRendering(false),
+        mGeodesicAccuracy(0.5)
     {
     }
 
@@ -227,6 +228,55 @@ namespace MagicApp
             RunDumpInfo();
 #endif
         }
+        else if (arg.key == OIS::KC_G)
+        {
+            std::vector<GPP::Real> curvature;
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeGaussCurvature(mpTriMeshRef, curvature);
+            if (res != GPP_NO_ERROR)
+            {
+                return true;
+            }
+            GPP::Int vertexCount = mpTriMeshRef->GetVertexCount();
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                mpTriMeshRef->SetVertexColor(vid, MagicCore::ToolKit::ColorCoding(0.6 + fabs(curvature.at(vid)) * 2.0));
+            }
+            UpdateModelRefRendering();
+        }
+        else if (arg.key == OIS::KC_S)
+        {
+            //std::vector<GPP::Real> texCoords;
+            //std::vector<GPP::Int> faceTexIds;
+            //std::vector<std::vector<GPP::Int> > splitEdges;
+            //GPP::ErrorCode res = GPP::UnfoldMesh::GenerateUVAtlas(mpTriMeshRef, 2, &texCoords, &faceTexIds, &splitEdges);
+            ///*if (res != GPP_NO_ERROR)
+            //{
+            //    return true;
+            //}*/
+            //MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPointLineSegRef_MeasureApp");
+            //mRefMarkIds.clear();
+            //for (std::vector<std::vector<GPP::Int> >::iterator eitr = splitEdges.begin(); eitr != splitEdges.end(); ++eitr)
+            //{
+            //    std::vector<GPP::Vector3> oneLineCoords;
+            //    for (std::vector<GPP::Int>::iterator vitr = eitr->begin(); vitr != eitr->end(); ++vitr)
+            //    {
+            //        oneLineCoords.push_back(mpTriMeshRef->GetVertexCoord(*vitr) + mpTriMeshRef->GetVertexNormal(*vitr) * 0.001);
+            //    }
+            //    MagicCore::RenderSystem::Get()->RenderPolyline("MarkPointLineSegRef_MeasureApp", "Simple_Line", GPP::Vector3(1, 0, 0), oneLineCoords);
+            //}
+            //
+            //UpdateMarkRefRendering();
+        }
+        else if (arg.key == OIS::KC_L)
+        {
+            std::vector<GPP::Vector3> lineSegments;
+            for (int mid = 0; mid < mRefMarkPoints.size() - 1; mid++)
+            {
+                lineSegments.push_back(mRefMarkPoints.at(mid));
+                lineSegments.push_back(mRefMarkPoints.at(mid + 1));
+            }
+            GPP::Parser::ExportLineSegmentToPovray("edge.inc", lineSegments, 0.0025, GPP::Vector3(0.09, 0.48627, 0.69));
+        }
         return true;
     }
 
@@ -323,6 +373,9 @@ namespace MagicApp
             case MagicApp::MeasureApp::GEODESICS_APPROXIMATE:
                 ComputeApproximateGeodesics(false);
                 break;
+            case MagicApp::MeasureApp::GEOMESICS_FAST_EXACT:
+                FastComputeExactGeodesics(mGeodesicAccuracy, false);
+                break;
             case MagicApp::MeasureApp::GEODESICS_EXACT:
                 ComputeExactGeodesics(false);
                 break;
@@ -384,7 +437,7 @@ namespace MagicApp
         mpTriMeshRef->UnifyCoords(2.0);
         mpTriMeshRef->UpdateNormal();
 
-        if (mpDumpInfo->GetApiName() == GPP::MESH_MEASURE_SECTION_EXACT)
+        if (mpDumpInfo->GetApiName() == GPP::MESH_MEASURE_SECTION_EXACT || mpDumpInfo->GetApiName() == GPP::MESH_MEASURE_SECTION_FAST_EXACT)
         {
             GPP::DumpMeshMeasureSectionExact* dumpDetails = dynamic_cast<GPP::DumpMeshMeasureSectionExact*>(mpDumpInfo);
             if (dumpDetails)
@@ -394,6 +447,7 @@ namespace MagicApp
         }
 
         UpdateModelRefRendering();
+        UpdateMarkRefRendering();
         GPPFREEPOINTER(mpDumpInfo);
     }
 #endif
@@ -603,6 +657,62 @@ namespace MagicApp
             mUpdateMarkRefRendering = true;
         }
     }
+ 
+    void MeasureApp::FastComputeExactGeodesics(double accuracy, bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (mpTriMeshRef == NULL)
+        {
+            MessageBox(NULL, "请导入需要测量的网格", "温馨提示", MB_OK);
+            return;
+        }
+        else if (mRefMarkIds.size() < 2)
+        {
+            MessageBox(NULL, "请在测量的网格上选择标记点", "温馨提示", MB_OK);
+            return;
+        }
+        /*else if (mpTriMeshRef->GetVertexCount() > 200000 && isSubThread)
+        {
+            if (MessageBox(NULL, "测量网格顶点大于200k，测量时间会比较长，是否继续？", "温馨提示", MB_OKCANCEL) != IDOK)
+            {
+                return;
+            }
+        }*/
+        if (isSubThread)
+        {
+            mCommandType = GEOMESICS_FAST_EXACT;
+            mGeodesicAccuracy = accuracy;
+            DoCommand(true);
+        }
+        else
+        {
+            std::vector<GPP::Vector3> pathPoints;
+            std::vector<GPP::PointOnEdge> pathInfos;
+            GPP::Real distance = 0;
+            //GPP::DumpOnce();
+            mIsCommandInProgress = true;
+            GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(mpTriMeshRef, mRefMarkIds, true, 
+                pathPoints, distance, &pathInfos, accuracy);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                return;
+            }
+            mpUI->SetGeodesicsInfo(distance / mScaleValue);
+            mRefMarkPoints.clear();
+            mRefMarkPoints.swap(pathPoints);
+            mUpdateMarkRefRendering = true;
+        }
+    }
 
     void MeasureApp::ComputeExactGeodesics(bool isSubThread)
     {
@@ -635,10 +745,11 @@ namespace MagicApp
         else
         {
             std::vector<GPP::Vector3> pathPoints;
+            std::vector<GPP::PointOnEdge> pathInfos;
             GPP::Real distance = 0;
             //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::MeasureMesh::ComputeExactGeodesics(mpTriMeshRef, mRefMarkIds, true, pathPoints, distance);
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeExactGeodesics(mpTriMeshRef, mRefMarkIds, true, pathPoints, distance, &pathInfos);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {

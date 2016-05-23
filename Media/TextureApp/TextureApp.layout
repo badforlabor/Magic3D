@@ -1,9 +1,11 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
     <Widget type="Widget" skin="PanelEmpty" position="0 0 1024 768" align="Left Top" layer="Back">
-        <Widget type="TextBox" skin="TextBox" position="200 15 700 300" align="Left Top" name="Text_Info"/>
+        <Widget type="TextBox" skin="TextBox" position="230 15 700 300" align="Left Top" name="Text_Info"/>
         
         <Widget type="Button" skin="But_Viewer" position="120 15 40 40" align="Left Top" name="But_DisplayMode"/>
+
+        <Widget type="Button" skin="But_Image" position="170 15 40 40" align="Left Top" name="But_TextureImage"/>
 
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportTriMesh"/>
         
@@ -24,11 +26,28 @@
 
         <Widget type="Button" skin="But_Optimise_CN" position="15 295 60 60" align="Left Top" name="But_Optimize2Isometric"/>
 
-        <Widget type="Button" skin="But_MeshTool" position="15 365 60 60" align="Left Top" name="But_EnterMeshToolApp"/>
+        <Widget type="Button" skin="But_Atlas" position="15 365 60 60" align="Left Top" name="But_GenerateUVAtlas"/>
+        <Widget type="EditBox" skin="EditBox" position="75 380 80 30" align="Left Top" name="Edit_InitChartCount">
+            <Property key="TextColour" value="0.286275 0.254902 0.4"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_OK_CN" position="155 375 43 43" align="Left Top" name="But_DoGenerateUVAtlas">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
-    	<Widget type="Button" skin="But_Home" position="15 435 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_MeshTool" position="15 435 60 60" align="Left Top" name="But_EnterMeshToolApp"/>
 
-        <Widget type="ProgressBar" skin="ProgressBar" position="15 510 150 20" align="Left Top" name="APIProgress">
+        <Widget type="Button" skin="But_Saliency" position="15 505 60 60" align="Left Top" name="But_OptimizeColorConsistency">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_PointShop" position="15 575 60 60" align="Left Top" name="But_EnterPointShop">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+    	<Widget type="Button" skin="But_Home" position="15 505 60 60" align="Left Top" name="But_BackToHomepage"/>
+
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 720 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>
             <Property key="FlowDirection" value="LeftToRight"/>
             <Property key="Visible" value="false"/>

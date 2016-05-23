@@ -25,6 +25,7 @@ namespace MagicApp
         {
             NONE = 0,
             GEODESICS_APPROXIMATE,
+            GEOMESICS_FAST_EXACT,
             GEODESICS_EXACT,
             DEVIATION
         };
@@ -48,6 +49,7 @@ namespace MagicApp
 
         void DeleteMeshMarkRef(void);
         void ComputeApproximateGeodesics(bool isSubThread = true);
+        void FastComputeExactGeodesics(double accuracy, bool isSubThread = true);
         void ComputeExactGeodesics(bool isSubThread = true);
 
         void MeasureRefArea(void);
@@ -110,5 +112,6 @@ namespace MagicApp
         bool mUpdateMarkRefRendering;
         bool mUpdateModelFromRendering;
         bool mUpdateMarkFromRendering;
+        double mGeodesicAccuracy;
     };
 }

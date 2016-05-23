@@ -21,6 +21,8 @@ namespace MagicApp
 
     private:
         void SwitchDisplayMode(MyGUI::Widget* pSender);
+        void SwitchTextureImage(MyGUI::Widget* pSender);
+
         void ImportTriMesh(MyGUI::Widget* pSender);
         void ExportTriMesh(MyGUI::Widget* pSender);
 
@@ -31,8 +33,15 @@ namespace MagicApp
 
         void UnfoldTriMesh(MyGUI::Widget* pSender);
         void Optimize2Isometric(MyGUI::Widget* pSender);
-        
+
+        void GenerateUVAtlas(MyGUI::Widget* pSender);
+        void DoGenerateUVAtlas(MyGUI::Widget* pSender);
+
         void EnterMeshToolApp(MyGUI::Widget* pSender);
+
+        void OptimizeColorConsistency(MyGUI::Widget* pSender);
+
+        void EnterPointToolApp(MyGUI::Widget* pSender);
 
         void BackToHomepage(MyGUI::Widget* pSender);
 

@@ -7,6 +7,7 @@ namespace GPP
 {
     class TriMesh;
     class DumpBase;
+    class PointCloud;
 }
 
 namespace MagicCore
@@ -19,6 +20,13 @@ namespace MagicApp
     class ReliefAppUI;
     class ReliefApp : public AppBase
     {
+        enum DisplayMode
+        {
+            TRIMESH = 0,
+            RELIEF,
+            POINTCLOUD
+        };
+
     public:
         ReliefApp();
         ~ReliefApp();
@@ -32,10 +40,13 @@ namespace MagicApp
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
         virtual void WindowFocusChanged(Ogre::RenderWindow* rw);
 
+        void SwitchDisplayMode(void);
         bool ImportModel(void);
-        void GenerateRelief(double compressRatio);
+        void GenerateRelief(double compressRatio, int resolution);
         void EnterMeshTool(void);
         void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
+        void CaptureDepthPointCloud(int resolution);
+        void SavePointCloud(void);
 
 #if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -58,7 +69,8 @@ namespace MagicApp
 #if DEBUGDUMPFILE
         GPP::DumpBase* mpDumpInfo;
 #endif
-        std::vector<GPP::Real> mHeightField;
-        int mResolution;
+        GPP::TriMesh* mpReliefMesh;
+        DisplayMode mDisplayMode;
+        GPP::PointCloud* mpDepthPointCloud;
     };
 }

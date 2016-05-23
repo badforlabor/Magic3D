@@ -26,10 +26,14 @@ namespace MagicApp
         void SamplePointCloud(MyGUI::Widget* pSender);
         void DoSamplePointCloud(MyGUI::Widget* pSender);
 
+        void SimplifyPointCloud(MyGUI::Widget* pSender);
+        void DoSimplifyPointCloud(MyGUI::Widget* pSender);
+
         void PointCloudNormal(MyGUI::Widget* pSender);
         void CalculatePointCloudNormalFront(MyGUI::Widget* pSender);
         void CalculatePointCloudNormal(MyGUI::Widget* pSender);
         void FlipPointCloudNormal(MyGUI::Widget* pSender);
+        void ReversePatchNormal(MyGUI::Widget* pSender);
         void SmoothPointCloudNormal(MyGUI::Widget* pSender);
         
         void ConsolidatePointCloud(MyGUI::Widget* pSender);
@@ -37,12 +41,22 @@ namespace MagicApp
         void RemoveIsolatePart(MyGUI::Widget* pSender);
         void SmoothPointCloudByNormal(MyGUI::Widget* pSender);
 
+        void SelectPoint(MyGUI::Widget* pSender);
+        void SelectByRectangle(MyGUI::Widget* pSender);
+        void EraseByRectangle(MyGUI::Widget* pSender);
+        void DeleteSelections(MyGUI::Widget* pSender);
+        void IgnoreBack(MyGUI::Widget* pSender);
+        void MoveModel(MyGUI::Widget* pSender);
+
         void ReconstructMesh(MyGUI::Widget* pSender);
+        void DoReconstructMesh(MyGUI::Widget* pSender);
+
         void BackToHomepage(MyGUI::Widget* pSender);
 
     private:
         MyGUI::VectorWidgetPtr mRoot;
         bool mIsProgressbarVisible;
         MyGUI::TextBox* mTextInfo;
+        bool mIgnoreBack;
     };
 }

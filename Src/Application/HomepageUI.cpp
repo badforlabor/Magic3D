@@ -9,6 +9,7 @@
 #include "MeasureApp.h"
 #include "ReliefApp.h"
 #include "TextureApp.h"
+#include "AnimationApp.h"
 
 namespace MagicApp
 {
@@ -37,6 +38,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_MeasureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterMeasureApp);
         mRoot.at(0)->findWidget("But_ReliefApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterReliefApp);
         mRoot.at(0)->findWidget("But_TextureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterTextureApp);
+        mRoot.at(0)->findWidget("But_AnimationApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterAnimationApp);
         mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::Contact);
     }
 
@@ -68,6 +70,11 @@ namespace MagicApp
     void HomepageUI::EnterTextureApp(MyGUI::Widget* pSender)
     {
         AppManager::Get()->EnterApp(new TextureApp, "TextureApp");
+    }
+
+    void HomepageUI::EnterAnimationApp(MyGUI::Widget* pSender)
+    {
+        AppManager::Get()->EnterApp(new AnimationApp, "AnimationApp");
     }
 
     void HomepageUI::Shutdown()

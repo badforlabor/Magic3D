@@ -22,6 +22,8 @@ namespace MagicApp
         MagicCore::ResourceManager::LoadResource("../../Media/TextureApp", "FileSystem", "TextureApp");
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("TextureApp.layout");
         mRoot.at(0)->findWidget("But_DisplayMode")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::SwitchDisplayMode);
+        mRoot.at(0)->findWidget("But_TextureImage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::SwitchTextureImage);
+
         mRoot.at(0)->findWidget("But_ImportTriMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ImportTriMesh);
         mRoot.at(0)->findWidget("But_ExportTriMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ExportTriMesh);
 
@@ -32,8 +34,15 @@ namespace MagicApp
         
         mRoot.at(0)->findWidget("But_UnFoldTriMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::UnfoldTriMesh);
         mRoot.at(0)->findWidget("But_Optimize2Isometric")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::Optimize2Isometric);
+        
+        mRoot.at(0)->findWidget("But_GenerateUVAtlas")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::GenerateUVAtlas);
+        mRoot.at(0)->findWidget("But_DoGenerateUVAtlas")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::DoGenerateUVAtlas);
 
         mRoot.at(0)->findWidget("But_EnterMeshToolApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::EnterMeshToolApp);
+
+        mRoot.at(0)->findWidget("But_OptimizeColorConsistency")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::OptimizeColorConsistency);
+
+        mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::EnterPointToolApp);
 
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::BackToHomepage);
 
@@ -100,6 +109,15 @@ namespace MagicApp
         if (textureApp != NULL)
         {
             textureApp->SwitchDisplayMode();
+        }
+    }
+
+    void TextureAppUI::SwitchTextureImage(MyGUI::Widget* pSender)
+    {
+        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
+        if (textureApp != NULL)
+        {
+            textureApp->SwitchTextureImage();
         }
     }
 
@@ -174,12 +192,69 @@ namespace MagicApp
         }
     }
 
+    void TextureAppUI::GenerateUVAtlas(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_DoGenerateUVAtlas")->castType<MyGUI::Button>()->isVisible();
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_DoGenerateUVAtlas")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_InitChartCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            
+            std::stringstream ss;
+            std::string textString;
+            ss << 25;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_InitChartCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+        }
+    }
+
+    void TextureAppUI::DoGenerateUVAtlas(MyGUI::Widget* pSender)
+    {
+        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
+        if (textureApp != NULL)
+        {
+            std::string textString = mRoot.at(0)->findWidget("Edit_InitChartCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int initChartCount = std::atoi(textString.c_str());
+            if (initChartCount > 0)
+            {
+                textureApp->GenerateUVAtlas(initChartCount);
+            }
+            else
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 25;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_InitChartCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+        }
+    }
+
     void TextureAppUI::EnterMeshToolApp(MyGUI::Widget* pSender)
     {
         TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
         if (textureApp != NULL)
         {
             textureApp->EnterMeshToolApp();
+        }
+    }
+
+    void TextureAppUI::OptimizeColorConsistency(MyGUI::Widget* pSender)
+    {
+        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
+        if (textureApp != NULL)
+        {
+            textureApp->OptimizeColorConsistency();
+        }
+    }
+
+    void TextureAppUI::EnterPointToolApp(MyGUI::Widget* pSender)
+    {
+        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
+        if (textureApp != NULL)
+        {
+            textureApp->EnterPointToolApp();
         }
     }
 

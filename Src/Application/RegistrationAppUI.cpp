@@ -31,6 +31,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalRefNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateRefNormalFront);
         mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateRefNormal);
         mRoot.at(0)->findWidget("But_FlipRefNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FlipRefNormal);
+        mRoot.at(0)->findWidget("But_ReversePatchNormalRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ReversePatchNormalRef);
         mRoot.at(0)->findWidget("But_RemoveOutlierRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RemoveOutlierRef);
         
         mRoot.at(0)->findWidget("But_RefFeaturePoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RefFeaturePoint);
@@ -43,6 +44,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalFromNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateFromNormalFront);
         mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::CalculateFromNormal);
         mRoot.at(0)->findWidget("But_FlipFromNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FlipFromNormal);
+        mRoot.at(0)->findWidget("But_ReversePatchNormalFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ReversePatchNormalFrom);
         mRoot.at(0)->findWidget("But_RemoveOutlierFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::RemoveOutlierFrom);
         
         mRoot.at(0)->findWidget("But_FromFeaturePoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FromFeaturePoint);
@@ -56,6 +58,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_FusePointCloudRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseRef);
         
         mRoot.at(0)->findWidget("But_GlobalRegistrate")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::GlobalRegistrate);
+        mRoot.at(0)->findWidget("But_DoGlobalRegistrate")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::DoGlobalRegistrate);
         
         mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::EnterPointShop);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::BackToHomepage);
@@ -164,7 +167,8 @@ namespace MagicApp
         bool isVisible = mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_CalRefNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CalRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_FlipRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);  
+        mRoot.at(0)->findWidget("But_FlipRefNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_ReversePatchNormalRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_RemoveOutlierRef")->castType<MyGUI::Button>()->setVisible(!isVisible);  
     }
 
@@ -192,6 +196,15 @@ namespace MagicApp
         if (registrationApp != NULL)
         {
             registrationApp->FlipRefNormal();
+        }
+    }
+
+    void RegistrationAppUI::ReversePatchNormalRef(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->ReversePatchNormalRef();
         }
     }
 
@@ -240,10 +253,40 @@ namespace MagicApp
 
     void RegistrationAppUI::GlobalRegistrate(MyGUI::Widget* pSender)
     {
+        bool isVisible = mRoot.at(0)->findWidget("But_DoGlobalRegistrate")->castType<MyGUI::Button>()->isVisible();
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_DoGlobalRegistrate")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 15;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
+    }
+
+    void RegistrationAppUI::DoGlobalRegistrate(MyGUI::Widget* pSender)
+    {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->GlobalRegistrate(true);
+            std::string textString = mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int iterationCount = std::atoi(textString.c_str());
+            if (iterationCount < 1)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 15;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                registrationApp->GlobalRegistrate(iterationCount, true);
+            }            
         }
     }
 
@@ -262,6 +305,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CalFromNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CalFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_FlipFromNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_ReversePatchNormalFrom")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_RemoveOutlierFrom")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
@@ -288,6 +332,15 @@ namespace MagicApp
         if (registrationApp != NULL)
         {
             registrationApp->FlipFromNormal();
+        }
+    }
+
+    void RegistrationAppUI::ReversePatchNormalFrom(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->ReversePatchNormalFrom();
         }
     }
 

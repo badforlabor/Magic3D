@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MyGUI type="Layout" version="3.2.0">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 10024 768" align="Left Top" layer="Back">
+        <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportModel"/>
+
+        <Widget type="Button" skin="But_Deform" position="15 85 60 60" align="Left Top" name="But_DeformModel"/>
+        <Widget type="EditBox" skin="EditBox" position="75 100 80 30" align="Left Top" name="Edit_ControlPointCount">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_OK_CN" position="155 95 43 43" align="Left Top" name="But_InitDeformation">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Select" position="15 155 60 60" align="Left Top" name="But_SelectControlPoint"></Widget>
+        <Widget type="Button" skin="But_Rectangle" position="75 165 43 43" align="Left Top" name="But_SelectByRectangle">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Erase" position="118 165 43 43" align="Left Top" name="But_EraseSelections">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Deform" position="161 165 43 43" align="Left Top" name="But_DeformControlPoint">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Select" position="204 165 43 43" align="Left Top" name="But_MoveControlPoint">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Flip" position="15 225 60 60" align="Left Top" name="But_AppJump"/>
+
+    	<Widget type="Button" skin="But_Home" position="15 295 60 60" align="Left Top" name="But_BackToHomepage"/>
+    </Widget>
+</MyGUI>

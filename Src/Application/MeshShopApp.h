@@ -67,7 +67,7 @@ namespace MagicApp
         void EnterTextureApp(void);
         void EnterMeasureApp(void);
         void FindHole(bool isShowHole);
-        void FillHole(bool isFillFlat, bool isSubThread = true);
+        void FillHole(int type, bool isSubThread = true);
 
         void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
         int GetMeshVertexCount(void);
@@ -103,7 +103,7 @@ namespace MagicApp
         std::vector<std::vector<GPP::Int> > mShowHoleLoopIds;
         std::vector<GPP::Int>               mBoundarySeedIds;
         GPP::Int mTargetVertexCount;
-        bool mIsFillFlat;
+        int mFillHoleType;
         CommandType mCommandType;
         bool mUpdateMeshRendering;
         bool mUpdateHoleRendering;

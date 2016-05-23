@@ -24,7 +24,8 @@ namespace MagicApp
         {
             NONE = 0,
             UNFOLD_INITIAL,
-            OPTIMIZE_ISOMETRIC
+            OPTIMIZE_ISOMETRIC,
+            GENERATE_UV_ATLAS
         };
 
         enum DisplayMode
@@ -51,6 +52,8 @@ namespace MagicApp
         void DoCommand(bool isSubThread);
 
         void SwitchDisplayMode(void);
+        void SwitchTextureImage(void);
+
         void ImportTriMesh(void);
         void ExportTriMesh(void);
 
@@ -60,8 +63,13 @@ namespace MagicApp
         
         void UnfoldTriMesh(bool isSubThread = true);
         void Optimize2Isometric(bool isSubThread = true);
+        void GenerateUVAtlas(int initChartCount, bool isSubThread = true);
 
         void EnterMeshToolApp(void);
+
+        void OptimizeColorConsistency(void);
+
+        void EnterPointToolApp(void);
 
         void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
 
@@ -70,14 +78,18 @@ namespace MagicApp
         void UpdateDisplay(void);
         void UpdateMarkDisplay(bool display);
         void UpdateTriMeshTexture(void);
-        void GenerateUVMesh(void);
+        void GenerateUVMesh(bool bWithTextureCoordinates = false);
         void UpdateTextureFromUVMesh(void);
+        void UnifyTextureCoords(std::vector<double>& texCoords, double scaleValue);
+        void UpdatePointCloudRendering(void);
 
     private:
         void SetupScene(void);
         void ShutdownScene(void);
         void ClearData(void);
         bool IsCommandAvaliable(void);
+        void ClearMeshData(void);
+        void ClearPointCloudData(void);
 
     private:
         TextureAppUI* mpUI;
@@ -96,7 +108,14 @@ namespace MagicApp
         bool mUpdateDisplay;
         bool mHideMarks;
         MagicCore::PickTool* mpPickTool;
-        std::vector<GPP::Int> mCurMarkIds;
+        GPP::Int mLastCutVertexId;
+        std::vector<GPP::PointOnEdge> mCurPointsOnEdge;
+        std::vector<GPP::Vector3> mCurMarkCoords;
         std::vector<std::vector<GPP::Int> > mCutLineList;
+        int mInitChartCount;
+        std::vector<std::string> mTextureImageNames;
+        int mCurrentTextureImageId;
+        std::vector<GPP::PointCloud*> mPointCloudList;
+        bool mUpdatePointCloudRendering;
     };
 }

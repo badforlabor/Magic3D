@@ -124,7 +124,8 @@ namespace MagicCore
         return mpMainCamera;
     }
 
-    void RenderSystem::RenderPointCloud(std::string pointCloudName, std::string materialName, const GPP::PointCloud* pointCloud, ModelNodeType nodeType)
+    void RenderSystem::RenderPointCloud(std::string pointCloudName, std::string materialName, const GPP::PointCloud* pointCloud, 
+        ModelNodeType nodeType, std::vector<bool>* selectFlags, GPP::Vector3* selectColor)
     {
         if (mpSceneManager == NULL)
         {
@@ -154,7 +155,15 @@ namespace MagicCore
             {
                 GPP::Vector3 coord = pointCloud->GetPointCoord(pid);
                 GPP::Vector3 normal = pointCloud->GetPointNormal(pid);
-                GPP::Vector3 color = pointCloud->GetPointColor(pid);
+                GPP::Vector3 color;
+                if (selectFlags && selectFlags->at(pid))
+                {
+                    color = *selectColor;
+                }
+                else
+                {
+                    color = pointCloud->GetPointColor(pid);
+                }
                 manualObj->position(coord[0], coord[1], coord[2]);
                 manualObj->normal(normal[0], normal[1], normal[2]);
                 manualObj->colour(color[0], color[1], color[2]);
@@ -168,7 +177,15 @@ namespace MagicCore
             for (int pid = 0; pid < pointCount; pid++)
             {
                 GPP::Vector3 coord = pointCloud->GetPointCoord(pid);
-                GPP::Vector3 color = pointCloud->GetPointColor(pid);
+                GPP::Vector3 color;
+                if (selectFlags && selectFlags->at(pid))
+                {
+                    color = *selectColor;
+                }
+                else
+                {
+                    color = pointCloud->GetPointColor(pid);
+                }
                 manualObj->position(coord[0], coord[1], coord[2]);
                 manualObj->colour(color[0], color[1], color[2]);
             }
@@ -362,10 +379,15 @@ namespace MagicCore
         {
             GPP::Vector3 textureCoord = mesh->GetVertexTexcoord(vid);
             GPP::Vector3 normal = mesh->GetVertexNormal(vid);
-            GPP::Vector3 color = mesh->GetVertexColor(vid);
+            GPP::Vector3 color = normal;
+            if (normal[2] < 0)
+            {
+                normal *= -1.0;
+            }
+            //GPP::Vector3 color = mesh->GetVertexColor(vid);
             manualObj->position(textureCoord[0], textureCoord[1], textureCoord[2]);
             manualObj->normal(normal[0], normal[1], normal[2]);
-            manualObj->colour(color[0], color[1], color[2]);
+            manualObj->colour((color[0] + 1.0) / 2.0, (color[1] + 1.0) / 2.0, (color[2] + 1.0) / 2.0);
         }
         int triangleCount = mesh->GetTriangleCount();
         for (int fid = 0; fid < triangleCount; fid++)
@@ -377,7 +399,7 @@ namespace MagicCore
         manualObj->end();
     }
 
-    /*void RenderSystem::RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords)
+    void RenderSystem::RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords)
     {
         Ogre::ManualObject* manualObj = NULL;
         if (mpSceneManager->hasManualObject(lineName))
@@ -408,10 +430,12 @@ namespace MagicCore
             GPP::Vector3 start = startCoords.at(lineId);
             GPP::Vector3 end = endCoords.at(lineId);
             manualObj->position(start[0], start[1], start[2]);
+            manualObj->colour(0, 0, 1);
             manualObj->position(end[0], end[1], end[2]);
+            manualObj->colour(0, 0, 1);
         }
         manualObj->end();
-    }*/
+    }
 
     void RenderSystem::RenderPolyline(std::string lineName, std::string materialName, const GPP::Vector3& color, 
         const std::vector<GPP::Vector3>& polylineCoords, bool appendNewPolyline, ModelNodeType nodeType)

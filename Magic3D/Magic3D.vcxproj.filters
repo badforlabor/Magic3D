@@ -43,6 +43,9 @@
     <Filter Include="Application\TextureApp">
       <UniqueIdentifier>{12e4edff-c07a-48dc-9aaa-ec578f911498}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Application\AnimationApp">
+      <UniqueIdentifier>{36bfe68b-3d7b-4a16-916c-bab10e345448}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -135,6 +138,12 @@
     <ClInclude Include="..\Src\Application\TextureAppUI.h">
       <Filter>Application\TextureApp</Filter>
     </ClInclude>
+    <ClInclude Include="..\Src\Application\AnimationApp.h">
+      <Filter>Application\AnimationApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\AnimationAppUI.h">
+      <Filter>Application\AnimationApp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -223,6 +232,12 @@
     </ClCompile>
     <ClCompile Include="..\Src\Application\TextureAppUI.cpp">
       <Filter>Application\TextureApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\AnimationApp.cpp">
+      <Filter>Application\AnimationApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\AnimationAppUI.cpp">
+      <Filter>Application\AnimationApp</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
