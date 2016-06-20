@@ -34,6 +34,14 @@ namespace MagicApp
             FILLHOLE
         };
 
+        enum RightMouseType
+        {
+            MOVE = 0,
+            SELECT_ADD,
+            SELECT_DELETE,
+            SELECT_BRIDGE
+        };
+
     public:
         MeshShopApp();
         ~MeshShopApp();
@@ -56,8 +64,8 @@ namespace MagicApp
         void ReverseDirection(void);
         void RemoveMeshIsolatePart(bool isSubThread = true);
         void ConsolidateGeometry(bool isSubThread = true);
-        void RemoveMeshNoise(bool isSubThread = true);
-        void SmoothMesh(bool isSubThread = true);
+        void RemoveMeshNoise(double positionWeight, bool isSubThread = true);
+        void SmoothMesh(double positionWeight, bool isSubThread = true);
         void EnhanceMeshDetail(bool isSubThread = true);
         void LoopSubdivide(bool isSubThread = true);
         void RefineMesh(int targetVertexCount, bool isSubThread = true);
@@ -68,6 +76,12 @@ namespace MagicApp
         void EnterMeasureApp(void);
         void FindHole(bool isShowHole);
         void FillHole(int type, bool isSubThread = true);
+        void BridgeEdges(bool isSubThread = true);
+        void SelectByRectangle(void);
+        void EraseByRectangle(void);
+        void DeleteSelections(void);
+        void IgnoreBack(bool ignore);
+        void MoveModel(void);
 
         void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
         int GetMeshVertexCount(void);
@@ -82,6 +96,12 @@ namespace MagicApp
         void ShutdownScene(void);
         void ClearData(void);
         bool IsCommandAvaliable(void);
+        void ResetSelection(void);
+        void SelectControlPointByRectangle(int startCoordX, int startCoordY, int endCoordX, int endCoordY);
+        void UpdateRectangleRendering(int startCoordX, int startCoordY, int endCoordX, int endCoordY);
+        void ClearRectangleRendering(void);
+        void DoBridgeEdges();
+        void ResetBridgeTags();
 
     private:
         void InitViewTool(void);
@@ -89,6 +109,7 @@ namespace MagicApp
         void SetToShowHoleLoopVrtIds(const std::vector<std::vector<GPP::Int> >& toShowHoleLoopIds);
         void SetBoundarySeedIds(const std::vector<GPP::Int>& bounarySeedIds);
         void UpdateHoleRendering(void);
+        void UpdateBridgeRendering(void);
 
     private:
         MeshShopAppUI* mpUI;
@@ -107,6 +128,14 @@ namespace MagicApp
         CommandType mCommandType;
         bool mUpdateMeshRendering;
         bool mUpdateHoleRendering;
+        bool mUpdateBridgeRendering;
         bool mIsCommandInProgress;
+        std::vector<bool> mVertexSelectFlag;
+        RightMouseType mRightMouseType;
+        GPP::Vector2 mMousePressdCoord;
+        bool mIgnoreBack;
+        double mFilterPositionWeight;
+        std::vector<GPP::Int> mBridgeEdgeVertices;
+        std::vector<bool> mVertexBridgeFlag;
     };
 }

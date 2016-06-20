@@ -44,7 +44,12 @@ namespace MagicApp
         mCommandType(NONE),
         mUpdateMeshRendering(false),
         mUpdateHoleRendering(false),
-        mIsCommandInProgress(false)
+        mIsCommandInProgress(false),
+        mVertexSelectFlag(),
+        mRightMouseType(MOVE),
+        mMousePressdCoord(),
+        mIgnoreBack(true),
+        mFilterPositionWeight(1.0)
     {
     }
 
@@ -87,6 +92,11 @@ namespace MagicApp
             UpdateHoleRendering();
             mUpdateHoleRendering = false;
         }
+        if (mUpdateBridgeRendering)
+        {
+            UpdateBridgeRendering();
+            mUpdateBridgeRendering = false;
+        }
         return true;
     }
 
@@ -104,43 +114,62 @@ namespace MagicApp
 
     bool MeshShopApp::MouseMoved( const OIS::MouseEvent &arg )
     {
-        if (mpViewTool != NULL)
+        if (arg.state.buttonDown(OIS::MB_Middle) && mpViewTool != NULL)
         {
-            MagicCore::ViewTool::MouseMode mm;
-            if (arg.state.buttonDown(OIS::MB_Left))
-            {
-                mm = MagicCore::ViewTool::MM_LEFT_DOWN;
-            }
-            else if (arg.state.buttonDown(OIS::MB_Middle))
-            {
-                mm = MagicCore::ViewTool::MM_MIDDLE_DOWN;
-            }
-            else if (arg.state.buttonDown(OIS::MB_Right))
-            {
-                mm = MagicCore::ViewTool::MM_RIGHT_DOWN;
-            }
-            else
-            {
-                mm = MagicCore::ViewTool::MM_NONE;
-            }
-            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, mm);
+            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_MIDDLE_DOWN);
         }
-        
+        else if (arg.state.buttonDown(OIS::MB_Right) && mRightMouseType == MOVE && mpViewTool != NULL)
+        {
+            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_RIGHT_DOWN);
+        }
+        else if (arg.state.buttonDown(OIS::MB_Left) && mpViewTool != NULL)
+        {
+            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_LEFT_DOWN);
+        } 
+        else if ((mRightMouseType == SELECT_ADD || mRightMouseType == SELECT_DELETE || mRightMouseType == SELECT_BRIDGE) && arg.state.buttonDown(OIS::MB_Right))
+        {
+            UpdateRectangleRendering(mMousePressdCoord[0], mMousePressdCoord[1], arg.state.X.abs, arg.state.Y.abs);
+        }
+
         return true;
     }
 
     bool MeshShopApp::MousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        if (mpViewTool != NULL)
+        if ((id == OIS::MB_Middle || id == OIS::MB_Left || (id == OIS::MB_Right && mRightMouseType == MOVE)) && mpViewTool != NULL)
         {
             mpViewTool->MousePressed(arg.state.X.abs, arg.state.Y.abs);
+        }
+        else if (arg.state.buttonDown(OIS::MB_Right) && mpTriMesh && (mRightMouseType == SELECT_ADD || mRightMouseType == SELECT_DELETE || mRightMouseType == SELECT_BRIDGE))
+        {
+            mMousePressdCoord[0] = arg.state.X.abs;
+            mMousePressdCoord[1] = arg.state.Y.abs;
         }
         return true;
     }
 
     bool MeshShopApp::MouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
     {
-        return  true;
+        if ((id == OIS::MB_Middle || id == OIS::MB_Left || (id == OIS::MB_Right && mRightMouseType == MOVE)) && mpViewTool != NULL)
+        {
+            mpViewTool->MouseReleased(); 
+        }
+        else if (id == OIS::MB_Right && mpTriMesh && (mRightMouseType == SELECT_ADD || mRightMouseType == SELECT_DELETE))
+        {
+            SelectControlPointByRectangle(mMousePressdCoord[0], mMousePressdCoord[1], arg.state.X.abs, arg.state.Y.abs);
+            ClearRectangleRendering();
+            UpdateMeshRendering();
+        }
+        else if (id == OIS::MB_Right && mpTriMesh && (mRightMouseType == SELECT_BRIDGE))
+        {
+            SelectControlPointByRectangle(mMousePressdCoord[0], mMousePressdCoord[1], arg.state.X.abs, arg.state.Y.abs);
+            ClearRectangleRendering();
+            DoBridgeEdges();
+            UpdateMeshRendering();
+            UpdateBridgeRendering();
+        }
+
+        return true;
     }
 
     bool MeshShopApp::KeyPressed( const OIS::KeyEvent &arg )
@@ -201,10 +230,10 @@ namespace MagicApp
                 RemoveMeshIsolatePart(false);
                 break;
             case MagicApp::MeshShopApp::REMOVEMESHNOISE:
-                RemoveMeshNoise(false);
+                RemoveMeshNoise(mFilterPositionWeight, false);
                 break;
             case MagicApp::MeshShopApp::SMOOTHMESH:
-                SmoothMesh(false);
+                SmoothMesh(mFilterPositionWeight, false);
                 break;
             case MagicApp::MeshShopApp::ENHANCEDETAIL:
                 EnhanceMeshDetail(false);
@@ -262,6 +291,8 @@ namespace MagicApp
         GPPFREEPOINTER(mpDumpInfo);
 #endif
         mShowHoleLoopIds.clear();
+        mVertexSelectFlag.clear();
+        mRightMouseType = MOVE;
     }
 
     bool MeshShopApp::IsCommandAvaliable()
@@ -277,6 +308,138 @@ namespace MagicApp
             return false;
         }
         return true;
+    }
+
+    void MeshShopApp::ResetSelection()
+    {
+        if (mpTriMesh)
+        {
+            mVertexSelectFlag = std::vector<bool>(mpTriMesh->GetVertexCount(), 0);
+        }
+        else
+        {
+            mVertexSelectFlag.clear();
+        }
+    }
+
+    void MeshShopApp::SelectControlPointByRectangle(int startCoordX, int startCoordY, int endCoordX, int endCoordY)
+    {
+        GPP::Vector2 pos0(startCoordX * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getWidth() - 1.0, 
+                    1.0 - startCoordY * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getHeight());
+        GPP::Vector2 pos1(endCoordX * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getWidth() - 1.0, 
+                    1.0 - endCoordY * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getHeight());
+        double minX = (pos0[0] < pos1[0]) ? pos0[0] : pos1[0];
+        double maxX = (pos0[0] > pos1[0]) ? pos0[0] : pos1[0];
+        double minY = (pos0[1] < pos1[1]) ? pos0[1] : pos1[1];
+        double maxY = (pos0[1] > pos1[1]) ? pos0[1] : pos1[1];
+        Ogre::Matrix4 worldM = MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->_getFullTransform();
+        Ogre::Matrix4 viewM  = MagicCore::RenderSystem::Get()->GetMainCamera()->getViewMatrix();
+        Ogre::Matrix4 projM  = MagicCore::RenderSystem::Get()->GetMainCamera()->getProjectionMatrix();
+        Ogre::Matrix4 wvpM   = projM * viewM * worldM;
+        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+        GPP::Vector3 coord;
+        GPP::Vector3 normal;
+        bool ignoreBack = mIgnoreBack;
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            if (mRightMouseType == SELECT_ADD && mVertexSelectFlag.at(vid))
+            {
+                continue;
+            }
+            else if (mRightMouseType == SELECT_DELETE && mVertexSelectFlag.at(vid) == 0)
+            {
+                continue;
+            }
+            GPP::Vector3 coord = mpTriMesh->GetVertexCoord(vid);
+            Ogre::Vector3 ogreCoord(coord[0], coord[1], coord[2]);
+            ogreCoord = wvpM * ogreCoord;
+            if (ogreCoord.x > minX && ogreCoord.x < maxX && ogreCoord.y > minY && ogreCoord.y < maxY)
+            {
+                if (ignoreBack)
+                {
+                    normal = mpTriMesh->GetVertexNormal(vid);
+                    Ogre::Vector4 ogreNormal(normal[0], normal[1], normal[2], 0);
+                    ogreNormal = worldM * ogreNormal;
+                    if (ogreNormal.z > 0)
+                    {
+                        if (mRightMouseType == SELECT_BRIDGE)
+                        {
+                            mVertexBridgeFlag.at(vid) = 1;
+                        }
+                        else if (mRightMouseType == SELECT_ADD)
+                        {
+                            mVertexSelectFlag.at(vid) = 1;
+                        }
+                        else
+                        {
+                            mVertexSelectFlag.at(vid) = 0;
+                        }
+                    }
+                }
+                else
+                {
+                    if (mRightMouseType == SELECT_BRIDGE)
+                    {
+                        mVertexBridgeFlag.at(vid) = 1;
+                    }
+                    else if (mRightMouseType == SELECT_ADD)
+                    {
+                        mVertexSelectFlag.at(vid) = 1;
+                    }
+                    else
+                    {
+                        mVertexSelectFlag.at(vid) = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    void MeshShopApp::UpdateRectangleRendering(int startCoordX, int startCoordY, int endCoordX, int endCoordY)
+    {
+        Ogre::ManualObject* pMObj = NULL;
+        Ogre::SceneManager* pSceneMgr = MagicCore::RenderSystem::Get()->GetSceneManager();
+        if (pSceneMgr->hasManualObject("PickRectangleObj"))
+        {
+            pMObj = pSceneMgr->getManualObject("PickRectangleObj");
+            pMObj->clear();
+        }
+        else
+        {
+            pMObj = pSceneMgr->createManualObject("PickRectangleObj");
+            pMObj->setRenderQueueGroup(Ogre::RENDER_QUEUE_OVERLAY);
+            pMObj->setUseIdentityProjection(true);
+            pMObj->setUseIdentityView(true);
+            if (pSceneMgr->hasSceneNode("PickRectangleNode"))
+            {
+                pSceneMgr->getSceneNode("PickRectangleNode")->attachObject(pMObj);
+            }
+            else
+            {
+                pSceneMgr->getRootSceneNode()->createChildSceneNode("PickRectangleNode")->attachObject(pMObj);
+            }
+        }
+        GPP::Vector2 pos0(startCoordX * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getWidth() - 1.0, 
+                    1.0 - startCoordY * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getHeight());
+        GPP::Vector2 pos1(endCoordX * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getWidth() - 1.0, 
+                    1.0 - endCoordY * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getHeight());
+        pMObj->begin("SimpleLine", Ogre::RenderOperation::OT_LINE_STRIP);
+        pMObj->position(pos0[0], pos0[1], -1);
+        pMObj->colour(1, 0, 0);
+        pMObj->position(pos0[0], pos1[1], -1);
+        pMObj->colour(1, 0, 0);
+        pMObj->position(pos1[0], pos1[1], -1);
+        pMObj->colour(1, 0, 0);
+        pMObj->position(pos1[0], pos0[1], -1);
+        pMObj->colour(1, 0, 0);
+        pMObj->position(pos0[0], pos0[1], -1);
+        pMObj->colour(1, 0, 0);
+        pMObj->end();
+    }
+
+    void MeshShopApp::ClearRectangleRendering()
+    {
+        MagicCore::RenderSystem::Get()->HideRenderingObject("PickRectangleObj");
     }
 
     void MeshShopApp::SwitchDisplayMode()
@@ -314,16 +477,23 @@ namespace MagicApp
             GPP::TriMesh* triMesh = GPP::Parser::ImportTriMesh(fileName);
             if (triMesh != NULL)
             { 
-                mShowHoleLoopIds.clear();
+                if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+                {
+                    triMesh->FuseVertex();
+                }
                 triMesh->UnifyCoords(2.0, &mScaleValue, &mObjCenterCoord);
                 triMesh->UpdateNormal();
                 GPPFREEPOINTER(mpTriMesh);
                 mpTriMesh = triMesh;
                 InfoLog << "Import Mesh,  vertex: " << mpTriMesh->GetVertexCount() << " triangles: " << triMesh->GetTriangleCount() << std::endl;
                 InitViewTool();
+                ResetSelection();
+                mRightMouseType = MOVE;
+                mShowHoleLoopIds.clear();
                 UpdateHoleRendering();
                 UpdateMeshRendering();
                 mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+                mpUI->ResetFillHole();
                 return true;
             }
             else
@@ -345,10 +515,6 @@ namespace MagicApp
         char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0PLY Files(*.ply)\0*.ply\0OFF Files(*.off)\0*.off\0";
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             size_t dotPos = fileName.rfind('.');
             if (dotPos == std::string::npos)
             {
@@ -397,6 +563,8 @@ namespace MagicApp
         mpTriMesh = triMesh;
         mObjCenterCoord = objCenterCoord;
         mScaleValue = scaleValue;
+        ResetSelection();
+        mRightMouseType = MOVE;
         InitViewTool();
         UpdateMeshRendering();
         if (mpTriMesh)
@@ -486,6 +654,7 @@ namespace MagicApp
                 UpdateHoleRendering();
             }
         }
+        ResetSelection();
         UpdateMeshRendering();
     }
 
@@ -528,6 +697,7 @@ namespace MagicApp
                 UpdateHoleRendering();
             }
         }
+        ResetSelection();
         UpdateMeshRendering();
         GPPFREEPOINTER(mpDumpInfo);
         
@@ -552,10 +722,6 @@ namespace MagicApp
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             mIsCommandInProgress = true;
             GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(mpTriMesh);
             mIsCommandInProgress = false;
@@ -569,6 +735,7 @@ namespace MagicApp
                 MessageBox(NULL, "拓扑修复失败", "温馨提示", MB_OK);
                 return;
             }
+            ResetSelection();
             bool isManifold = GPP::ConsolidateMesh::_IsTriMeshManifold(mpTriMesh);
             if (!isManifold)
             {
@@ -578,6 +745,8 @@ namespace MagicApp
             mpTriMesh->UpdateNormal();
             mUpdateMeshRendering= true;
             mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+            mpUI->ResetFillHole();
+            FindHole(false);
         }
     }
 
@@ -611,10 +780,6 @@ namespace MagicApp
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             GPP::Int vertexCount = mpTriMesh->GetVertexCount();
             if (vertexCount < 1)
             {
@@ -635,6 +800,7 @@ namespace MagicApp
                 MessageBox(NULL, "网格光顺失败", "温馨提示", MB_OK);
                 return;
             }
+            ResetSelection();
             GPP::Real cutValue = 0.10;
             std::vector<GPP::Int> deleteIndex;
             for (GPP::Int vid = 0; vid < vertexCount; vid++)
@@ -653,6 +819,8 @@ namespace MagicApp
             mpTriMesh->UpdateNormal();
             mUpdateMeshRendering = true;
             mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+            mpUI->ResetFillHole();
+            FindHole(false);
         }
     }
 
@@ -669,10 +837,6 @@ namespace MagicApp
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             mIsCommandInProgress = true;
             GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(mpTriMesh, GPP::ONE_RADIAN * 5.0, GPP::REAL_TOL, GPP::ONE_RADIAN * 170.0);
             mIsCommandInProgress = false;
@@ -691,7 +855,7 @@ namespace MagicApp
         }
     }
 
-    void MeshShopApp::RemoveMeshNoise(bool isSubThread)
+    void MeshShopApp::RemoveMeshNoise(double positionWeight, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -700,17 +864,31 @@ namespace MagicApp
         if (isSubThread)
         {
             mCommandType = REMOVEMESHNOISE;
+            mFilterPositionWeight = positionWeight;
             DoCommand(true);
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             mIsCommandInProgress = true;
-            //GPP::DumpOnce();
-            GPP::ErrorCode res = GPP::ConsolidateMesh::RemoveGeometryNoise(mpTriMesh, 70.0 * GPP::ONE_RADIAN, 1.0);
+            bool isVertexSelected = false;
+            for (std::vector<bool>::iterator itr = mVertexSelectFlag.begin(); itr != mVertexSelectFlag.end(); ++itr)
+            {
+                if (*itr)
+                {
+                    isVertexSelected = true;
+                    break;
+                }
+            }
+            GPP::ErrorCode res = GPP_NO_ERROR;
+            if (isVertexSelected)
+            {
+                GPP::SubTriMesh subTriMesh(mpTriMesh, mVertexSelectFlag, GPP::SubTriMesh::BUILD_SUBTRIMESH_TYPE_BY_VERTICES);
+                res = GPP::ConsolidateMesh::RemoveGeometryNoise(&subTriMesh, 70.0 * GPP::ONE_RADIAN, positionWeight);
+            }
+            else
+            {
+                res = GPP::ConsolidateMesh::RemoveGeometryNoise(mpTriMesh, 70.0 * GPP::ONE_RADIAN, positionWeight);
+            }
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -727,7 +905,7 @@ namespace MagicApp
         }
     }
 
-    void MeshShopApp::SmoothMesh(bool isSubThread)
+    void MeshShopApp::SmoothMesh(double positionWeight, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -736,16 +914,31 @@ namespace MagicApp
         if (isSubThread)
         {
             mCommandType = SMOOTHMESH;
+            mFilterPositionWeight = positionWeight;
             DoCommand(true);
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::FilterMesh::LaplaceSmooth(mpTriMesh, false);
+            bool isVertexSelected = false;
+            for (std::vector<bool>::iterator itr = mVertexSelectFlag.begin(); itr != mVertexSelectFlag.end(); ++itr)
+            {
+                if (*itr)
+                {
+                    isVertexSelected = true;
+                    break;
+                }
+            }
+            GPP::ErrorCode res = GPP_NO_ERROR;
+            if (isVertexSelected)
+            {
+                GPP::SubTriMesh subTriMesh(mpTriMesh, mVertexSelectFlag, GPP::SubTriMesh::BUILD_SUBTRIMESH_TYPE_BY_VERTICES);
+                res = GPP::FilterMesh::LaplaceSmooth(&subTriMesh, true, positionWeight);
+            }
+            else
+            {
+                res = GPP::FilterMesh::LaplaceSmooth(mpTriMesh, true, positionWeight);
+            }
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -775,12 +968,26 @@ namespace MagicApp
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::FilterMesh::EnhanceDetail(mpTriMesh);
+            bool isVertexSelected = false;
+            for (std::vector<bool>::iterator itr = mVertexSelectFlag.begin(); itr != mVertexSelectFlag.end(); ++itr)
+            {
+                if (*itr)
+                {
+                    isVertexSelected = true;
+                    break;
+                }
+            }
+            GPP::ErrorCode res = GPP_NO_ERROR;
+            if (isVertexSelected)
+            {
+                GPP::SubTriMesh subTriMesh(mpTriMesh, mVertexSelectFlag, GPP::SubTriMesh::BUILD_SUBTRIMESH_TYPE_BY_VERTICES);
+                res = GPP::FilterMesh::EnhanceDetail(&subTriMesh);
+            }
+            else
+            {
+                res = GPP::FilterMesh::EnhanceDetail(mpTriMesh);
+            }
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -810,10 +1017,6 @@ namespace MagicApp
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             GPP::Int vertexCount = mpTriMesh->GetVertexCount();
             if (vertexCount >= 250000)
             {
@@ -845,6 +1048,7 @@ namespace MagicApp
                 MessageBox(NULL, "Loop细分失败", "温馨提示", MB_OK);
                 return;
             }
+            ResetSelection();
             GPP::Int insertedVertexCount = mpTriMesh->GetVertexCount() - vertexCount;
             for (GPP::Int vid = 0; vid < insertedVertexCount; vid++)
             {
@@ -871,10 +1075,6 @@ namespace MagicApp
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             if (targetVertexCount > 1000000)
             {
                 if (MessageBox(NULL, "加密后网格顶点数量会大于1M，是否继续", "温馨提示", MB_OKCANCEL) != IDOK)
@@ -906,6 +1106,7 @@ namespace MagicApp
                 MessageBox(NULL, "网格加密失败", "温馨提示", MB_OK);
                 return;
             }
+            ResetSelection();
             GPP::Int insertedVertexCount = mpTriMesh->GetVertexCount() - vertexCount;
             for (GPP::Int vid = 0; vid < insertedVertexCount; vid++)
             {
@@ -932,10 +1133,6 @@ namespace MagicApp
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            }
             if (GPP::ConsolidateMesh::_IsTriMeshManifold(mpTriMesh) == false)
             {
                 MessageBox(NULL, "警告：网格有非流形结构，请先拓扑修复，否则程序会出错", "温馨提示", MB_OK);
@@ -958,6 +1155,7 @@ namespace MagicApp
                 MessageBox(NULL, "网格简化失败", "温馨提示", MB_OK);
                 return;
             }
+            ResetSelection();
             GPP::Int vertexCount = mpTriMesh->GetVertexCount();
             for (GPP::Int vid = 0; vid < vertexCount; vid++)
             {
@@ -967,6 +1165,8 @@ namespace MagicApp
             mpTriMesh->UpdateNormal();
             mUpdateMeshRendering = true;
             mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+            mpUI->ResetFillHole();
+            FindHole(false);
         }
     }
 
@@ -1087,24 +1287,36 @@ namespace MagicApp
         }
     }
 
+    void MeshShopApp::ResetBridgeTags()
+    {
+        if (mpTriMesh)
+        {
+            mVertexBridgeFlag = std::vector<bool>(mpTriMesh->GetVertexCount(), 0);
+        }
+        else
+        {
+            mVertexBridgeFlag.clear();
+        }
+
+    }
+
     void MeshShopApp::FindHole(bool isShowHoles)
     {
         if (IsCommandAvaliable() == false)
         {
             return;
         }
-        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-        {
-            mpTriMesh->FuseVertex();
-        } 
         std::vector<std::vector<GPP::Int> > holeIds;
         if (!isShowHoles)
         {
             // clear the holes
+            mRightMouseType = MOVE; 
+            ResetBridgeTags();
+            mBridgeEdgeVertices.clear();
             SetToShowHoleLoopVrtIds(holeIds);
             SetBoundarySeedIds(std::vector<GPP::Int>());
+            UpdateBridgeRendering();
             UpdateHoleRendering();
-            UpdateMeshRendering();
             return;
         }
         GPP::ErrorCode res = GPP::FillMeshHole::FindHoles(mpTriMesh, &holeIds);
@@ -1139,21 +1351,53 @@ namespace MagicApp
         }
         else
         {
-            if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                mpTriMesh->FuseVertex();
-            } 
-
-            std::vector<GPP::Int> holeSeeds;
-            for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
-            {
-                holeSeeds.insert(holeSeeds.end(), mShowHoleLoopIds[vLoop].begin(), mShowHoleLoopIds[vLoop].end());
-            }
+            mIsCommandInProgress = true;
 
             std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
             CollectTriMeshVerticesColorFields(mpTriMesh, &vertexScaleFields);
             GPP::Int oldTriMeshVertexSize = mpTriMesh->GetVertexCount();
-            mIsCommandInProgress = true;
+            
+            bool isHoleSelected = false;
+            for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
+            {
+                if (isHoleSelected)
+                {
+                    break;
+                }
+                for (std::vector<GPP::Int>::iterator loopItr = mShowHoleLoopIds.at(vLoop).begin(); loopItr != mShowHoleLoopIds.at(vLoop).end(); ++loopItr)
+                {
+                    if (mVertexSelectFlag.at(*loopItr))
+                    {
+                        isHoleSelected = true;
+                        break;
+                    }
+                }
+            }
+            std::vector<GPP::Int> holeSeeds;
+            if (isHoleSelected)
+            {
+                for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
+                {
+                    for (std::vector<GPP::Int>::iterator loopItr = mShowHoleLoopIds.at(vLoop).begin(); loopItr != mShowHoleLoopIds.at(vLoop).end(); ++loopItr)
+                    {
+                        if (mVertexSelectFlag.at(*loopItr))
+                        {
+                            holeSeeds.push_back(*loopItr);
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
+                {
+                    if (mShowHoleLoopIds.at(vLoop).size() > 0)
+                    {
+                        holeSeeds.push_back(mShowHoleLoopIds.at(vLoop).at(0));
+                    }
+                }
+            }
             GPP::ErrorCode res = GPP::FillMeshHole::FillHoles(mpTriMesh, &holeSeeds, GPP::FillMeshHoleType(mFillHoleType),
                 &vertexScaleFields, &outputScaleFields);
             mIsCommandInProgress = false;
@@ -1167,6 +1411,7 @@ namespace MagicApp
                 MessageBox(NULL, "网格补洞失败", "温馨提示", MB_OK);
                 return;
             }
+            ResetSelection();
             UpdateTriMeshVertexColors(mpTriMesh, oldTriMeshVertexSize, outputScaleFields);
             SetToShowHoleLoopVrtIds(std::vector<std::vector<GPP::Int> >());
             SetBoundarySeedIds(std::vector<GPP::Int>());
@@ -1174,7 +1419,256 @@ namespace MagicApp
             mUpdateMeshRendering = true;
             mUpdateHoleRendering = true;
             mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+            mpUI->ResetFillHole();
         }
+    }
+
+    void MeshShopApp::DoBridgeEdges()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        
+        if (mBridgeEdgeVertices.size() == 0 || mBridgeEdgeVertices.size() == 2)
+        {
+            for (int holeLoopId = 0; holeLoopId < mShowHoleLoopIds.size(); ++holeLoopId)
+            {
+                bool isHoleSelected = false;
+                std::vector<bool> isSelectedTags(mShowHoleLoopIds.at(holeLoopId).size(), false);
+                for (int vid = 0; vid < mShowHoleLoopIds.at(holeLoopId).size(); ++vid)
+                {
+                    GPP::Int vertexId = mShowHoleLoopIds.at(holeLoopId).at(vid);
+                    if (mVertexBridgeFlag.at(vertexId))
+                    {
+                        isSelectedTags.at(vid) = true;
+                        isHoleSelected = true;
+                    }
+                }
+                if (isHoleSelected)
+                {
+                    // find the "most center" id
+                    int allCount = isSelectedTags.size();
+                    int longestStartId = -1, longestEndId = -1;
+                    int tmpStartId = -1, tmpEndId = -1;
+                    int longestSize = 0;
+                    int currentId = 0;
+                    bool bFind = false;
+                    while (currentId != isSelectedTags.size() - 2)
+                    {
+                        if (!isSelectedTags.at(currentId) && isSelectedTags.at(currentId + 1))
+                        {
+                            bFind = true;
+                            break;
+                        }
+                        currentId++;
+                    }
+                    if (!bFind)
+                    {
+                        mBridgeEdgeVertices.push_back(mShowHoleLoopIds.at(holeLoopId).at(0));
+                        mBridgeEdgeVertices.push_back(mShowHoleLoopIds.at(holeLoopId).at(1));
+                        break;
+                    }
+
+                    //
+                    currentId ++;
+                    int startId = currentId;
+                    do 
+                    {
+                        if (!isSelectedTags.at(currentId))
+                        {
+                            currentId ++;
+                            if (currentId >= allCount)
+                            {
+                                currentId = 0;
+                            }
+                            continue;
+                        }
+
+                        tmpStartId = currentId;
+                        do 
+                        {
+                            int nextId = currentId + 1;
+                            if (nextId >= allCount)
+                            {
+                                nextId = 0;
+                            }
+                            if (!isSelectedTags.at(nextId))
+                            {
+                                int count = (nextId - tmpStartId + allCount) % allCount;
+                                if (count > longestSize)
+                                {
+                                    longestStartId = tmpStartId;
+                                    longestEndId = currentId;
+                                    longestSize = count;
+                                }
+                                break;
+                            }
+
+                            currentId ++;
+                            if (currentId >= allCount)
+                            {
+                                currentId = 0;
+                            }
+                        } while (currentId != tmpStartId);
+                        currentId ++;
+                        if (currentId >= allCount)
+                        {
+                            currentId = 0;
+                        }
+                    } while (currentId != startId);
+                    if (longestSize <= 2)
+                    {
+                        mBridgeEdgeVertices.push_back(mShowHoleLoopIds.at(holeLoopId).at(longestStartId));
+                        mBridgeEdgeVertices.push_back(mShowHoleLoopIds.at(holeLoopId).at((longestStartId + 1) % allCount));
+                    }
+                    else
+                    {
+                        int centerId = (longestStartId + longestEndId) / 2;
+                        if (longestStartId > longestEndId)
+                        {
+                            centerId = (longestStartId + longestEndId + allCount) / 2;
+                            centerId %= allCount;
+                        }
+                        int nextId = (centerId + 1) % allCount;
+                        mBridgeEdgeVertices.push_back(mShowHoleLoopIds.at(holeLoopId).at(centerId));
+                        mBridgeEdgeVertices.push_back(mShowHoleLoopIds.at(holeLoopId).at(nextId));
+                    }
+                    break;
+                }
+            }
+            mUpdateBridgeRendering = true;
+        }
+        else
+        {
+            ResetBridgeTags();
+        }
+
+        if (mBridgeEdgeVertices.size() == 2)
+        {
+            ResetBridgeTags();
+        }
+        else if (mBridgeEdgeVertices.size() == 4)
+        {
+            GPP::Int edgeVertex1[2] = {mBridgeEdgeVertices[0], mBridgeEdgeVertices[1]};
+            GPP::Int edgeVertex2[2] = {mBridgeEdgeVertices[2], mBridgeEdgeVertices[3]};
+            std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
+            CollectTriMeshVerticesColorFields(mpTriMesh, &vertexScaleFields);
+            GPP::Int oldTriMeshVertexSize = mpTriMesh->GetVertexCount();
+
+            GPP::ErrorCode res = GPP::FillMeshHole::BridgeEdges(mpTriMesh, edgeVertex1, edgeVertex2, &vertexScaleFields, &outputScaleFields);
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格搭桥失败", "温馨提示", MB_OK);
+            }
+
+            UpdateTriMeshVertexColors(mpTriMesh, oldTriMeshVertexSize, outputScaleFields);
+            ResetSelection();
+            FindHole(false);
+            mpTriMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
+            mUpdateHoleRendering = true;
+            mUpdateBridgeRendering = true;
+            mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+            mpUI->ResetFillHole();
+            mRightMouseType = MOVE;
+        }
+    }
+
+    void MeshShopApp::BridgeEdges(bool isSubThread)
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        mRightMouseType = SELECT_BRIDGE;
+        ResetBridgeTags();
+        if (mBridgeEdgeVertices.empty())
+        {
+            MessageBox(NULL, "进入搭桥模式: 请使用鼠标右键依次框选需要进行搭桥的两对边", "温馨提示", MB_OK);
+        }
+        else
+        {
+            MessageBox(NULL, "搭桥模式: 请使用鼠标右键再选择一条边进行搭桥", "温馨提示", MB_OK);
+        }
+    }
+
+    void MeshShopApp::SelectByRectangle()
+    {
+        mRightMouseType = SELECT_ADD;
+        ResetBridgeTags();
+        mBridgeEdgeVertices.clear();
+        UpdateBridgeRendering();
+    }
+
+    void MeshShopApp::EraseByRectangle()
+    {
+        mRightMouseType = SELECT_DELETE;
+        ResetBridgeTags();
+        mBridgeEdgeVertices.clear();
+        UpdateBridgeRendering();
+    }
+ 
+    void MeshShopApp::DeleteSelections()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        std::vector<GPP::Int> deleteIndex;
+        GPP::Int vertexCount = mpTriMesh->GetVertexCount();
+        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        {
+            if (mVertexSelectFlag.at(vid))
+            {
+                deleteIndex.push_back(vid);
+            }
+        }
+        GPP::ErrorCode res = GPP::DeleteTriMeshVertices(mpTriMesh, deleteIndex);
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "删点失败", "温馨提示", MB_OK);
+            return;
+        }
+        if (GPP::ConsolidateMesh::_IsTriMeshManifold(mpTriMesh) == false)
+        {
+            if (MessageBox(NULL, "警告：删除面片后的网格有非流形结构，是否需要修复？", "温馨提示", MB_OKCANCEL) == IDOK)
+            {
+                GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(mpTriMesh);
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "拓扑修复失败", "温馨提示", MB_OK);
+                    return;
+                }
+            }
+        }
+        ResetSelection();
+        mpTriMesh->UpdateNormal();
+        mUpdateMeshRendering = true;
+        mpUI->SetMeshInfo(mpTriMesh->GetVertexCount(), mpTriMesh->GetTriangleCount());
+        mpUI->ResetFillHole();
+        FindHole(false);
+    }
+
+    void MeshShopApp::IgnoreBack(bool ignore)
+    {
+        mIgnoreBack = ignore;
+    }
+
+    void MeshShopApp::MoveModel(void)
+    {
+        mRightMouseType = MOVE;
     }
 
     int MeshShopApp::GetMeshVertexCount()
@@ -1195,7 +1689,9 @@ namespace MagicApp
         {
             return;
         }
-        MagicCore::RenderSystem::Get()->RenderMesh("Mesh_MeshShop", "CookTorrance", mpTriMesh);
+        GPP::Vector3 selectColor(1, 0, 0);
+        MagicCore::RenderSystem::Get()->RenderMesh("Mesh_MeshShop", "CookTorrance", mpTriMesh, MagicCore::RenderSystem::MODEL_NODE_CENTER,
+            &mVertexSelectFlag, &selectColor);
     }
 
     void MeshShopApp::UpdateHoleRendering()
@@ -1226,6 +1722,26 @@ namespace MagicApp
             holeSeeds.at(vId) = mpTriMesh->GetVertexCoord(mBoundarySeedIds[vId]);
         }
         MagicCore::RenderSystem::Get()->RenderPointList("MeshShop_HoleSeeds", "SimplePoint", GPP::Vector3(1.0, 0.0, 0.0), holeSeeds);
+    }
+
+    void MeshShopApp::UpdateBridgeRendering()
+    {
+        if (mpTriMesh == NULL)
+        {
+            return;
+        }
+        MagicCore::RenderSystem::Get()->RenderPointList("MeshShop_Bridge", "CookTorrancePointLarge", GPP::Vector3(0.0, 1.0, 1.0), std::vector<GPP::Vector3>());
+        std::vector<GPP::Vector3> bridgeVertices;
+        if (mBridgeEdgeVertices.size() < 2)
+        {
+            return;
+        }
+        for (int vid = 0; vid < mBridgeEdgeVertices.size(); ++vid)
+        {
+            bridgeVertices.push_back(mpTriMesh->GetVertexCoord(mBridgeEdgeVertices.at(vid)));
+        }
+        bridgeVertices.push_back(bridgeVertices.front());
+        MagicCore::RenderSystem::Get()->RenderPointList("MeshShop_Bridge", "CookTorrancePointLarge", GPP::Vector3(0.0, 1.0, 1.0), bridgeVertices);
     }
 
     void MeshShopApp::SetToShowHoleLoopVrtIds(const std::vector<std::vector<GPP::Int> >& toShowHoleLoopVrtIds)

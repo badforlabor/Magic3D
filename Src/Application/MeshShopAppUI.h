@@ -18,6 +18,7 @@ namespace MagicApp
         bool IsProgressbarVisible(void);
 
         void SetMeshInfo(int vertexCount, int triangleCount);
+        void ResetFillHole(void);
 
     private:
         void SwitchDisplayMode(MyGUI::Widget* pSender);
@@ -41,6 +42,13 @@ namespace MagicApp
         void DoFillHoleFlat(MyGUI::Widget* pSender);
         void DoFillHoleTangent(MyGUI::Widget* pSender);
         void DoFillHoleSmooth(MyGUI::Widget* pSender);
+        void DoBridgeEdges(MyGUI::Widget* pSender);
+        void SelectPoint(MyGUI::Widget* pSender);
+        void SelectByRectangle(MyGUI::Widget* pSender);
+        void EraseByRectangle(MyGUI::Widget* pSender);
+        void DeleteSelections(MyGUI::Widget* pSender);
+        void IgnoreBack(MyGUI::Widget* pSender);
+        void MoveModel(MyGUI::Widget* pSender);
         void AppJump(MyGUI::Widget* pSender);
         void SampleMesh(MyGUI::Widget* pSender);
         void EnterReliefApp(MyGUI::Widget* pSender);
@@ -52,5 +60,6 @@ namespace MagicApp
         MyGUI::VectorWidgetPtr mRoot;
         bool mIsProgressbarVisible;
         MyGUI::TextBox* mTextInfo;
+        bool mIgnoreBack;
     };
 }
