@@ -27,7 +27,9 @@ namespace MagicApp
             NORMAL_FROM,
             OUTLIER_REF,
             OUTLIER_FROM,
-            GLOBAL_REGISTRATE
+            GLOBAL_REGISTRATE,
+            GLOBAL_FUSE,
+            FUSE_COLOR
         };
 
     public:
@@ -67,16 +69,21 @@ namespace MagicApp
         void ImportFromMark(void);
 
         void AlignMark(bool isSubThread = true);
-        void AlignFree(bool isSubThread = true);
+        void AlignFree(int maxSampleTripleCount, bool isSubThread = true);
         void AlignICP(bool isSubThread = true);
         
         void FuseRef(void);
 
         void GlobalRegistrate(int maxIterationCount, bool isSubThread = true);
+        void GlobalFuse(bool isSubThread = true);
 
         void EnterPointShop(void);
 
         void ImportPointCloudList(void);
+        void ImportMarkList(void);
+        void ImportPointCloudColor(GPP::PointCloud* pointCloud, std::string fileName);
+
+        void FusePointCloudColor(bool needBlend, bool isSubThread = true);
 
 #if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -94,6 +101,7 @@ namespace MagicApp
         void UpdatePointCloudRefRendering(void);
         void UpdateMarkRefRendering(void);
         void UpdateMarkFromRendering(void);
+        void UpdateMarkListRendering(void);
         void UpdatePointCloudListRendering(void);
         void SetPointCloudColor(GPP::PointCloud* pointCloud, const GPP::Vector3& color);
         bool IsCommandAvaliable(void);
@@ -104,6 +112,7 @@ namespace MagicApp
         void ClearData(void);
         void ResetGlobalRegistrationData(void);
         void ClearPairwiseRegistrationData(void);
+        void ClearAuxiliaryData(void);
 
     private:
         RegistrationAppUI* mpUI;
@@ -116,7 +125,7 @@ namespace MagicApp
 #endif
         GPP::PointCloud* mpPointCloudRef;
         GPP::PointCloud* mpPointCloudFrom;
-        GPP::SumPointCloud* mpFusePointCloud;
+        GPP::SumPointCloud* mpSumPointCloud;
         GPP::Vector3 mObjCenterCoord;
         GPP::Real mScaleValue;
         std::vector<GPP::Vector3> mRefMarks;
@@ -128,6 +137,7 @@ namespace MagicApp
         bool mUpdateMarkRefRendering;
         bool mUpdateMarkFromRendering;
         bool mUpdatePointCloudListRendering;
+        bool mUpdateMarkListRendering;
         bool mIsDepthImageRef;
         bool mIsDepthImageFrom;
         std::vector<GPP::PointCloud*> mPointCloudList;
@@ -139,5 +149,14 @@ namespace MagicApp
         bool mReversePatchNormalFrom;
         int mMaxGlobalIterationCount;
         bool mSaveGlobalRegistrateResult;
+        int mMaxSampleTripleCount;
+        std::vector<std::string> mPointCloudFiles;
+        std::vector<std::vector<GPP::ImageColorId> > mImageColorIdList;
+        std::vector<GPP::ImageColorId> mImageColorIds;
+        std::vector<std::string> mTextureImageFiles;
+        std::vector<int> mCloudIds;
+        std::vector<std::vector<int> > mColorList;
+        std::vector<int> mColorIds;
+        bool mNeedBlendColor;
     };
 }

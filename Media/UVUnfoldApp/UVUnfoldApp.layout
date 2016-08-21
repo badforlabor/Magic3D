@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MyGUI type="Layout" version="3.2.0">
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 1024 768" align="Left Top" layer="Back">
+        <Widget type="TextBox" skin="TextBox" position="260 15 700 300" align="Left Top" name="Text_Info"/>
+        
+        <Widget type="Button" skin="But_Viewer" position="200 15 40 40" align="Left Top" name="But_DisplayMode"/>
+
+        <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportTriMesh"/>
+
+        <Widget type="Button" skin="But_CutLine_CN" position="15 80 60 60" align="Left Top" name="But_Geodesics"></Widget>
+        <Widget type="Button" skin="But_SnapFront_CN" position="75 90 43 43" align="Left Top" name="But_SnapFrontGeodesics">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_SnapBack_CN" position="118 90 43 43" align="Left Top" name="But_SnapBackGeodesics">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Close_CN" position="161 90 43 43" align="Left Top" name="But_CloseGeodesics">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_OK_CN" position="204 90 43 43" align="Left Top" name="But_ConfirmGeodesics">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Delete_CN" position="247 90 43 43" align="Left Top" name="But_DeleteGeodesics">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Viewer" position="290 90 43 43" align="Left Top" name="But_SwitchMarkDisplay">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_SingleUnfold_CN" position="15 145 60 60" align="Left Top" name="But_UnFoldTriMesh"/>
+
+        <Widget type="Button" skin="But_Atlas" position="15 210 60 60" align="Left Top" name="But_GenerateUVAtlas"/>
+        <Widget type="EditBox" skin="EditBox" position="75 225 40 30" align="Left Top" name="Edit_InitChartCount">
+            <Property key="TextColour" value="0.286275 0.254902 0.4"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_OK_CN" position="115 220 43 43" align="Left Top" name="But_DoGenerateUVAtlas">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+    	<Widget type="Button" skin="But_Home" position="15 275 60 60" align="Left Top" name="But_BackToHomepage"/>
+
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 345 150 20" align="Left Top" name="APIProgress">
+            <Property key="AutoTrack" value="false"/>
+            <Property key="FlowDirection" value="LeftToRight"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+    </Widget>
+</MyGUI>

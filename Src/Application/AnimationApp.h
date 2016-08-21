@@ -2,12 +2,6 @@
 #include "AppBase.h"
 #include "Gpp.h"
 
-namespace GPP
-{
-    class TriMesh;
-    class PointCloud;
-}
-
 namespace MagicCore
 {
     class ViewTool;
@@ -74,10 +68,6 @@ namespace MagicApp
 
     private:
         AnimationAppUI* mpUI;
-        GPP::TriMesh* mpTriMesh;
-        GPP::PointCloud* mpPointCloud;
-        GPP::Vector3 mObjCenterCoord;
-        GPP::Real mScaleValue;
         MagicCore::ViewTool* mpViewTool;
         GPP::DeformPointList* mDeformation;
         std::vector<GPP::Int> mControlIds;

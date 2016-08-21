@@ -4,7 +4,7 @@ material CookTorrance
     {
         pass
         {
-            //cull_hardware none
+            cull_hardware none
             
             vertex_program_ref VCookTorrance
             {
@@ -29,22 +29,22 @@ material CookTorrance
     }
 }
 
-material CookTorranceRough
+material CookTorranceColor
 {
     technique
     {
         pass
         {
-            //cull_hardware none
+            cull_hardware none
             
-            vertex_program_ref VCookTorrance
+            vertex_program_ref VCookTorranceColor
             {
                 param_named_auto worldViewProj    worldviewproj_matrix
                 param_named_auto worldMatrix      world_matrix
                 param_named_auto worldMatrix_IT   inverse_transpose_world_matrix
             }
             
-            fragment_program_ref FCookTorrance
+            fragment_program_ref FCookTorranceColor
             {
                 param_named_auto    globalAmbient  ambient_light_colour
                 param_named_auto    eyePosition    camera_position
@@ -60,13 +60,46 @@ material CookTorranceRough
     }
 }
 
+material CookTorranceShade
+{
+    technique
+    {
+        pass
+        {
+            cull_hardware none
+            
+            vertex_program_ref VCookTorranceShade
+            {
+                param_named_auto worldViewProj    worldviewproj_matrix
+                param_named_auto worldMatrix      world_matrix
+                param_named_auto worldMatrix_IT   inverse_transpose_world_matrix
+            }
+            
+            fragment_program_ref FCookTorranceShade
+            {
+                param_named_auto    globalAmbient  ambient_light_colour
+                param_named_auto    eyePosition    camera_position
+                param_named_auto    lightPosition  light_position 0
+                param_named_auto    lightColor     light_diffuse_colour 0
+                param_named         Ka             float3    0.5 0.5 0.5 
+                param_named         Ks             float3    0.0005 0.0005 0.0005
+                param_named         f              float     0.5
+                param_named         m              float     0.03
+            }
+
+        }
+    }
+}
+
 material CookTorrancePoint
 {
     technique
     {
         pass
         {
-            point_size 1
+            cull_hardware none
+            
+            point_size 2
 
             vertex_program_ref VCookTorrancePoint
             {

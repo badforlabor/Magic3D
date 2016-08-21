@@ -1,37 +1,43 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
     <Widget type="Widget" skin="PanelEmpty" position="0 0 310 768" align="Left Top" layer="Back">
-        <Widget type="Button" skin="But_Viewer" position="120 15 40 40" align="Left Top" name="But_DisplayMode"/>
+        <Widget type="Button" skin="But_Viewer" position="200 15 40 40" align="Left Top" name="But_DisplayMode"/>
         
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportModel"/>
         
-        <Widget type="Button" skin="But_Relief" position="15 85 60 60" align="Left Top" name="But_Relief"/>
-        <Widget type="EditBox" skin="EditBox" position="75 117 45 28" align="Left Top" name="Edit_CompressRatio">
+        <Widget type="Button" skin="But_Relief" position="15 80 60 60" align="Left Top" name="But_Relief"/>
+        <Widget type="EditBox" skin="EditBox" position="75 112 45 28" align="Left Top" name="Edit_CompressRatio">
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="EditBox" skin="EditBox" position="75 85 45 28" align="Left Top" name="Edit_Resolution">
+        <Widget type="EditBox" skin="EditBox" position="75 80 45 28" align="Left Top" name="Edit_Resolution">
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Calculate_CN" position="120 95 43 43" align="Left Top" name="But_GenerateRelief">
+        <Widget type="Button" skin="But_Calculate_CN" position="120 90 43 43" align="Left Top" name="But_GenerateRelief">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_MeshTool" position="15 155 60 60" align="Left Top" name="But_EnterMeshTool"/>
 
-        <Widget type="Button" skin="But_Scan" position="15 225 60 60" align="Left Top" name="But_Scan"/>
-        <Widget type="EditBox" skin="EditBox" position="75 240 45 28" align="Left Top" name="Edit_ScanResolution">
+        <Widget type="Button" skin="But_Scan" position="15 145 60 60" align="Left Top" name="But_Scan"/>
+        <Widget type="EditBox" skin="EditBox" position="75 160 45 28" align="Left Top" name="Edit_ScanResolution">
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Calculate_CN" position="120 235 43 43" align="Left Top" name="But_GenerateScan">
+        <Widget type="Button" skin="But_Color_CN" position="120 155 43 43" align="Left Top" name="But_GenerateScanColor">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Shade_CN" position="163 155 43 43" align="Left Top" name="But_GenerateScanShade">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="EditBox" skin="EditBox" position="206 160 45 28" align="Left Top" name="Edit_ImageResolution">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Save" position="15 295 60 60" align="Left Top" name="But_SavePointCloud"/>
+        <Widget type="Button" skin="But_Save" position="15 215 60 60" align="Left Top" name="But_SavePointCloud"/>
 
-        <Widget type="Button" skin="But_Home" position="15 365 60 60" align="Left Top" name="But_BackToHomepage"/>
-        <Widget type="Button" skin="But_Contact" position="15 435 60 60" align="Left Top" name="But_Contact"/>
+        <Widget type="Button" skin="But_Home" position="15 280 60 60" align="Left Top" name="But_BackToHomepage"/>
+
     </Widget>
 </MyGUI>

@@ -1,4 +1,5 @@
 #include "HomepageUI.h"
+#include "Homepage.h"
 #include "../Common/ResourceManager.h"
 #include "../Common/ToolKit.h"
 #include "../Common/RenderSystem.h"
@@ -10,6 +11,7 @@
 #include "ReliefApp.h"
 #include "TextureApp.h"
 #include "AnimationApp.h"
+#include "UVUnfoldApp.h"
 
 namespace MagicApp
 {
@@ -25,21 +27,89 @@ namespace MagicApp
     void HomepageUI::Setup()
     {
         MagicCore::ResourceManager::LoadResource("../../Media/Homepage", "FileSystem", "Homepage");
-        mRoot = MyGUI::LayoutManager::getInstance().loadLayout("HomeLayout.layout");
-        int winWidth  = MagicCore::RenderSystem::Get()->GetRenderWindowWidth();
-        int winHeight = MagicCore::RenderSystem::Get()->GetRenderWindowHeight();
-        int root0Width = mRoot.at(0)->getWidth();
-        int root0Height = mRoot.at(0)->getHeight();
-        mRoot.at(0)->setPosition((winWidth - root0Width) / 2, (winHeight - root0Height) / 2);
-        mRoot.at(0)->findWidget("Title")->castType<MyGUI::ImageBox>()->setSize(406, 110);
-        mRoot.at(0)->findWidget("But_PointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterPointShopApp);
-        mRoot.at(0)->findWidget("But_MeshShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterMeshShopApp);
-        mRoot.at(0)->findWidget("But_RegistrationApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterRegistrationApp);
-        mRoot.at(0)->findWidget("But_MeasureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterMeasureApp);
-        mRoot.at(0)->findWidget("But_ReliefApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterReliefApp);
-        mRoot.at(0)->findWidget("But_TextureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterTextureApp);
-        mRoot.at(0)->findWidget("But_AnimationApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterAnimationApp);
+        mRoot = MyGUI::LayoutManager::getInstance().loadLayout("Homepage.layout");
+        mRoot.at(0)->findWidget("But_DisplayMode")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::SwitchDisplayMode);
+        mRoot.at(0)->findWidget("But_ImportModel")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::ImportModel);
+        mRoot.at(0)->findWidget("But_ImportPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::ImportPointCloud);
+        mRoot.at(0)->findWidget("But_ImportMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::ImportMesh);
+        mRoot.at(0)->findWidget("But_ExportModel")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::ExportModel);
+        mRoot.at(0)->findWidget("But_EnterPointShopApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterPointShopApp);
+        mRoot.at(0)->findWidget("But_EnterMeshShopApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterMeshShopApp);
+        mRoot.at(0)->findWidget("But_EnterRegistrationApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterRegistrationApp);
+        mRoot.at(0)->findWidget("But_EnterMeasureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterMeasureApp);
+        mRoot.at(0)->findWidget("But_EnterReliefApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterReliefApp);
+        mRoot.at(0)->findWidget("But_EnterTextureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterTextureApp);
+        mRoot.at(0)->findWidget("But_EnterAnimationApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterAnimationApp);
+        mRoot.at(0)->findWidget("But_EnterUVUnfoldApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::EnterUVUnfoldApp);
         mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &HomepageUI::Contact);
+
+        mTextInfo = mRoot.at(0)->findWidget("Text_Info")->castType<MyGUI::TextBox>();
+        mTextInfo->setTextColour(MyGUI::Colour(75.0 / 255.0, 131.0 / 255.0, 128.0 / 255.0));
+    }
+
+    void HomepageUI::SetModelInfo(int vertexCount, int triangleCount)
+    {
+        std::string textString = "";
+        if (vertexCount > 0)
+        {
+            textString += "Vertex count = ";
+            std::stringstream ss;
+            ss << vertexCount;
+            std::string numberString;
+            ss >> numberString;
+            textString += numberString;
+            textString += "  Triangle count = ";
+            ss.clear();
+            ss << triangleCount;
+            numberString.clear();
+            ss >> numberString;
+            textString += numberString;
+            textString += "\n";
+        }
+        mTextInfo->setCaption(textString);
+    }
+
+    void HomepageUI::SwitchDisplayMode(MyGUI::Widget* pSender)
+    {
+        Homepage* homepage = dynamic_cast<Homepage* >(AppManager::Get()->GetApp("Homepage"));
+        if (homepage != NULL)
+        {
+            homepage->SwitchDisplayMode();
+        }
+    }
+
+    void HomepageUI::ImportModel(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_ImportPointCloud")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_ImportPointCloud")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_ImportMesh")->castType<MyGUI::Button>()->setVisible(!isVisible);
+    }
+
+    void HomepageUI::ImportPointCloud(MyGUI::Widget* pSender)
+    {
+        Homepage* homepage = dynamic_cast<Homepage* >(AppManager::Get()->GetApp("Homepage"));
+        if (homepage != NULL)
+        {
+            homepage->ImportPointCloud();
+        }
+    }
+
+    void HomepageUI::ImportMesh(MyGUI::Widget* pSender)
+    {
+        Homepage* homepage = dynamic_cast<Homepage* >(AppManager::Get()->GetApp("Homepage"));
+        if (homepage != NULL)
+        {
+            homepage->ImportMesh();
+        }
+    }
+
+    void HomepageUI::ExportModel(MyGUI::Widget* pSender)
+    {
+        Homepage* homepage = dynamic_cast<Homepage* >(AppManager::Get()->GetApp("Homepage"));
+        if (homepage != NULL)
+        {
+            homepage->ExportModel();
+        }
     }
 
     void HomepageUI::EnterPointShopApp(MyGUI::Widget* pSender)
@@ -75,6 +145,11 @@ namespace MagicApp
     void HomepageUI::EnterAnimationApp(MyGUI::Widget* pSender)
     {
         AppManager::Get()->EnterApp(new AnimationApp, "AnimationApp");
+    }
+
+    void HomepageUI::EnterUVUnfoldApp(MyGUI::Widget* pSender)
+    {
+        AppManager::Get()->EnterApp(new UVUnfoldApp, "UVUnfoldApp");
     }
 
     void HomepageUI::Shutdown()

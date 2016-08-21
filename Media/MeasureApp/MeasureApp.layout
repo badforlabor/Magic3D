@@ -1,53 +1,44 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
     <Widget type="Widget" skin="PanelEmpty" position="0 0 1024 768" align="Left Top" layer="Back">
-        <Widget type="TextBox" skin="TextBox" position="250 15 700 300" align="Left Top" name="Text_Info"/>
+        <Widget type="TextBox" skin="TextBox" position="260 15 700 300" align="Left Top" name="Text_Info"/>
 
-        <Widget type="Button" skin="But_Clustering" position="120 15 40 40" align="Left Top" name="But_SwitchDisplayMode"/>
+        <Widget type="Button" skin="But_Viewer" position="200 15 40 40" align="Left Top" name="But_DisplayMode"/>
         
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportModelRef"/>
 
-        <Widget type="Button" skin="But_Geodesics_CN" position="15 85 60 60" align="Left Top" name="But_Geodesics"></Widget>
-        <Widget type="Button" skin="But_Delete_CN" position="75 95 43 43" align="Left Top" name="But_DeleteMeshRef">
+        <Widget type="Button" skin="But_Geodesics_CN" position="15 80 60 60" align="Left Top" name="But_Geodesics"></Widget>
+        <Widget type="Button" skin="But_Delete_CN" position="75 90 43 43" align="Left Top" name="But_DeleteMeshRef">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Approximate_CN" position="118 95 43 43" align="Left Top" name="But_ApproximateGeodesics">
+        <Widget type="Button" skin="But_Approximate_CN" position="118 90 43 43" align="Left Top" name="But_ApproximateGeodesics">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Fast_CN" position="161 95 43 43" align="Left Top" name="But_QuickExactGeodesics">
+        <Widget type="Button" skin="But_Fast_CN" position="161 90 43 43" align="Left Top" name="But_QuickExactGeodesics">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Exact_CN" position="204 95 43 43" align="Left Top" name="But_ExactGeodesics">
+        <Widget type="Button" skin="But_Exact_CN" position="204 90 43 43" align="Left Top" name="But_ExactGeodesics">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="EditBox" skin="EditBox" position="161 65 40 30" align="Left Button" name="Edit_GeodesicAccuracy">
+        <Widget type="EditBox" skin="EditBox" position="161 60 40 30" align="Left Button" name="Edit_GeodesicAccuracy">
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Measure_CN" position="15 155 60 60" align="Left Top" name="But_MeasureRef"></Widget>
-        <Widget type="Button" skin="But_Area_CN" position="75 165 43 43" align="Left Top" name="But_AreaRef">
+        <Widget type="Button" skin="But_Measure_CN" position="15 145 60 60" align="Left Top" name="But_MeasureRef"></Widget>
+        <Widget type="Button" skin="But_Area_CN" position="75 155 43 43" align="Left Top" name="But_AreaRef">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Volume_CN" position="118 165 43 43" align="Left Top" name="But_VolumeRef">
+        <Widget type="Button" skin="But_Volume_CN" position="118 155 43 43" align="Left Top" name="But_VolumeRef">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Curvature_CN" position="161 165 43 43" align="Left Top" name="But_CurvatureRef">
-            <Property key="Visible" value="false"/>
-        </Widget>
-
-        <Widget type="Button" skin="But_Open" position="15 225 60 60" align="Left Top" name="But_ImportModelFrom"/>
-
-        <Widget type="Button" skin="But_Resize" position="15 295 60 60" align="Left Top" name="But_Deviation"></Widget>
-        <Widget type="Button" skin="But_Resize" position="75 305 43 43" align="Left Top" name="But_ComputeDeviation">
+        <Widget type="Button" skin="But_Curvature_CN" position="161 155 43 43" align="Left Top" name="But_CurvatureRef">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_MeshTool" position="15 365 60 60" align="Left Top" name="But_EnterMeshTool"/>
-
-        <Widget type="Button" skin="But_Home" position="15 435 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Home" position="15 210 60 60" align="Left Top" name="But_BackToHomepage"/>
         
-        <Widget type="ProgressBar" skin="ProgressBar" position="15 505 150 20" align="Left Top" name="APIProgress">
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 280 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>
             <Property key="FlowDirection" value="LeftToRight"/>
             <Property key="Visible" value="false"/>

@@ -2,7 +2,7 @@
 #include "ReliefApp.h"
 #include "ReliefAppUI.h"
 #include "AppManager.h"
-#include "MeshShopApp.h"
+#include "ModelManager.h"
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
@@ -13,21 +13,22 @@ namespace MagicApp
 {
     ReliefApp::ReliefApp() :
         mpUI(NULL),
-        mpTriMesh(NULL),
         mpViewTool(NULL),
 #if DEBUGDUMPFILE
         mpDumpInfo(NULL),
 #endif
         mpReliefMesh(NULL),
         mDisplayMode(TRIMESH),
-        mpDepthPointCloud(NULL)
+        mpDepthPointCloud(NULL),
+        mDepthImage(),
+        mScanResolution(0),
+        mImageResolution(0)
     {
     }
 
     ReliefApp::~ReliefApp()
     {
         GPPFREEPOINTER(mpUI);
-        GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpReliefMesh);
         GPPFREEPOINTER(mpViewTool);
 #if DEBUGDUMPFILE
@@ -35,6 +36,7 @@ namespace MagicApp
 #endif
         GPPFREEPOINTER(mpReliefMesh);
         GPPFREEPOINTER(mpDepthPointCloud);
+        mDepthImage.release();
     }
 
     bool ReliefApp::Enter()
@@ -46,6 +48,7 @@ namespace MagicApp
         }
         mpUI->Setup();
         SetupScene();
+        UpdateModelRendering();
         return true;
     }
 
@@ -113,27 +116,31 @@ namespace MagicApp
 
     bool ReliefApp::KeyPressed( const OIS::KeyEvent &arg )
     {
-        if (arg.key == OIS::KC_V && mpTriMesh !=NULL)
+        if (arg.key == OIS::KC_C)
         {
-            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_POINTS);
-        }
-        else if (arg.key == OIS::KC_E && mpTriMesh !=NULL)
-        {
-            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_WIREFRAME);
-        }
-        else if (arg.key == OIS::KC_F && mpTriMesh !=NULL)
-        {
-            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_SOLID);
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh)
+            {
+                int vertexCount = triMesh->GetVertexCount();
+                GPP::Vector3 minCoord(-1.5, -1.5, -1.5);
+                double deltaLength = 0.3;
+                int maxColorId = 6;
+                triMesh->SetHasColor(true);
+                for (int vid = 0; vid < vertexCount; vid++)
+                {
+                    GPP::Vector3 deltaCoord = triMesh->GetVertexCoord(vid) - minCoord;
+                    int colorId = int(deltaCoord[0] / deltaLength) + int(deltaCoord[1] / deltaLength) + int(deltaCoord[2] / deltaLength);
+                    //int colorId = int((deltaCoord[0] + deltaCoord[1] + deltaCoord[2]) / deltaLength);
+                    triMesh->SetVertexColor(vid, MagicCore::ToolKit::ColorCoding(double(colorId % maxColorId + 1) / double(maxColorId)));
+                }
+                UpdateModelRendering();
+            }
         }
         else if (arg.key == OIS::KC_D)
         {
 #if DEBUGDUMPFILE
             RunDumpInfo();
 #endif
-        }
-        else if (arg.key == OIS::KC_C)
-        {
-            CaptureDepthPointCloud(256);
         }
         return true;
     }
@@ -149,11 +156,12 @@ namespace MagicApp
     void ReliefApp::SetupScene()
     {
         Ogre::SceneManager* sceneManager = MagicCore::RenderSystem::Get()->GetSceneManager();
-        sceneManager->setAmbientLight(Ogre::ColourValue(0.3, 0.3, 0.3));
+        sceneManager->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
         Ogre::Light* light = sceneManager->createLight("ReliefApp_SimpleLight");
-        light->setPosition(-7.5, 7.5, 20);
+        light->setPosition(0, 0, 20);
         light->setDiffuseColour(0.7, 0.7, 0.7);
         light->setSpecularColour(0.1, 0.1, 0.1);
+        InitViewTool();
     }
 
     void ReliefApp::ShutdownScene()
@@ -161,18 +169,17 @@ namespace MagicApp
         Ogre::SceneManager* sceneManager = MagicCore::RenderSystem::Get()->GetSceneManager();
         sceneManager->setAmbientLight(Ogre::ColourValue::Black);
         sceneManager->destroyLight("ReliefApp_SimpleLight");
-        MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
+        //MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
         MagicCore::RenderSystem::Get()->HideRenderingObject("Mesh_ReliefApp");
-        if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
+        /*if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
         {
             MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->resetToInitialState();
-        } 
+        } */
     }
 
     void ReliefApp::ClearData()
     {
         GPPFREEPOINTER(mpUI);
-        GPPFREEPOINTER(mpTriMesh);
         GPPFREEPOINTER(mpReliefMesh);
         GPPFREEPOINTER(mpViewTool);
 #if DEBUGDUMPFILE
@@ -180,12 +187,13 @@ namespace MagicApp
 #endif
         mDisplayMode = TRIMESH;
         GPPFREEPOINTER(mpDepthPointCloud);
+        mDisplayMode = TRIMESH;
     }
 
 #if DEBUGDUMPFILE
     void ReliefApp::SetDumpInfo(GPP::DumpBase* dumpInfo)
     {
-        if (dumpInfo == NULL)
+        /*if (dumpInfo == NULL)
         {
             return;
         }
@@ -200,31 +208,31 @@ namespace MagicApp
         mpTriMesh = triMesh;
         mpTriMesh->UpdateNormal();
         InitViewTool();
-        UpdateModelRendering();
+        UpdateModelRendering();*/
     }
 
     void ReliefApp::RunDumpInfo()
     {
-        if (mpDumpInfo == NULL)
-        {
-            return;
-        }
-        GPP::ErrorCode res = mpDumpInfo->Run();
-        if (res != GPP_NO_ERROR)
-        {
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-            return;
-        }
-        //Copy result
-        GPPFREEPOINTER(mpTriMesh);
-        mpTriMesh = mpDumpInfo->GetTriMesh();
-        if (mpTriMesh != NULL)
-        {
-            mpTriMesh->UnifyCoords(2.0);
-            mpTriMesh->UpdateNormal();
-        }
-        UpdateModelRendering();
-        GPPFREEPOINTER(mpDumpInfo);
+        //if (mpDumpInfo == NULL)
+        //{
+        //    return;
+        //}
+        //GPP::ErrorCode res = mpDumpInfo->Run();
+        //if (res != GPP_NO_ERROR)
+        //{
+        //    MagicCore::ToolKit::Get()->SetAppRunning(false);
+        //    return;
+        //}
+        ////Copy result
+        //GPPFREEPOINTER(mpTriMesh);
+        //mpTriMesh = mpDumpInfo->GetTriMesh();
+        //if (mpTriMesh != NULL)
+        //{
+        //    mpTriMesh->UnifyCoords(2.0);
+        //    mpTriMesh->UpdateNormal();
+        //}
+        //UpdateModelRendering();
+        //GPPFREEPOINTER(mpDumpInfo);
     }
 #endif
 
@@ -269,36 +277,32 @@ namespace MagicApp
         char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
-            GPP::TriMesh* triMesh = GPP::Parser::ImportTriMesh(fileName);
-            if (triMesh != NULL)
-            { 
-                triMesh->UnifyCoords(2.5);
-                triMesh->UpdateNormal();
-                GPPFREEPOINTER(mpTriMesh);
-                GPPFREEPOINTER(mpReliefMesh);
-                mpTriMesh = triMesh;
-                InfoLog << "Import Mesh,  vertex: " << mpTriMesh->GetVertexCount() << " triangles: " << mpTriMesh->GetTriangleCount() << std::endl;
-                InitViewTool();
-                UpdateModelRendering();
-                return true;
-            }
-            else
+            ModelManager::Get()->ClearPointCloud();
+            if (ModelManager::Get()->ImportMesh(fileName) == false)
             {
                 MessageBox(NULL, "网格导入失败", "温馨提示", MB_OK);
+                return false;
             }
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+            {
+                triMesh->FuseVertex();
+            }
+            GPPFREEPOINTER(mpReliefMesh);   
+            UpdateModelRendering();
+            return true;
         }
         return false;
     }
 
     void ReliefApp::GenerateRelief(double compressRatio, int resolution)
     {
-        //GPPDebug << "Compress ratio: " << compressRatio << std::endl;
-        if (mpTriMesh == NULL)
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh == NULL)
         {
             MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
             return;
         }
-
         //Get depth data
         Ogre::TexturePtr depthTex = Ogre::TextureManager::getSingleton().createManual(  
             "DepthTexture",      // name   
@@ -322,7 +326,7 @@ namespace MagicApp
         orthCam->setFarClipDistance(5);
         Ogre::Viewport* viewport = target->addViewport(orthCam);
         viewport->setDimensions(0, 0, 1, 1);
-        MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "Depth", mpTriMesh);
+        MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "Depth", triMesh);
         MagicCore::RenderSystem::Get()->Update();
         Ogre::Image img;
         depthTex->convertToImage(img);
@@ -365,71 +369,26 @@ namespace MagicApp
         UpdateModelRendering();
     }
 
-    void ReliefApp::EnterMeshTool()
+    void ReliefApp::ExportReliefMesh()
     {
-        if (mpTriMesh == NULL)
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh == NULL || mpReliefMesh == NULL)
         {
-            AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
             return;
         }
-        GPP::TriMesh* copiedTriMesh = NULL;
-        if (mpReliefMesh != NULL)
-        {
-            copiedTriMesh = GPP::CopyTriMesh(mpReliefMesh);
-        }
-        else
-        {
-            copiedTriMesh = GPP::CopyTriMesh(mpTriMesh);
-        }
-        AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
-        MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
-        if (meshShop)
-        {
-            meshShop->SetMesh(copiedTriMesh, GPP::Vector3(1.0, 1.0, 1.0), 1.0);
-        }
-        else
-        {
-            GPPFREEPOINTER(copiedTriMesh);
-        }
+        GPP::TriMesh* copiedTriMesh = GPP::CopyTriMesh(mpReliefMesh);
+        ModelManager::Get()->SetMesh(copiedTriMesh);
     }
 
-    void ReliefApp::SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue)
+    void ReliefApp::CaptureDepthPointCloud(int scanResolution, int imageResolution, std::string shadeName)
     {
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
         if (triMesh == NULL)
-        {
-            return;
-        }
-        GPPFREEPOINTER(mpTriMesh);
-        GPPFREEPOINTER(mpReliefMesh);
-        mpTriMesh = triMesh;
-        mpTriMesh->UnifyCoords(2.5);
-        mpTriMesh->UpdateNormal();
-        InitViewTool();
-        mDisplayMode = TRIMESH;
-        UpdateModelRendering();
-    }
-
-    void ReliefApp::CaptureDepthPointCloud(int resolution)
-    {
-        if (mpTriMesh == NULL)
         {
             MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
             return;
         }
 
-        //Get depth data
-        Ogre::TexturePtr depthTex = Ogre::TextureManager::getSingleton().createManual(  
-            "DepthTexture",      // name   
-            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,  
-            Ogre::TEX_TYPE_2D,   // type   
-            resolution,  // width   
-            resolution,  // height   
-            0,                   // number of mipmaps   
-            //Ogre::PF_B8G8R8A8,   // pixel format
-            Ogre::PF_FLOAT32_R,
-            Ogre::TU_RENDERTARGET
-            ); 
-        Ogre::RenderTarget* target = depthTex->getBuffer()->getRenderTarget();
         Ogre::Camera* orthCam = MagicCore::RenderSystem::Get()->GetMainCamera();
         orthCam->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
         orthCam->setOrthoWindow(3, 3);
@@ -438,12 +397,62 @@ namespace MagicApp
         orthCam->setAspectRatio(1.0);
         orthCam->setNearClipDistance(0.5);
         orthCam->setFarClipDistance(5);
-        Ogre::Viewport* viewport = target->addViewport(orthCam);
-        viewport->setDimensions(0, 0, 1, 1);
-        MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "Depth", mpTriMesh);
+
+        //Get color data
+        Ogre::TexturePtr colorTex = Ogre::TextureManager::getSingleton().createManual(  
+            "ColorTexture",      // name   
+            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,  
+            Ogre::TEX_TYPE_2D,   // type   
+            imageResolution,  // width   
+            imageResolution,  // height   
+            0,                   // number of mipmaps   
+            Ogre::PF_R8G8B8A8,   // pixel format
+            Ogre::TU_RENDERTARGET
+            ); 
+        Ogre::RenderTarget* colorTarget = colorTex->getBuffer()->getRenderTarget();
+        Ogre::Viewport* colorViewport = colorTarget->addViewport(orthCam);
+        colorViewport->setDimensions(0, 0, 1, 1);
+
+        MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", shadeName, triMesh);
         MagicCore::RenderSystem::Get()->Update();
-        Ogre::Image img;
-        depthTex->convertToImage(img);
+
+        Ogre::Image colorImg;
+        colorTex->convertToImage(colorImg);
+        mDepthImage.release();
+        mDepthImage = cv::Mat(imageResolution, imageResolution, CV_8UC4);
+        for (int x = 0; x < imageResolution; ++x)
+        {
+            for (int y = 0; y < imageResolution; ++y)
+            {
+                unsigned char* pixel = mDepthImage.ptr(y, x);
+                pixel[0] = colorImg.getColourAt(x, y, 0)[2] * 255;
+                pixel[1] = colorImg.getColourAt(x, y, 0)[1] * 255;
+                pixel[2] = colorImg.getColourAt(x, y, 0)[0] * 255;
+                pixel[3] = 255;
+            }
+        }
+        Ogre::TextureManager::getSingleton().remove("ColorTexture");
+
+        //Get depth data
+        Ogre::TexturePtr depthTex = Ogre::TextureManager::getSingleton().createManual(  
+            "DepthTexture",      // name   
+            Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,  
+            Ogre::TEX_TYPE_2D,   // type   
+            scanResolution,  // width   
+            scanResolution,  // height   
+            0,                   // number of mipmaps   
+            Ogre::PF_FLOAT32_R,
+            Ogre::TU_RENDERTARGET
+            ); 
+        Ogre::RenderTarget* depthTarget = depthTex->getBuffer()->getRenderTarget();
+        Ogre::Viewport* depthViewport = depthTarget->addViewport(orthCam);
+        depthViewport->setDimensions(0, 0, 1, 1);
+
+        MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "Depth", triMesh);
+        MagicCore::RenderSystem::Get()->Update();
+        
+        Ogre::Image depthImg;
+        depthTex->convertToImage(depthImg);
         GPPFREEPOINTER(mpDepthPointCloud);
         mpDepthPointCloud = new GPP::PointCloud;
         double scaleValue = 2.0 / 3.0;
@@ -451,18 +460,19 @@ namespace MagicApp
         double maxX = 1.0 * scaleValue;
         double minY = -1.0 * scaleValue;
         double maxY = 1.0 * scaleValue;
-        double deltaX = (maxX - minX) / resolution;
-        double deltaY = (maxY - minY) / resolution;
-        for (int xid = 0; xid < resolution; xid++)
+        double deltaX = (maxX - minX) / scanResolution;
+        double deltaY = (maxY - minY) / scanResolution;
+        for (int xid = 0; xid < scanResolution; xid++)
         {
-            for (int yid = 0; yid < resolution; yid++)
+            for (int yid = 0; yid < scanResolution; yid++)
             {
-                int baseIndex = xid * resolution;
+                int baseIndex = xid * scanResolution;
                 mpDepthPointCloud->InsertPoint(GPP::Vector3(minX + deltaX * xid, minY + deltaY * yid, 
-                    (img.getColourAt(xid, resolution - 1 - yid, 0))[1]));
+                    (depthImg.getColourAt(xid, scanResolution - 1 - yid, 0))[1]));
             }
         }
-        GPP::ErrorCode res = GPP::ConsolidatePointCloud::ConsolidateRawScanData(mpDepthPointCloud, resolution, resolution, false, true);
+        GPP::ErrorCode res = GPP::ConsolidatePointCloud::ConsolidateRawScanData(mpDepthPointCloud, scanResolution, 
+            scanResolution, false, true, 75.0 * GPP::ONE_RADIAN);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
@@ -474,6 +484,25 @@ namespace MagicApp
             return;
         }
         Ogre::TextureManager::getSingleton().remove("DepthTexture");
+
+        // point to color
+        if (triMesh->HasColor())
+        {
+            int pointCount = mpDepthPointCloud->GetPointCount();
+            for (int pid = 0; pid < pointCount; pid++)
+            {
+                GPP::Vector3 coord = mpDepthPointCloud->GetPointCoord(pid);
+                int imageX = floor((coord[0] - minX) / deltaX * imageResolution / scanResolution + 0.5);
+                int imageY = floor((coord[1] - minY) / deltaY * imageResolution / scanResolution + 0.5);
+                const unsigned char* pixel = mDepthImage.ptr(imageResolution - imageY - 1, imageX);
+                mpDepthPointCloud->SetPointColor(pid, GPP::Vector3(pixel[2] / 255.0, pixel[1] / 255.0, pixel[0] / 255.0));
+            }
+            mpDepthPointCloud->SetHasColor(true);
+        }
+
+        mScanResolution = scanResolution;
+        mImageResolution = imageResolution;
+
         MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
         mDisplayMode = POINTCLOUD;
         UpdateModelRendering();
@@ -496,11 +525,42 @@ namespace MagicApp
                 MessageBox(NULL, "请输入文件后缀名", "温馨提示", MB_OK);
                 return;
             }
+            mpDepthPointCloud->SetHasColor(false);
             GPP::ErrorCode res = GPP::Parser::ExportPointCloud(fileName, mpDepthPointCloud);
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "导出点云失败", "温馨提示", MB_OK);
             }
+
+            dotPos = fileName.rfind('.');
+            std::stringstream dumpStream;
+            dumpStream << fileName.substr(0, dotPos) << ".jpg";
+            std::string imageName;
+            dumpStream >> imageName;
+            cv::imwrite(imageName, mDepthImage);
+
+            double scaleValue = 2.0 / 3.0;
+            double minX = -1.0 * scaleValue;
+            double maxX = 1.0 * scaleValue;
+            double minY = -1.0 * scaleValue;
+            double maxY = 1.0 * scaleValue;
+            double deltaX = (maxX - minX) / mScanResolution;
+            double deltaY = (maxY - minY) / mScanResolution;
+            dotPos = fileName.rfind('.');
+            std::stringstream pairStream;
+            pairStream << fileName.substr(0, dotPos) << ".map";
+            std::string pairName;
+            pairStream >> pairName;
+            std::ofstream pairOut(pairName);
+            int pointCount = mpDepthPointCloud->GetPointCount();
+            for (int pid = 0; pid < pointCount; pid++)
+            {
+                GPP::Vector3 coord = mpDepthPointCloud->GetPointCoord(pid);
+                int imageX = floor((coord[0] - minX) / deltaX * mImageResolution / mScanResolution + 0.5);
+                int imageY = floor((coord[1] - minY) / deltaY * mImageResolution / mScanResolution + 0.5);
+                pairOut << imageX << " " << imageY << std::endl;
+            }
+            pairOut.close();
         }
     }
 
@@ -516,16 +576,17 @@ namespace MagicApp
     {
         if (mDisplayMode == TRIMESH)
         {
-            if (mpTriMesh != NULL)
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh != NULL)
             {
-                MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "CookTorranceRough", mpTriMesh);
+                MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "CookTorranceShade", triMesh);
             }
         }
         else if (mDisplayMode == RELIEF)
         {
             if (mpReliefMesh != NULL)
             {
-                MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "CookTorranceRough", mpReliefMesh);
+                MagicCore::RenderSystem::Get()->RenderMesh("Mesh_ReliefApp", "CookTorranceShade", mpReliefMesh);
             }
         }
         else if (mDisplayMode == POINTCLOUD)

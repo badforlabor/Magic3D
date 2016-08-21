@@ -3,6 +3,9 @@
 #include "Gpp.h"
 #include "opencv2/opencv.hpp"
 #include "OgreTextureManager.h"
+#if DEBUGDUMPFILE
+#include "DumpBase.h"
+#endif
 
 namespace GPP
 {
@@ -22,10 +25,7 @@ namespace MagicApp
     {
         enum CommandType
         {
-            NONE = 0,
-            UNFOLD_INITIAL,
-            OPTIMIZE_ISOMETRIC,
-            GENERATE_UV_ATLAS
+            NONE = 0
         };
 
         enum DisplayMode
@@ -34,6 +34,13 @@ namespace MagicApp
             TRIMESH_WIREFRAME,
             UVMESH_WIREFRAME,
             TRIMESH_TEXTURE
+        };
+
+        enum TextureType
+        {
+            TT_NONE = 0,
+            TT_SINGLE,
+            TT_MULTIPLE
         };
 
     public:
@@ -53,35 +60,29 @@ namespace MagicApp
 
         void SwitchDisplayMode(void);
         void SwitchTextureImage(void);
+        void UpdatetextureImage(void);
 
         void ImportTriMesh(void);
-        void ExportTriMesh(void);
 
-        void ConfirmGeodesics(void);
-        void DeleteGeodesics(void);
-        void SwitchMarkDisplay(void);
-        
-        void UnfoldTriMesh(bool isSubThread = true);
-        void Optimize2Isometric(bool isSubThread = true);
-        void GenerateUVAtlas(int initChartCount, bool isSubThread = true);
+        void SaveImageColorInfo(void);
+        void LoadImageColorInfo(void);
+        void PickMeshColorFromImages(void);
 
-        void EnterMeshToolApp(void);
+        void GenerateTextureImage(bool isByVertexColor);
+        void TuneTextureImageByVertexColor(void);
 
-        void OptimizeColorConsistency(void);
+        int GetMeshVertexCount(void);
 
-        void EnterPointToolApp(void);
-
-        void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
+#if DEBUGDUMPFILE
+        void SetDumpInfo(GPP::DumpBase* dumpInfo);
+        void RunDumpInfo(void);
+#endif
 
     private:
         void InitViewTool(void);
         void UpdateDisplay(void);
-        void UpdateMarkDisplay(bool display);
         void UpdateTriMeshTexture(void);
-        void GenerateUVMesh(bool bWithTextureCoordinates = false);
-        void UpdateTextureFromUVMesh(void);
         void UnifyTextureCoords(std::vector<double>& texCoords, double scaleValue);
-        void UpdatePointCloudRendering(void);
 
     private:
         void SetupScene(void);
@@ -89,14 +90,9 @@ namespace MagicApp
         void ClearData(void);
         bool IsCommandAvaliable(void);
         void ClearMeshData(void);
-        void ClearPointCloudData(void);
 
     private:
         TextureAppUI* mpUI;
-        GPP::TriMesh* mpTriMesh;
-        GPP::Vector3 mObjCenterCoord;
-        GPP::Real mScaleValue;
-        GPP::TriMesh* mpUVMesh;
         GPP::TriMesh* mpImageFrameMesh;
         cv::Mat mDistortionImage;
         int mTextureImageSize;
@@ -106,16 +102,10 @@ namespace MagicApp
         CommandType mCommandType;
         bool mIsCommandInProgress;
         bool mUpdateDisplay;
-        bool mHideMarks;
-        MagicCore::PickTool* mpPickTool;
-        GPP::Int mLastCutVertexId;
-        std::vector<GPP::PointOnEdge> mCurPointsOnEdge;
-        std::vector<GPP::Vector3> mCurMarkCoords;
-        std::vector<std::vector<GPP::Int> > mCutLineList;
-        int mInitChartCount;
         std::vector<std::string> mTextureImageNames;
         int mCurrentTextureImageId;
-        std::vector<GPP::PointCloud*> mPointCloudList;
-        bool mUpdatePointCloudRendering;
+        TextureType mTextureType;
+        std::string mTextureImageName;
+        std::vector<GPP::Int> mTextureImageMasks;
     };
 }

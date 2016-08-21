@@ -23,12 +23,11 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ImportModel")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::ImportModel);
         mRoot.at(0)->findWidget("But_Relief")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::Relief);
         mRoot.at(0)->findWidget("But_GenerateRelief")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::GenerateRelief);        
-        mRoot.at(0)->findWidget("But_EnterMeshTool")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::EnterMeshTool);
         mRoot.at(0)->findWidget("But_Scan")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::Scan);
-        mRoot.at(0)->findWidget("But_GenerateScan")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::GenerateScan);        
+        mRoot.at(0)->findWidget("But_GenerateScanColor")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::GenerateScanColor);        
+        mRoot.at(0)->findWidget("But_GenerateScanShade")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::GenerateScanShade);        
         mRoot.at(0)->findWidget("But_SavePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::SavePointCloud);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::BackToHomepage);
-        mRoot.at(0)->findWidget("But_Contact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &ReliefAppUI::Contact);
     }
 
     void ReliefAppUI::Shutdown()
@@ -104,38 +103,39 @@ namespace MagicApp
         }
     }
 
-    void ReliefAppUI::EnterMeshTool(MyGUI::Widget* pSender)
-    {
-        ReliefApp* reliefApp = dynamic_cast<ReliefApp* >(AppManager::Get()->GetApp("ReliefApp"));
-        if (reliefApp != NULL)
-        {
-            reliefApp->EnterMeshTool();
-        }
-    }
-
     void ReliefAppUI::Scan(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_GenerateScan")->castType<MyGUI::Button>()->isVisible();
+        bool isVisible = mRoot.at(0)->findWidget("But_GenerateScanColor")->castType<MyGUI::Button>()->isVisible();
         isVisible = !isVisible;
-        mRoot.at(0)->findWidget("But_GenerateScan")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_GenerateScanColor")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_GenerateScanShade")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_ScanResolution")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_ImageResolution")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
         {
-            std::string textString = "512";
+            std::string textString = "800";
             mRoot.at(0)->findWidget("Edit_ScanResolution")->castType<MyGUI::EditBox>()->setOnlyText(textString);
             mRoot.at(0)->findWidget("Edit_ScanResolution")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+
+            textString = "1024";
+            mRoot.at(0)->findWidget("Edit_ImageResolution")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_ImageResolution")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
         }
     }
 
-    void ReliefAppUI::GenerateScan(MyGUI::Widget* pSender)
+    void ReliefAppUI::GenerateScanColor(MyGUI::Widget* pSender)
     {
         bool isInputValid = true;
         std::string textString = mRoot.at(0)->findWidget("Edit_ScanResolution")->castType<MyGUI::EditBox>()->getOnlyText();
-        int resolution = std::atof(textString.c_str());
-        if (resolution < 16 || resolution > 2048)
+        int scanResolution = std::atof(textString.c_str());
+        textString = mRoot.at(0)->findWidget("Edit_ImageResolution")->castType<MyGUI::EditBox>()->getOnlyText();
+        int imageResolution = std::atof(textString.c_str());
+        if (scanResolution < 16 || scanResolution > 2048 || imageResolution < 16 || imageResolution > 2048)
         {
-            std::string textString = "512";
+            std::string textString = "800";
             mRoot.at(0)->findWidget("Edit_ScanResolution")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            textString = "1024";
+            mRoot.at(0)->findWidget("Edit_ImageResolution")->castType<MyGUI::EditBox>()->setOnlyText(textString);
             isInputValid = false;
         }
         if (!isInputValid)
@@ -145,7 +145,33 @@ namespace MagicApp
         ReliefApp* reliefApp = dynamic_cast<ReliefApp* >(AppManager::Get()->GetApp("ReliefApp"));
         if (reliefApp != NULL)
         {
-            reliefApp->CaptureDepthPointCloud(resolution);
+            reliefApp->CaptureDepthPointCloud(scanResolution, imageResolution, "CookTorranceColor");
+        }
+    }
+
+    void ReliefAppUI::GenerateScanShade(MyGUI::Widget* pSender)
+    {
+        bool isInputValid = true;
+        std::string textString = mRoot.at(0)->findWidget("Edit_ScanResolution")->castType<MyGUI::EditBox>()->getOnlyText();
+        int scanResolution = std::atof(textString.c_str());
+        textString = mRoot.at(0)->findWidget("Edit_ImageResolution")->castType<MyGUI::EditBox>()->getOnlyText();
+        int imageResolution = std::atof(textString.c_str());
+        if (scanResolution < 16 || scanResolution > 2048 || imageResolution < 16 || imageResolution > 2048)
+        {
+            std::string textString = "800";
+            mRoot.at(0)->findWidget("Edit_ScanResolution")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            textString = "1024";
+            mRoot.at(0)->findWidget("Edit_ImageResolution")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            isInputValid = false;
+        }
+        if (!isInputValid)
+        {
+            return;
+        }
+        ReliefApp* reliefApp = dynamic_cast<ReliefApp* >(AppManager::Get()->GetApp("ReliefApp"));
+        if (reliefApp != NULL)
+        {
+            reliefApp->CaptureDepthPointCloud(scanResolution, imageResolution, "CookTorranceShade");
         }
     }
     
@@ -160,11 +186,12 @@ namespace MagicApp
 
     void ReliefAppUI::BackToHomepage(MyGUI::Widget* pSender)
     {
+        ReliefApp* reliefApp = dynamic_cast<ReliefApp* >(AppManager::Get()->GetApp("ReliefApp"));
+        if (reliefApp != NULL)
+        {
+            reliefApp->ExportReliefMesh();
+        }
         AppManager::Get()->SwitchCurrentApp("Homepage");
     }
 
-    void ReliefAppUI::Contact(MyGUI::Widget* pSender)
-    {
-        MagicCore::ToolKit::OpenWebsite(std::string("http://threepark.net/magic3d"));
-    }
 }

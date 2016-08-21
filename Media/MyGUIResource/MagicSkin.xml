@@ -729,4 +729,112 @@
             <State name="normal" offset="602 1604 86 86"/>
         </BasisSkin>
     </Resource>
+    <Resource type="ResourceSkin" name="But_SingleUnfold_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="688 1604 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Bridge_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="688 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Uniform_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="774 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Offset_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="775 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Update_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="861 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Plane_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="860 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Color_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="946 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Shade_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="946 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_OpenMesh_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1032 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_CloseMesh_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1032 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_TextureImage_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1119 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_ColorMerging_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1118 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_NormalMap" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="disabled" offset="1 1993 86 86"/>
+            <State name="normal" offset="1 2080 86 86"/>
+            <State name="highlighted" offset="1 2167 86 86"/>
+            <State name="pushed" offset="1 2254 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_PointCloud_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1205 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Mesh_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1205 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_PointPixelMap_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1290 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_ControlPoint_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1290 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_SnapFront_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1376 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_SnapBack_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1376 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Close_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1462 1605 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Registrate_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="1462 1692 86 86"/>
+        </BasisSkin>
+    </Resource>
 </MyGUI>

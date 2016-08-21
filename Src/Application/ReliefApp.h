@@ -1,6 +1,7 @@
 #pragma once
 #include "AppBase.h"
 #include <vector>
+#include "opencv2/opencv.hpp"
 #include "GPP.h"
 
 namespace GPP
@@ -43,9 +44,8 @@ namespace MagicApp
         void SwitchDisplayMode(void);
         bool ImportModel(void);
         void GenerateRelief(double compressRatio, int resolution);
-        void EnterMeshTool(void);
-        void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
-        void CaptureDepthPointCloud(int resolution);
+        void ExportReliefMesh(void);
+        void CaptureDepthPointCloud(int scanResolution, int imageResolution, std::string shadeName);
         void SavePointCloud(void);
 
 #if DEBUGDUMPFILE
@@ -64,7 +64,6 @@ namespace MagicApp
 
     private:
         ReliefAppUI* mpUI;
-        GPP::TriMesh* mpTriMesh;
         MagicCore::ViewTool* mpViewTool;
 #if DEBUGDUMPFILE
         GPP::DumpBase* mpDumpInfo;
@@ -72,5 +71,8 @@ namespace MagicApp
         GPP::TriMesh* mpReliefMesh;
         DisplayMode mDisplayMode;
         GPP::PointCloud* mpDepthPointCloud;
+        cv::Mat mDepthImage;
+        int mScanResolution;
+        int mImageResolution;
     };
 }

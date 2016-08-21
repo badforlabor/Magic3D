@@ -62,7 +62,7 @@ namespace MagicCore
 
     bool ToolKit::MultiFileOpenDlg(std::vector<std::string>& selectFileNames, char* filterName)
     {
-        char szOpenFileNames[MAX_PATH * 128] = "";
+        char szOpenFileNames[MAX_PATH * 1024] = "";
         char szPath[MAX_PATH];
         char* p;
         OPENFILENAME file = { 0 };
@@ -169,6 +169,16 @@ namespace MagicCore
             colorV[2] = 0;
         }
         return colorV;
+    }
+
+    std::string ToolKit::GetNoSuffixName(std::string fileName)
+    {
+        size_t dotPos = fileName.rfind('.');
+        if (dotPos == std::string::npos)
+        {
+            return "";
+        }
+        return fileName.substr(0, dotPos);
     }
 
     bool ToolKit::IsAppRunning()

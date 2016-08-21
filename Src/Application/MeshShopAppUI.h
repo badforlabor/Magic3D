@@ -23,7 +23,6 @@ namespace MagicApp
     private:
         void SwitchDisplayMode(MyGUI::Widget* pSender);
         void ImportMesh(MyGUI::Widget* pSender);
-        void ExportMesh(MyGUI::Widget* pSender);
         void ConsolidateMesh(MyGUI::Widget* pSender);
         void ConsolidateTopology(MyGUI::Widget* pSender);
         void ConsolidateGeometry(MyGUI::Widget* pSender);
@@ -39,21 +38,20 @@ namespace MagicApp
         void SimplifyMesh(MyGUI::Widget* pSender);
         void DoSimplifyMesh(MyGUI::Widget* pSender);
         void FillHole(MyGUI::Widget* pSender);
+        void DoFillHoleTriangulation(MyGUI::Widget* pSender);
         void DoFillHoleFlat(MyGUI::Widget* pSender);
         void DoFillHoleTangent(MyGUI::Widget* pSender);
         void DoFillHoleSmooth(MyGUI::Widget* pSender);
         void DoBridgeEdges(MyGUI::Widget* pSender);
+        void OffsetMesh(MyGUI::Widget* pSender);
+        void DoUniformOffset(MyGUI::Widget* pSender);
         void SelectPoint(MyGUI::Widget* pSender);
         void SelectByRectangle(MyGUI::Widget* pSender);
         void EraseByRectangle(MyGUI::Widget* pSender);
         void DeleteSelections(MyGUI::Widget* pSender);
         void IgnoreBack(MyGUI::Widget* pSender);
         void MoveModel(MyGUI::Widget* pSender);
-        void AppJump(MyGUI::Widget* pSender);
         void SampleMesh(MyGUI::Widget* pSender);
-        void EnterReliefApp(MyGUI::Widget* pSender);
-        void EnterTextureApp(MyGUI::Widget* pSender);
-        void EnterMeasureApp(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
 
     private:

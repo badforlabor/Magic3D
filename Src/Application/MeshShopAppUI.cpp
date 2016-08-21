@@ -24,7 +24,6 @@ namespace MagicApp
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("MeshShopApp.layout");
         mRoot.at(0)->findWidget("But_DisplayMode")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SwitchDisplayMode);
         mRoot.at(0)->findWidget("But_ImportMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ImportMesh);
-        mRoot.at(0)->findWidget("But_ExportMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ExportMesh);
         mRoot.at(0)->findWidget("But_ConsolidateMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateMesh);
         mRoot.at(0)->findWidget("But_ConsolidateTopology")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ConsolidateTopology);
         mRoot.at(0)->findWidget("But_ReverseDirection")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::ReverseDirection);
@@ -40,21 +39,20 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_SimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SimplifyMesh);
         mRoot.at(0)->findWidget("But_DoSimplifyMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoSimplifyMesh);
         mRoot.at(0)->findWidget("But_FillHole")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::FillHole);
+        mRoot.at(0)->findWidget("But_FillHoleTriangulation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleTriangulation);
         mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleFlat);
         mRoot.at(0)->findWidget("But_FillHoleTangent")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleTangent);
         mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoFillHoleSmooth);
         mRoot.at(0)->findWidget("But_BridgeEdges")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoBridgeEdges);
+        mRoot.at(0)->findWidget("But_OffsetMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::OffsetMesh);
+        mRoot.at(0)->findWidget("But_DoUniformOffset")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DoUniformOffset);
         mRoot.at(0)->findWidget("But_Selection")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SelectPoint);
         mRoot.at(0)->findWidget("But_SelectByRectangle")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SelectByRectangle);
         mRoot.at(0)->findWidget("But_EraseByRectangle")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EraseByRectangle);
         mRoot.at(0)->findWidget("But_DeleteSelections")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::DeleteSelections);
         mRoot.at(0)->findWidget("But_IgnoreBack")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::IgnoreBack);
-        mRoot.at(0)->findWidget("But_MoveModel")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::MoveModel);
-        mRoot.at(0)->findWidget("But_AppJump")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::AppJump);
-        mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SampleMesh);
-        mRoot.at(0)->findWidget("But_ReliefApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnterReliefApp);
-        mRoot.at(0)->findWidget("But_TextureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnterTextureApp);
-        mRoot.at(0)->findWidget("But_MeasureApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::EnterMeasureApp);
+        mRoot.at(0)->findWidget("But_MoveModel")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::MoveModel);        
+        mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::SampleMesh);        
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeshShopAppUI::BackToHomepage);
 
         mTextInfo = mRoot.at(0)->findWidget("Text_Info")->castType<MyGUI::TextBox>();
@@ -129,15 +127,6 @@ namespace MagicApp
         if (meshShop != NULL)
         {
             meshShop->ImportMesh();
-        }
-    }
-
-    void MeshShopAppUI::ExportMesh(MyGUI::Widget* pSender)
-    {
-        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
-        if (meshShop != NULL)
-        {
-            meshShop->ExportMesh();
         }
     }
 
@@ -356,16 +345,6 @@ namespace MagicApp
         }
     }
 
-    void MeshShopAppUI::AppJump(MyGUI::Widget* pSender)
-    {
-        bool isVisible = mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->isVisible();
-        isVisible = !isVisible;
-        mRoot.at(0)->findWidget("But_SampleMesh")->castType<MyGUI::Button>()->setVisible(isVisible);
-        mRoot.at(0)->findWidget("But_ReliefApp")->castType<MyGUI::Button>()->setVisible(isVisible);
-        mRoot.at(0)->findWidget("But_TextureApp")->castType<MyGUI::Button>()->setVisible(isVisible);
-        mRoot.at(0)->findWidget("But_MeasureApp")->castType<MyGUI::Button>()->setVisible(isVisible);
-    }
-
     void MeshShopAppUI::SampleMesh(MyGUI::Widget* pSender)
     {
         MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
@@ -375,35 +354,9 @@ namespace MagicApp
         }
     }
 
-    void MeshShopAppUI::EnterReliefApp(MyGUI::Widget* pSender)
-    {
-        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
-        if (meshShop != NULL)
-        {
-            meshShop->EnterReliefApp();
-        }
-    }
-        
-    void MeshShopAppUI::EnterTextureApp(MyGUI::Widget* pSender)
-    {
-        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
-        if (meshShop != NULL)
-        {
-            meshShop->EnterTextureApp();
-        }
-    }
-    
-    void MeshShopAppUI::EnterMeasureApp(MyGUI::Widget* pSender)
-    {
-        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
-        if (meshShop != NULL)
-        {
-            meshShop->EnterMeasureApp();
-        }
-    }
-
     void MeshShopAppUI::ResetFillHole()
     {
+        mRoot.at(0)->findWidget("But_FillHoleTriangulation")->castType<MyGUI::Button>()->setVisible(false);
         mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->setVisible(false);
         mRoot.at(0)->findWidget("But_FillHoleTangent")->castType<MyGUI::Button>()->setVisible(false);
         mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->setVisible(false);
@@ -414,6 +367,7 @@ namespace MagicApp
     {
         bool isVisible = mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->getVisible();
         isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_FillHoleTriangulation")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_FillHoleFlat")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_FillHoleTangent")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_FillHoleSmooth")->castType<MyGUI::Button>()->setVisible(isVisible);
@@ -422,6 +376,15 @@ namespace MagicApp
         if (meshShop != NULL)
         {
             meshShop->FindHole(isVisible);
+        }
+    }
+
+    void MeshShopAppUI::DoFillHoleTriangulation(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            meshShop->FillHole(3);
         }
     }
 
@@ -458,6 +421,33 @@ namespace MagicApp
         if (meshShop != NULL)
         {
             meshShop->BridgeEdges();
+        }
+    }
+
+    void MeshShopAppUI::OffsetMesh(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_DoUniformOffset")->castType<MyGUI::Button>()->isVisible();
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_DoUniformOffset")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_OffsetValue")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 0.025;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_OffsetValue")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+        }
+    }
+
+    void MeshShopAppUI::DoUniformOffset(MyGUI::Widget* pSender)
+    {
+        MeshShopApp* meshShop = dynamic_cast<MeshShopApp* >(AppManager::Get()->GetApp("MeshShopApp"));
+        if (meshShop != NULL)
+        {
+            std::string textString = mRoot.at(0)->findWidget("Edit_OffsetValue")->castType<MyGUI::EditBox>()->getOnlyText();
+            double offsetValue = std::atof(textString.c_str());
+            meshShop->UniformOffsetMesh(offsetValue);         
         }
     }
 

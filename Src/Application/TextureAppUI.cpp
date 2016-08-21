@@ -25,24 +25,15 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_TextureImage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::SwitchTextureImage);
 
         mRoot.at(0)->findWidget("But_ImportTriMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ImportTriMesh);
-        mRoot.at(0)->findWidget("But_ExportTriMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ExportTriMesh);
-
-        mRoot.at(0)->findWidget("But_Geodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::Geodesics);
-        mRoot.at(0)->findWidget("But_ConfirmGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ConfirmGeodesics);
-        mRoot.at(0)->findWidget("But_DeleteGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::DeleteGeodesics);
-        mRoot.at(0)->findWidget("But_SwitchMarkDisplay")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::SwitchMarkDisplay);
         
-        mRoot.at(0)->findWidget("But_UnFoldTriMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::UnfoldTriMesh);
-        mRoot.at(0)->findWidget("But_Optimize2Isometric")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::Optimize2Isometric);
-        
-        mRoot.at(0)->findWidget("But_GenerateUVAtlas")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::GenerateUVAtlas);
-        mRoot.at(0)->findWidget("But_DoGenerateUVAtlas")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::DoGenerateUVAtlas);
+        mRoot.at(0)->findWidget("But_ImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ImageColorIds);
+        mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::LoadImageColorIds);
+        mRoot.at(0)->findWidget("But_SaveImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::SaveImageColorIds);
 
-        mRoot.at(0)->findWidget("But_EnterMeshToolApp")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::EnterMeshToolApp);
-
-        mRoot.at(0)->findWidget("But_OptimizeColorConsistency")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::OptimizeColorConsistency);
-
-        mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::EnterPointToolApp);
+        mRoot.at(0)->findWidget("But_GenerateTextureImage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::GenerateTextureImage);
+        mRoot.at(0)->findWidget("But_TextureImageByVertex")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::GenerateTextureImageByVertexColor);
+        mRoot.at(0)->findWidget("But_TextureImageByImage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::GenerateTextureImageByImage);
+        mRoot.at(0)->findWidget("But_TuneTextureImageByVertex")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::TuneTextureImageByVertexColor);
 
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::BackToHomepage);
 
@@ -130,131 +121,63 @@ namespace MagicApp
         }
     }
 
-    void TextureAppUI::ExportTriMesh(MyGUI::Widget* pSender)
+    void TextureAppUI::ImageColorIds(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_SaveImageColorIds")->castType<MyGUI::Button>()->setVisible(!isVisible);
+    }
+
+    void TextureAppUI::LoadImageColorIds(MyGUI::Widget* pSender)
     {
         TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
         if (textureApp != NULL)
         {
-            textureApp->ExportTriMesh();
+            textureApp->LoadImageColorInfo();
         }
     }
 
-    void TextureAppUI::Geodesics(MyGUI::Widget* pSender)
-    {
-        bool isVisible = mRoot.at(0)->findWidget("But_ConfirmGeodesics")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_ConfirmGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_DeleteGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_SwitchMarkDisplay")->castType<MyGUI::Button>()->setVisible(!isVisible);
-    }
-
-    void TextureAppUI::ConfirmGeodesics(MyGUI::Widget* pSender)
+    void TextureAppUI::SaveImageColorIds(MyGUI::Widget* pSender)
     {
         TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
         if (textureApp != NULL)
         {
-            textureApp->ConfirmGeodesics();
+            textureApp->SaveImageColorInfo();
         }
     }
 
-    void TextureAppUI::DeleteGeodesics(MyGUI::Widget* pSender)
+    void TextureAppUI::GenerateTextureImage(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_TextureImageByVertex")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_TextureImageByVertex")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_TextureImageByImage")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_TuneTextureImageByVertex")->castType<MyGUI::Button>()->setVisible(!isVisible);
+    }
+
+    void TextureAppUI::GenerateTextureImageByVertexColor(MyGUI::Widget* pSender)
     {
         TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
         if (textureApp != NULL)
         {
-            textureApp->DeleteGeodesics();
+            textureApp->GenerateTextureImage(true);
         }
     }
 
-    void TextureAppUI::SwitchMarkDisplay(MyGUI::Widget* pSender)
+    void TextureAppUI::GenerateTextureImageByImage(MyGUI::Widget* pSender)
     {
         TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
         if (textureApp != NULL)
         {
-            textureApp->SwitchMarkDisplay();
+            textureApp->GenerateTextureImage(false);
         }
     }
 
-    void TextureAppUI::UnfoldTriMesh(MyGUI::Widget* pSender)
+    void TextureAppUI::TuneTextureImageByVertexColor(MyGUI::Widget* pSender)
     {
         TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
         if (textureApp != NULL)
         {
-            textureApp->UnfoldTriMesh();
-        }
-    }
-
-    void TextureAppUI::Optimize2Isometric(MyGUI::Widget* pSender)
-    {
-        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
-        if (textureApp != NULL)
-        {
-            textureApp->Optimize2Isometric();
-        }
-    }
-
-    void TextureAppUI::GenerateUVAtlas(MyGUI::Widget* pSender)
-    {
-        bool isVisible = mRoot.at(0)->findWidget("But_DoGenerateUVAtlas")->castType<MyGUI::Button>()->isVisible();
-        isVisible = !isVisible;
-        mRoot.at(0)->findWidget("But_DoGenerateUVAtlas")->castType<MyGUI::Button>()->setVisible(isVisible);
-        mRoot.at(0)->findWidget("Edit_InitChartCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
-        if (isVisible)
-        {
-            
-            std::stringstream ss;
-            std::string textString;
-            ss << 25;
-            ss >> textString;
-            mRoot.at(0)->findWidget("Edit_InitChartCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
-        }
-    }
-
-    void TextureAppUI::DoGenerateUVAtlas(MyGUI::Widget* pSender)
-    {
-        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
-        if (textureApp != NULL)
-        {
-            std::string textString = mRoot.at(0)->findWidget("Edit_InitChartCount")->castType<MyGUI::EditBox>()->getOnlyText();
-            int initChartCount = std::atoi(textString.c_str());
-            if (initChartCount > 0)
-            {
-                textureApp->GenerateUVAtlas(initChartCount);
-            }
-            else
-            {
-                std::stringstream ss;
-                std::string textString;
-                ss << 25;
-                ss >> textString;
-                mRoot.at(0)->findWidget("Edit_InitChartCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
-            }
-        }
-    }
-
-    void TextureAppUI::EnterMeshToolApp(MyGUI::Widget* pSender)
-    {
-        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
-        if (textureApp != NULL)
-        {
-            textureApp->EnterMeshToolApp();
-        }
-    }
-
-    void TextureAppUI::OptimizeColorConsistency(MyGUI::Widget* pSender)
-    {
-        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
-        if (textureApp != NULL)
-        {
-            textureApp->OptimizeColorConsistency();
-        }
-    }
-
-    void TextureAppUI::EnterPointToolApp(MyGUI::Widget* pSender)
-    {
-        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
-        if (textureApp != NULL)
-        {
-            textureApp->EnterPointToolApp();
+            textureApp->TuneTextureImageByVertexColor();
         }
     }
 

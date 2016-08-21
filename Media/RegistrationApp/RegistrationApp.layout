@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
     <Widget type="Widget" skin="PanelEmpty" position="0 0 1024 768" align="Left Top" layer="Back">
-        <Widget type="TextBox" skin="TextBox" position="250 15 700 300" align="Left Top" name="Text_Info"/>
+        <Widget type="TextBox" skin="TextBox" position="260 15 700 300" align="Left Top" name="Text_Info"/>
         
-        <Widget type="Button" skin="But_Clustering" position="120 15 40 40" align="Left Top" name="But_SwitchDisplayMode"/>
+        <Widget type="Button" skin="But_Clustering" position="200 15 40 40" align="Left Top" name="But_SwitchDisplayMode"/>
 
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportPointCloudRef"/>
         
@@ -66,20 +66,40 @@
         <Widget type="Button" skin="But_UnMark_CN" position="118 415 43 43" align="Left Top" name="But_AlignFree">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="EditBox" skin="EditBox" position="118 392 43 25" align="Left Top" name="Edit_MaxSampleTripleCount">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
         <Widget type="Button" skin="But_ICP" position="161 415 43 43" align="Left Top" name="But_AlignICP">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="Button" skin="But_Fuse_CN" position="204 415 43 43" align="Left Top" name="But_DoSum">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
-        <Widget type="Button" skin="But_ICP" position="15 470 60 60" align="Left Top" name="But_AlignICP"/>
-
-        <Widget type="Button" skin="But_Fuse_CN" position="15 470 60 60" align="Left Top" name="But_FusePointCloudRef"/>
+        <Widget type="Button" skin="But_ColorMerging_CN" position="15 470 60 60" align="Left Top" name="But_FuseColor"/>
+        <Widget type="Button" skin="But_Exact_CN" position="75 480 43 43" align="Left Top" name="But_FuseColorExact">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="118 480 43 43" align="Left Top" name="But_FuseColorBlend">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
         <Widget type="Button" skin="But_Global_CN" position="15 535 60 60" align="Left Top" name="But_GlobalRegistrate"/>
         <Widget type="EditBox" skin="EditBox" position="75 550 40 30" align="Left Top" name="Edit_GlobalIterationCount">
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_OK_CN" position="115 545 43 43" align="Left Top" name="But_DoGlobalRegistrate">
+        <Widget type="Button" skin="But_Registrate_CN" position="115 545 43 43" align="Left Top" name="But_DoGlobalRegistrate">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Fuse_CN" position="158 545 43 43" align="Left Top" name="But_DoGlobalSum">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Open" position="201 545 43 43" align="Left Top" name="But_ImportPointCloudList">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_FeaturePoint_CN" position="244 545 43 43" align="Left Top" name="But_ImportMarkList">
             <Property key="Visible" value="false"/>
         </Widget>
 

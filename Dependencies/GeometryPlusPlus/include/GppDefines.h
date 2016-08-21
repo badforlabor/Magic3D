@@ -38,6 +38,7 @@
 #define GPP_NOT_INITIALIZED   -5
 #define GPP_API_IS_NOT_AVAILABLE -6
 #define GPP_DATA_IS_CORRUPT   -7
+#define GPP_API_IS_NOT_DEFINE -8
 
 #define REALDOUBLE
 namespace GPP
@@ -56,7 +57,7 @@ namespace GPP
     extern GPP_EXPORT const Real REAL_LARGE;
     extern GPP_EXPORT const Int INT_LARGE;    
     extern GPP_EXPORT const UInt UINT_LARGE;    
-    extern GPP_EXPORT const Real PI;
+    extern GPP_EXPORT const Real GPP_PI;
     extern GPP_EXPORT const Real ONE_RADIAN;
 
     // Reset progress value before calling api
@@ -66,13 +67,6 @@ namespace GPP
     // progress value range: [0, 1]
     extern GPP_EXPORT Real GetApiProgress(void);
 
-    // Active library steps:
-    // 1. Get registrationKey from your computer: std::string registrationKey = GetRegistrationKey();
-    // 2. Send registrationKey to threepark@163.com and get activationKey
-    // 3. SetActivationKey(activationKey)
-
-    // Every computer has one registration key
-    extern GPP_EXPORT std::string GetRegistrationKey(void);
-
+    // Active library:
     extern GPP_EXPORT bool SetActivationKey(std::string key);
 }

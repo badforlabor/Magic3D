@@ -53,11 +53,17 @@ namespace MagicApp
         void AlignMark(MyGUI::Widget* pSender);
         void AlignFree(MyGUI::Widget* pSender);
         void AlignICP(MyGUI::Widget* pSender);
-        
-        void FuseRef(MyGUI::Widget* pSender);
+        void DoSum(MyGUI::Widget* pSender);
+
+        void FuseColor(MyGUI::Widget* pSender);
+        void FuseColorExact(MyGUI::Widget* pSender);
+        void FuseColorBlend(MyGUI::Widget* pSender);
         
         void GlobalRegistrate(MyGUI::Widget* pSender);
         void DoGlobalRegistrate(MyGUI::Widget* pSender);
+        void DoGlobalSum(MyGUI::Widget* pSender);
+        void ImportPointCloudList(MyGUI::Widget* pSender);
+        void ImportMarkList(MyGUI::Widget* pSender);
 
         void EnterPointShop(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);

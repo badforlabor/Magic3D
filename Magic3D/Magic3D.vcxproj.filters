@@ -46,6 +46,12 @@
     <Filter Include="Application\AnimationApp">
       <UniqueIdentifier>{36bfe68b-3d7b-4a16-916c-bab10e345448}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Application\UVUnfoldApp">
+      <UniqueIdentifier>{6eba5c38-bf91-4609-a0fd-8c44de2cabd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\DepthVideoApp">
+      <UniqueIdentifier>{c23095d0-3d2e-4189-872f-411ee81bdbc4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -144,6 +150,21 @@
     <ClInclude Include="..\Src\Application\AnimationAppUI.h">
       <Filter>Application\AnimationApp</Filter>
     </ClInclude>
+    <ClInclude Include="..\Src\Application\UVUnfoldApp.h">
+      <Filter>Application\UVUnfoldApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\UVUnfoldAppUI.h">
+      <Filter>Application\UVUnfoldApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\DepthVideoApp.h">
+      <Filter>Application\DepthVideoApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\DepthVideoAppUI.h">
+      <Filter>Application\DepthVideoApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\ModelManager.h">
+      <Filter>Application\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -238,6 +259,21 @@
     </ClCompile>
     <ClCompile Include="..\Src\Application\AnimationAppUI.cpp">
       <Filter>Application\AnimationApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\UVUnfoldApp.cpp">
+      <Filter>Application\UVUnfoldApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\UVUnfoldAppUI.cpp">
+      <Filter>Application\UVUnfoldApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\DepthVideoApp.cpp">
+      <Filter>Application\DepthVideoApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\DepthVideoAppUI.cpp">
+      <Filter>Application\DepthVideoApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\ModelManager.cpp">
+      <Filter>Application\Common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

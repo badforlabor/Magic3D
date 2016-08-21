@@ -10,14 +10,11 @@ namespace MagicApp
     MeasureAppUI::MeasureAppUI() :
         mIsProgressbarVisible(false),
         mTextInfo(NULL),
-        mRefVertexCount(0),
-        mRefTriangleCount(0),
-        mFromVertexCount(0),
-        mFromTriangleCount(0),
-        mRefArea(0),
-        mRefVolume(0),
-        mGeodesicsDistance(0),
-        mMaxDeviationDistance(0)
+        mVertexCount(0),
+        mTriangleCount(0),
+        mArea(0),
+        mVolume(0),
+        mGeodesicsDistance(0)
     {
     }
 
@@ -29,25 +26,21 @@ namespace MagicApp
     {
         MagicCore::ResourceManager::LoadResource("../../Media/MeasureApp", "FileSystem", "MeasureApp");
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("MeasureApp.layout");
-        mRoot.at(0)->findWidget("But_SwitchDisplayMode")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::SwitchDisplayMode);
-        mRoot.at(0)->findWidget("But_ImportModelRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ImportModelRef);
+        mRoot.at(0)->findWidget("But_DisplayMode")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::SwitchDisplayMode);
         
+        mRoot.at(0)->findWidget("But_ImportModelRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ImportModel);
+
         mRoot.at(0)->findWidget("But_Geodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::Geodesics);
-        mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::DeleteMeshMarkRef);
+        mRoot.at(0)->findWidget("But_DeleteMeshRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::DeleteMeshMark);
         mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeApproximateGeodesics);
         mRoot.at(0)->findWidget("But_QuickExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::FastComputeExactGeodesics);
         mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeExactGeodesics);
 
-        mRoot.at(0)->findWidget("But_MeasureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefModel);
-        mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefArea);
-        mRoot.at(0)->findWidget("But_VolumeRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefVolume);
-        mRoot.at(0)->findWidget("But_CurvatureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureRefCurvature);
+        mRoot.at(0)->findWidget("But_MeasureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureModel);
+        mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureArea);
+        mRoot.at(0)->findWidget("But_VolumeRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureVolume);
+        mRoot.at(0)->findWidget("But_CurvatureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureCurvature);
 
-        mRoot.at(0)->findWidget("But_ImportModelFrom")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ImportModelFrom);
-        mRoot.at(0)->findWidget("But_Deviation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::Deviation);
-        mRoot.at(0)->findWidget("But_ComputeDeviation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeDeviation);
-
-        mRoot.at(0)->findWidget("But_EnterMeshTool")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::EnterMeshTool);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::BackToHomepage);
 
         mTextInfo = mRoot.at(0)->findWidget("Text_Info")->castType<MyGUI::TextBox>();
@@ -85,29 +78,22 @@ namespace MagicApp
         return mIsProgressbarVisible;
     }
 
-    void MeasureAppUI::SetRefModelInfo(int vertexCount, int triangleCount)
+    void MeasureAppUI::SetModelInfo(int vertexCount, int triangleCount)
     {
-        mRefVertexCount = vertexCount;
-        mRefTriangleCount = triangleCount;
+        mVertexCount = vertexCount;
+        mTriangleCount = triangleCount;
         UpdateTextInfo();
     }
 
-    void MeasureAppUI::SetFromModelInfo(int vertexCount, int triangleCount)
+    void MeasureAppUI::SetModelArea(double area)
     {
-        mFromVertexCount = vertexCount;
-        mFromTriangleCount = triangleCount;
+        mArea = area;
         UpdateTextInfo();
     }
 
-    void MeasureAppUI::SetRefModelArea(double area)
+    void MeasureAppUI::SetModelVolume(double volume)
     {
-        mRefArea = area;
-        UpdateTextInfo();
-    }
-
-    void MeasureAppUI::SetRefModelVolume(double volume)
-    {
-        mRefVolume = volume;
+        mVolume = volume;
         UpdateTextInfo();
     }
 
@@ -117,27 +103,21 @@ namespace MagicApp
         UpdateTextInfo();
     }
 
-    void MeasureAppUI::SetDeviationInfo(double maxDistance)
-    {
-        mMaxDeviationDistance = maxDistance;
-        UpdateTextInfo();
-    }
-
     void MeasureAppUI::SwitchDisplayMode(MyGUI::Widget* pSender)
     {
         MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
         if (measureShop != NULL)
         {
-            measureShop->SwitchSeparateDisplay();
+            measureShop->SwitchDisplayMode();
         }
     }
 
-    void MeasureAppUI::ImportModelRef(MyGUI::Widget* pSender)
+    void MeasureAppUI::ImportModel(MyGUI::Widget* pSender)
     {
         MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
         if (measureShop != NULL)
         {
-            measureShop->ImportModelRef();
+            measureShop->ImportModel();
         }
     }
 
@@ -158,12 +138,12 @@ namespace MagicApp
         }
     }
 
-    void MeasureAppUI::DeleteMeshMarkRef(MyGUI::Widget* pSender)
+    void MeasureAppUI::DeleteMeshMark(MyGUI::Widget* pSender)
     {
         MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
         if (measureShop != NULL)
         {
-            measureShop->DeleteMeshMarkRef();
+            measureShop->DeleteMeshMark();
         }
     }
 
@@ -202,7 +182,7 @@ namespace MagicApp
         }
     }
 
-    void MeasureAppUI::MeasureRefModel(MyGUI::Widget* pSender)
+    void MeasureAppUI::MeasureModel(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
@@ -210,63 +190,30 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_CurvatureRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
-    void MeasureAppUI::MeasureRefArea(MyGUI::Widget* pSender)
+    void MeasureAppUI::MeasureArea(MyGUI::Widget* pSender)
     {
         MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
         if (measureShop != NULL)
         {
-            measureShop->MeasureRefArea();
+            measureShop->MeasureArea();
         }
     }
 
-    void MeasureAppUI::MeasureRefVolume(MyGUI::Widget* pSender)
+    void MeasureAppUI::MeasureVolume(MyGUI::Widget* pSender)
     {
         MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
         if (measureShop != NULL)
         {
-            measureShop->MeasureRefVolume();
+            measureShop->MeasureVolume();
         }
     }
 
-    void MeasureAppUI::MeasureRefCurvature(MyGUI::Widget* pSender)
+    void MeasureAppUI::MeasureCurvature(MyGUI::Widget* pSender)
     {
         MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
         if (measureShop != NULL)
         {
-            measureShop->MeasureRefCurvature();
-        }
-    }
-
-    void MeasureAppUI::ImportModelFrom(MyGUI::Widget* pSender)
-    {
-        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
-        if (measureShop != NULL)
-        {
-            measureShop->ImportModelFrom();
-        }
-    }
-
-    void MeasureAppUI::Deviation(MyGUI::Widget* pSender)
-    {
-        bool isVisible = mRoot.at(0)->findWidget("But_ComputeDeviation")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_ComputeDeviation")->castType<MyGUI::Button>()->setVisible(!isVisible);
-    }
-
-    void MeasureAppUI::ComputeDeviation(MyGUI::Widget* pSender)
-    {
-        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
-        if (measureShop != NULL)
-        {
-            measureShop->ComputeDeviation();
-        }
-    }
-
-    void MeasureAppUI::EnterMeshTool(MyGUI::Widget* pSender)
-    {
-        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
-        if (measureShop != NULL)
-        {
-            measureShop->EnterMeshTool();
+            measureShop->MeasureCurvature();
         }
     }
 
@@ -286,20 +233,20 @@ namespace MagicApp
     void MeasureAppUI::UpdateTextInfo()
     {
         std::string textString = "";
-        if (mRefVertexCount > 0)
+        if (mVertexCount > 0)
         {
-            textString += "Fix model vertex count = ";
+            textString += "Vertex count = ";
             std::stringstream ss;
-            ss << mRefVertexCount;
+            ss << mVertexCount;
             std::string numberString;
             ss >> numberString;
             textString += numberString;
             textString += " ";
-            if (mRefTriangleCount > 0)
+            if (mTriangleCount > 0)
             {
-                textString += " triangle count = ";
+                textString += " Triangle count = ";
                 std::stringstream ss;
-                ss << mRefTriangleCount;
+                ss << mTriangleCount;
                 std::string numberString;
                 ss >> numberString;
                 textString += numberString;
@@ -322,58 +269,22 @@ namespace MagicApp
             textString += "\n";
         }
 
-        if (mRefArea > 0)
+        if (mArea > 0)
         {
             textString += "Area = ";
             std::stringstream ss;
-            ss << mRefArea;
+            ss << mArea;
             std::string numberString;
             ss >> numberString;
             textString += numberString;
             textString += "\n";
         }
 
-        if (mRefVolume > 0)
+        if (mVolume > 0)
         {
             textString += "Volume = ";
             std::stringstream ss;
-            ss << mRefVolume;
-            std::string numberString;
-            ss >> numberString;
-            textString += numberString;
-            textString += "\n";
-        }
-
-        if (mFromVertexCount > 0)
-        {
-            textString += "Float model vertex count = ";
-            std::stringstream ss;
-            ss << mFromVertexCount;
-            std::string numberString;
-            ss >> numberString;
-            textString += numberString;
-            textString += " ";
-            if (mFromTriangleCount > 0)
-            {
-                textString += " triangle count = ";
-                std::stringstream ss;
-                ss << mFromTriangleCount;
-                std::string numberString;
-                ss >> numberString;
-                textString += numberString;
-                textString += "\n";
-            }
-            else
-            {
-                textString += "\n";
-            }
-        }
-
-        if (mMaxDeviationDistance > 0)
-        {
-            textString += "Max deviation distance = ";
-            std::stringstream ss;
-            ss << mMaxDeviationDistance;
+            ss << mVolume;
             std::string numberString;
             ss >> numberString;
             textString += numberString;

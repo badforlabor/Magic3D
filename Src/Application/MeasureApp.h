@@ -5,8 +5,6 @@
 
 namespace GPP
 {
-    class TriMesh;
-    class PointCloud;
     class DumpBase;
 }
 
@@ -26,8 +24,7 @@ namespace MagicApp
             NONE = 0,
             GEODESICS_APPROXIMATE,
             GEOMESICS_FAST_EXACT,
-            GEODESICS_EXACT,
-            DEVIATION
+            GEODESICS_EXACT
         };
 
     public:
@@ -45,21 +42,16 @@ namespace MagicApp
 
         void DoCommand(bool isSubThread);
 
-        bool ImportModelRef(void);
+        bool ImportModel(void);
 
-        void DeleteMeshMarkRef(void);
+        void DeleteMeshMark(void);
         void ComputeApproximateGeodesics(bool isSubThread = true);
         void FastComputeExactGeodesics(double accuracy, bool isSubThread = true);
         void ComputeExactGeodesics(bool isSubThread = true);
 
-        void MeasureRefArea(void);
-        void MeasureRefVolume(void);
-        void MeasureRefCurvature(void);
-
-        bool ImportModelFrom(void);
-        void ComputeDeviation(bool isSubThread = true);
-
-        void EnterMeshTool(void);
+        void MeasureArea(void);
+        void MeasureVolume(void);
+        void MeasureCurvature(void);
 
 #if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -67,51 +59,33 @@ namespace MagicApp
 #endif
         bool IsCommandInProgress(void);
 
-        void SwitchSeparateDisplay(void);
-
-        void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
+        void SwitchDisplayMode(void);
 
     private:
         void SetupScene(void);
         void ShutdownScene(void);
         void ClearData(void);
-        void ClearModelFromData(void);
         bool IsCommandAvaliable(void);
 
         void InitViewTool(void);
-        void UpdateModelRefRendering(void);
-        void UpdateMarkRefRendering(void);
-        void UpdateModelFromRendering(void);
-        void UpdateMarkFromRendering(void);
-
-        void SetPointCloudColor(GPP::PointCloud* pointCloud, const GPP::Vector3& color);
-        void SetMeshColor(GPP::TriMesh* triMesh, const GPP::Vector3& color);
+        void UpdateModelRendering(void);
+        void UpdateMarkRendering(void);
 
     private:
         MeasureAppUI* mpUI;
-        GPP::TriMesh* mpTriMeshRef;
-        GPP::PointCloud* mpPointCloudRef;
-        GPP::Vector3 mObjCenterCoord;
-        GPP::Real mScaleValue;
-        GPP::TriMesh* mpTriMeshFrom;
-        GPP::PointCloud* mpPointCloudFrom;
         MagicCore::ViewTool* mpViewTool;
-        bool mIsSeparateDisplay;
-        MagicCore::PickTool* mpPickToolRef;
-        MagicCore::PickTool* mpPickToolFrom;
+        MagicCore::PickTool* mpPickTool;
+        int mDisplayMode;
 #if DEBUGDUMPFILE
         GPP::DumpBase* mpDumpInfo;
 #endif
-        std::vector<GPP::Int> mRefMarkIds;
-        std::vector<GPP::Vector3> mRefMarkPoints;
-        std::vector<GPP::Int> mFromMarkIds;
-        std::vector<GPP::Vector3> mFromMarkPoints;
+        std::vector<GPP::Int> mMarkIds;
+        std::vector<GPP::Vector3> mMarkPoints;
         CommandType mCommandType;
         bool mIsCommandInProgress;
-        bool mUpdateModelRefRendering;
-        bool mUpdateMarkRefRendering;
-        bool mUpdateModelFromRendering;
-        bool mUpdateMarkFromRendering;
+        bool mUpdateModelRendering;
+        bool mUpdateMarkRendering;
         double mGeodesicAccuracy;
+        bool mIsFlatRenderingMode;
     };
 }

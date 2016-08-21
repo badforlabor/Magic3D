@@ -1,87 +1,109 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <MyGUI type="Layout" version="3.2.0">
-    <Widget type="Widget" skin="PanelEmpty" position="0 0 1024 768" align="Left Top" layer="Back">
-        <Widget type="TextBox" skin="TextBox" position="200 15 700 300" align="Left Top" name="Text_Info"/>
+    <Widget type="Widget" skin="PanelEmpty" position="0 0 1024 868" align="Left Top" layer="Back">
+        <Widget type="TextBox" skin="TextBox" position="260 15 700 300" align="Left Top" name="Text_Info"/>
 
-        <Widget type="Button" skin="But_Viewer" position="120 15 40 40" align="Left Top" name="But_DisplayMode"/>
+        <Widget type="Button" skin="But_Viewer" position="200 15 40 40" align="Left Top" name="But_DisplayMode"/>
 
         <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportMesh"/>
 
-        <Widget type="Button" skin="But_Save" position="15 80 60 60" align="Left Top" name="But_ExportMesh"></Widget>
-
-        <Widget type="Button" skin="But_Repair_CN" position="15 145 60 60" align="Left Top" name="But_ConsolidateMesh"></Widget>
-        <Widget type="Button" skin="But_Topology_CN" position="75 155 43 43" align="Left Top" name="But_ConsolidateTopology">
+        <Widget type="Button" skin="But_Repair_CN" position="15 80 60 60" align="Left Top" name="But_ConsolidateMesh"></Widget>
+        <Widget type="Button" skin="But_Topology_CN" position="75 90 43 43" align="Left Top" name="But_ConsolidateTopology">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Geometry_CN" position="118 155 43 43" align="Left Top" name="But_ConsolidateGeometry">
+        <Widget type="Button" skin="But_Geometry_CN" position="118 90 43 43" align="Left Top" name="But_ConsolidateGeometry">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Isolate_CN" position="161 155 43 43" align="Left Top" name="But_RemoveMeshIsolatePart">
+        <Widget type="Button" skin="But_Isolate_CN" position="161 90 43 43" align="Left Top" name="But_RemoveMeshIsolatePart">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Flip_CN" position="204 155 43 43" align="Left Top" name="But_ReverseDirection">
-            <Property key="Visible" value="false"/>
-        </Widget>
-
-        <Widget type="Button" skin="But_Filter_CN" position="15 210 60 60" align="Left Top" name="But_FilterMesh"></Widget>
-        <Widget type="Button" skin="But_RemoveNoise_CN" position="75 220 43 43" align="Left Top" name="But_RemoveMeshNoise">
-            <Property key="Visible" value="false"/>
-        </Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="118 220 43 43" align="Left Top" name="But_SmoothMesh">
-            <Property key="Visible" value="false"/>
-        </Widget>
-        <Widget type="Button" skin="But_Enhance_CN" position="161 220 43 43" align="Left Top" name="But_EnhanceMeshDetail">
+        <Widget type="Button" skin="But_Flip_CN" position="204 90 43 43" align="Left Top" name="But_ReverseDirection">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Subdivide_CN" position="15 275 60 60" align="Left Top" name="But_SubdivideMesh"></Widget>
-
-        <Widget type="Button" skin="But_Refine_CN" position="15 340 60 60" align="Left Top" name="But_RefineMesh"></Widget>
-        <Widget type="EditBox" skin="EditBox" position="75 355 80 30" align="Left Top" name="Edit_RefineTargetVertexCount">
+        <Widget type="Button" skin="But_Filter_CN" position="15 145 60 60" align="Left Top" name="But_FilterMesh"></Widget>
+        <Widget type="EditBox" skin="EditBox" position="75 160 50 30" align="Left Top" name="Edit_FilterPositionWeight">
             <Property key="TextColour" value="0.286275 0.254902 0.4"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_OK_CN" position="155 350 43 43" align="Left Top" name="But_DoRefineMesh">
+        <Widget type="Button" skin="But_RemoveNoise_CN" position="125 155 43 43" align="Left Top" name="But_RemoveMeshNoise">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="168 155 43 43" align="Left Top" name="But_SmoothMesh">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Enhance_CN" position="211 155 43 43" align="Left Top" name="But_EnhanceMeshDetail">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Simplify_CN" position="15 405 60 60" align="Left Top" name="But_SimplifyMesh"></Widget>
-        <Widget type="EditBox" skin="EditBox" position="75 420 80 30" align="Left Top" name="Edit_SimplifyTargetVertexCount">
+        <Widget type="Button" skin="But_Subdivide_CN" position="15 210 60 60" align="Left Top" name="But_SubdivideMesh"></Widget>
+
+        <Widget type="Button" skin="But_Refine_CN" position="15 275 60 60" align="Left Top" name="But_RefineMesh"></Widget>
+        <Widget type="EditBox" skin="EditBox" position="75 290 80 30" align="Left Top" name="Edit_RefineTargetVertexCount">
             <Property key="TextColour" value="0.286275 0.254902 0.4"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_OK_CN" position="155 415 43 43" align="Left Top" name="But_DoSimplifyMesh">
+        <Widget type="Button" skin="But_OK_CN" position="155 285 43 43" align="Left Top" name="But_DoRefineMesh">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Simplify_CN" position="15 340 60 60" align="Left Top" name="But_SimplifyMesh"></Widget>
+        <Widget type="EditBox" skin="EditBox" position="75 355 80 30" align="Left Top" name="Edit_SimplifyTargetVertexCount">
+            <Property key="TextColour" value="0.286275 0.254902 0.4"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_OK_CN" position="155 350 43 43" align="Left Top" name="But_DoSimplifyMesh">
             <Property key="Visible" value="false"/>
         </Widget>
         
-        <Widget type="Button" skin="But_FillHole_CN" position="15 470 60 60" align="Left Top" name="But_FillHole"/>
-        <Widget type="Button" skin="But_Flat_CN" position="75 480 43 43" align="Left Top" name="But_FillHoleFlat">
+        <Widget type="Button" skin="But_FillHole_CN" position="15 405 60 60" align="Left Top" name="But_FillHole"/>
+        <Widget type="Button" skin="But_Triangle_CN" position="75 415 43 43" align="Left Top" name="But_FillHoleTriangulation">
             <Property key="Visible" value="false"/>
         </Widget>
-		<Widget type="Button" skin="But_Smooth_CN" position="118 480 43 43" align="Left Top" name="But_FillHoleTangent">
-			<Property key="Visible" value="fales"/>
-		</Widget>
-        <Widget type="Button" skin="But_Curvature_CN" position="161 480 43 43" align="Left Top" name="But_FillHoleSmooth">
+        <Widget type="Button" skin="But_Plane_CN" position="118 415 43 43" align="Left Top" name="But_FillHoleFlat">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="161 415 43 43" align="Left Top" name="But_FillHoleTangent">
+          <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Curvature_CN" position="204 415 43 43" align="Left Top" name="But_FillHoleSmooth">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Bridge_CN" position="247 415 43 43" align="Left Top" name="But_BridgeEdges">
+          <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="Button" skin="But_Offset_CN" position="15 470 60 60" align="Left Top" name="But_OffsetMesh"></Widget>
+        <Widget type="EditBox" skin="EditBox" position="75 485 60 30" align="Left Top" name="Edit_OffsetValue">
+            <Property key="TextColour" value="0.286275 0.254902 0.4"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Uniform_CN" position="135 480 43 43" align="Left Top" name="But_DoUniformOffset">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Flip" position="15 535 60 60" align="Left Top" name="But_AppJump"/>
-        <Widget type="Button" skin="But_PointShop" position="75 545 43 43" align="Left Top" name="But_SampleMesh">
+        <Widget type="Button" skin="But_Select" position="15 535 60 60" align="Left Top" name="But_Selection"/>
+        <Widget type="Button" skin="But_Rectangle" position="75 545 43 43" align="Left Top" name="But_SelectByRectangle">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Relief" position="118 545 43 43" align="Left Top" name="But_ReliefApp">
+        <Widget type="Button" skin="But_Erase" position="118 545 43 43" align="Left Top" name="But_EraseByRectangle">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_ImageTool" position="161 545 43 43" align="Left Top" name="But_TextureApp">
+        <Widget type="Button" skin="But_Delete" position="161 545 43 43" align="Left Top" name="But_DeleteSelections">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Resize" position="205 545 43 43" align="Left Top" name="But_MeasureApp">
+        <Widget type="Button" skin="But_Front" position="204 545 43 43" align="Left Top" name="But_IgnoreBack">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Select" position="247 545 43 43" align="Left Top" name="But_MoveModel">
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_Home" position="15 600 60 60" align="Left Top" name="But_BackToHomepage"/>
+        <Widget type="Button" skin="But_Sampling_CN" position="15 600 60 60" align="Left Top" name="But_SampleMesh"/>
 
-        <Widget type="ProgressBar" skin="ProgressBar" position="15 680 150 20" align="Left Top" name="APIProgress">
+        <Widget type="Button" skin="But_Home" position="15 665 60 60" align="Left Top" name="But_BackToHomepage"/>
+
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 735 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>
             <Property key="FlowDirection" value="LeftToRight"/>
             <Property key="Visible" value="false"/>

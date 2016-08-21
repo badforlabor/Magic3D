@@ -55,10 +55,17 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_AlignMark")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignMark);
         mRoot.at(0)->findWidget("But_AlignFree")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignFree);
         mRoot.at(0)->findWidget("But_AlignICP")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::AlignICP);
-        mRoot.at(0)->findWidget("But_FusePointCloudRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseRef);
+        mRoot.at(0)->findWidget("But_DoSum")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::DoSum);
+
+        mRoot.at(0)->findWidget("But_FuseColor")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseColor);
+        mRoot.at(0)->findWidget("But_FuseColorExact")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseColorExact);
+        mRoot.at(0)->findWidget("But_FuseColorBlend")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::FuseColorBlend);
         
         mRoot.at(0)->findWidget("But_GlobalRegistrate")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::GlobalRegistrate);
         mRoot.at(0)->findWidget("But_DoGlobalRegistrate")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::DoGlobalRegistrate);
+        mRoot.at(0)->findWidget("But_DoGlobalSum")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::DoGlobalSum);
+        mRoot.at(0)->findWidget("But_ImportPointCloudList")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ImportPointCloudList);
+        mRoot.at(0)->findWidget("But_ImportMarkList")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ImportMarkList);
         
         mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::EnterPointShop);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::BackToHomepage);
@@ -242,7 +249,7 @@ namespace MagicApp
         }
     }
 
-    void RegistrationAppUI::FuseRef(MyGUI::Widget* pSender)
+    void RegistrationAppUI::DoSum(MyGUI::Widget* pSender)
     {
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
@@ -251,17 +258,45 @@ namespace MagicApp
         }
     }
 
+    void RegistrationAppUI::FuseColor(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_FuseColorExact")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_FuseColorExact")->castType<MyGUI::Button>()->setVisible(!isVisible);  
+        mRoot.at(0)->findWidget("But_FuseColorBlend")->castType<MyGUI::Button>()->setVisible(!isVisible);
+    }
+
+    void RegistrationAppUI::FuseColorExact(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->FusePointCloudColor(false, true);
+        }
+    }
+
+    void RegistrationAppUI::FuseColorBlend(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->FusePointCloudColor(true, true);
+        }
+    }
+
     void RegistrationAppUI::GlobalRegistrate(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_DoGlobalRegistrate")->castType<MyGUI::Button>()->isVisible();
+        bool isVisible = mRoot.at(0)->findWidget("But_ImportPointCloudList")->castType<MyGUI::Button>()->isVisible();
         isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_ImportPointCloudList")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_ImportMarkList")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_DoGlobalRegistrate")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_DoGlobalSum")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
         {
             std::stringstream ss;
             std::string textString;
-            ss << 15;
+            ss << 10;
             ss >> textString;
             mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
             mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
@@ -279,7 +314,7 @@ namespace MagicApp
             {
                 std::stringstream ss;
                 std::string textString;
-                ss << 15;
+                ss << 10;
                 ss >> textString;
                 mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
             }
@@ -287,6 +322,33 @@ namespace MagicApp
             {
                 registrationApp->GlobalRegistrate(iterationCount, true);
             }            
+        }
+    }
+
+    void RegistrationAppUI::DoGlobalSum(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->GlobalFuse(true);
+        }
+    }
+
+    void RegistrationAppUI::ImportPointCloudList(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->ImportPointCloudList();
+        }
+    }
+
+    void RegistrationAppUI::ImportMarkList(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->ImportMarkList();
         }
     }
 
@@ -381,9 +443,21 @@ namespace MagicApp
     void RegistrationAppUI::AlignFrom(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_AlignMark")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_AlignMark")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_AlignFree")->castType<MyGUI::Button>()->setVisible(!isVisible);  
-        mRoot.at(0)->findWidget("But_AlignICP")->castType<MyGUI::Button>()->setVisible(!isVisible);  
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_AlignMark")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_AlignFree")->castType<MyGUI::Button>()->setVisible(isVisible);  
+        mRoot.at(0)->findWidget("But_AlignICP")->castType<MyGUI::Button>()->setVisible(isVisible);  
+        mRoot.at(0)->findWidget("But_DoSum")->castType<MyGUI::Button>()->setVisible(isVisible);  
+        mRoot.at(0)->findWidget("Edit_MaxSampleTripleCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 500;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_MaxSampleTripleCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_MaxSampleTripleCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
     }
 
     void RegistrationAppUI::AlignMark(MyGUI::Widget* pSender)
@@ -400,7 +474,21 @@ namespace MagicApp
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->AlignFree();
+            std::string textString = mRoot.at(0)->findWidget("Edit_MaxSampleTripleCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int maxSampleTripleCount = std::atoi(textString.c_str());
+            if (maxSampleTripleCount > 1)
+            {
+                registrationApp->AlignFree(maxSampleTripleCount, true);
+            }
+            else
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 500;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_MaxSampleTripleCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+                mRoot.at(0)->findWidget("Edit_MaxSampleTripleCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+            }
         }
     }
 

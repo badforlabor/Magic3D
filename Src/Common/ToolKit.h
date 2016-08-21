@@ -18,6 +18,7 @@ namespace MagicCore
         static bool FileSaveDlg(std::string& selectFileName, char* filterName);
         static void OpenWebsite(std::string& address);
         static GPP::Vector3 ColorCoding(double f);
+        static std::string GetNoSuffixName(std::string fileName);
 
         bool IsAppRunning(void);
         void SetAppRunning(bool bRunning);

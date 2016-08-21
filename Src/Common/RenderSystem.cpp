@@ -2,8 +2,7 @@
 #include "RenderSystem.h"
 #include "../Common/LogSystem.h"
 #include "MagicListener.h"
-#include "PointCloud.h"
-#include "TriMesh.h"
+#include "GPP.h"
 
 namespace MagicCore
 {
@@ -13,7 +12,8 @@ namespace MagicCore
         mpRoot(NULL), 
         mpMainCamera(NULL), 
         mpRenderWindow(NULL), 
-        mpSceneManager(NULL)
+        mpSceneManager(NULL),
+        mpViewport(NULL)
     {
     }
 
@@ -50,10 +50,10 @@ namespace MagicCore
             mpMainCamera = mpSceneManager->createCamera("MainCamera");
             SetupCameraDefaultParameter();
             // Create a viewport covering whole window
-            Ogre::Viewport* viewPort = mpRenderWindow->addViewport(mpMainCamera);
-            viewPort->setBackgroundColour(Ogre::ColourValue(0.8705882352941176, 0.8705882352941176, 0.8705882352941176));
+            mpViewport = mpRenderWindow->addViewport(mpMainCamera);
+            mpViewport->setBackgroundColour(Ogre::ColourValue(0.8705882352941176, 0.8705882352941176, 0.8705882352941176));
             // Update the camera aspect ratio to that of the viewport
-            mpMainCamera->setAspectRatio(Ogre::Real(viewPort->getActualWidth()) / Ogre::Real(viewPort->getActualHeight()));
+            mpMainCamera->setAspectRatio(Ogre::Real(mpViewport->getActualWidth()) / Ogre::Real(mpViewport->getActualHeight()));
 
             mpRoot->addFrameListener(MagicListener::Get());
             Ogre::WindowEventUtilities::addWindowEventListener(mpRenderWindow, MagicListener::Get());
@@ -77,6 +77,14 @@ namespace MagicCore
             mpMainCamera->setNearClipDistance(0.05);
             mpMainCamera->setFarClipDistance(0);
             mpMainCamera->setAspectRatio((Ogre::Real)mpRenderWindow->getWidth() / (Ogre::Real)mpRenderWindow->getHeight());
+        }
+    }
+
+    void RenderSystem::SetBackgroundColor(double r, double g, double b)
+    {
+        if (mpViewport)
+        {
+            mpViewport->setBackgroundColour(Ogre::ColourValue(r, g, b));
         }
     }
 
@@ -280,7 +288,8 @@ namespace MagicCore
         manualObj->end();
     }
 
-    void RenderSystem::RenderMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh, ModelNodeType nodeType)
+    void RenderSystem::RenderMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh, ModelNodeType nodeType,
+        std::vector<bool>* selectFlags, GPP::Vector3* selectColor, bool isFlat)
     {
         Ogre::ManualObject* manualObj = NULL;
         if (mpSceneManager->hasManualObject(meshName))
@@ -298,22 +307,60 @@ namespace MagicCore
             return;
         }
         manualObj->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
-        int vertexCount = mesh->GetVertexCount();
-        for (int vid = 0; vid < vertexCount; vid++)
+        if (isFlat)
         {
-            GPP::Vector3 coord = mesh->GetVertexCoord(vid);
-            GPP::Vector3 normal = mesh->GetVertexNormal(vid);
-            GPP::Vector3 color = mesh->GetVertexColor(vid);
-            manualObj->position(coord[0], coord[1], coord[2]);
-            manualObj->normal(normal[0], normal[1], normal[2]);
-            manualObj->colour(color[0], color[1], color[2]);
+            int triangleCount = mesh->GetTriangleCount();
+            int vertexIds[3] = {-1};
+            for (int fid = 0; fid < triangleCount; fid++)
+            {
+                GPP::Vector3 normal = mesh->GetTriangleNormal(fid);
+                mesh->GetTriangleVertexIds(fid, vertexIds);
+                for (int fvid = 0; fvid < 3; fvid++)
+                {
+                    GPP::Vector3 coord = mesh->GetVertexCoord(vertexIds[fvid]);
+                    GPP::Vector3 color;
+                    if (selectFlags && selectFlags->at(vertexIds[fvid]))
+                    {
+                        color = *selectColor;
+                    }
+                    else
+                    {
+                        color = mesh->GetVertexColor(vertexIds[fvid]);
+                    }
+                    manualObj->position(coord[0], coord[1], coord[2]);
+                    manualObj->normal(normal[0], normal[1], normal[2]);
+                    manualObj->colour(color[0], color[1], color[2]);
+                }
+                manualObj->triangle(fid * 3, fid * 3 + 1, fid * 3 + 2);
+            }
         }
-        int triangleCount = mesh->GetTriangleCount();
-        for (int fid = 0; fid < triangleCount; fid++)
+        else
         {
-            int vertexIds[3];
-            mesh->GetTriangleVertexIds(fid, vertexIds);
-            manualObj->triangle(vertexIds[0], vertexIds[1], vertexIds[2]);
+            int vertexCount = mesh->GetVertexCount();
+            for (int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 coord = mesh->GetVertexCoord(vid);
+                GPP::Vector3 normal = mesh->GetVertexNormal(vid);
+                GPP::Vector3 color;
+                if (selectFlags && selectFlags->at(vid))
+                {
+                    color = *selectColor;
+                }
+                else
+                {
+                    color = mesh->GetVertexColor(vid);
+                }
+                manualObj->position(coord[0], coord[1], coord[2]);
+                manualObj->normal(normal[0], normal[1], normal[2]);
+                manualObj->colour(color[0], color[1], color[2]);
+            }
+            int triangleCount = mesh->GetTriangleCount();
+            for (int fid = 0; fid < triangleCount; fid++)
+            {
+                int vertexIds[3];
+                mesh->GetTriangleVertexIds(fid, vertexIds);
+                manualObj->triangle(vertexIds[0], vertexIds[1], vertexIds[2]);
+            }
         }
         manualObj->end();
     }
@@ -336,22 +383,24 @@ namespace MagicCore
             return;
         }
         manualObj->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
-        int vertexCount = mesh->GetVertexCount();
-        for (int vid = 0; vid < vertexCount; vid++)
-        {
-            GPP::Vector3 coord = mesh->GetVertexCoord(vid);
-            GPP::Vector3 normal = mesh->GetVertexNormal(vid);
-            GPP::Vector3 textureCoord = mesh->GetVertexTexcoord(vid);
-            manualObj->position(coord[0], coord[1], coord[2]);
-            manualObj->normal(normal[0], normal[1], normal[2]);
-            manualObj->textureCoord(textureCoord[0], textureCoord[1]);
-        }
-        int triangleCount = mesh->GetTriangleCount();
-        for (int fid = 0; fid < triangleCount; fid++)
+        int faceCount = mesh->GetTriangleCount();
+        for (int fid = 0; fid < faceCount; ++fid)
         {
             int vertexIds[3];
             mesh->GetTriangleVertexIds(fid, vertexIds);
-            manualObj->triangle(vertexIds[0], vertexIds[1], vertexIds[2]);
+            for (int fvid = 0; fvid < 3; ++fvid)
+            {
+                GPP::Vector3 coord = mesh->GetVertexCoord(vertexIds[fvid]);
+                GPP::Vector3 normal = mesh->GetVertexNormal(vertexIds[fvid]);
+                GPP::Vector3 textureCoord = mesh->GetTriangleTexcoord(fid, fvid);
+                manualObj->position(coord[0], coord[1], coord[2]);
+                manualObj->normal(normal[0], normal[1], normal[2]);
+                manualObj->textureCoord(textureCoord[0], textureCoord[1]);
+            }
+        }
+        for (int fid = 0; fid < faceCount; ++fid)
+        {
+            manualObj->triangle(fid * 3, fid * 3 + 1, fid * 3 + 2);
         }
         manualObj->end();
     }
@@ -374,27 +423,36 @@ namespace MagicCore
             return;
         }
         manualObj->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
-        int vertexCount = mesh->GetVertexCount();
-        for (int vid = 0; vid < vertexCount; vid++)
+        int faceCount = mesh->GetTriangleCount();
+        for (int fid = 0; fid < faceCount; ++fid)
         {
-            GPP::Vector3 textureCoord = mesh->GetVertexTexcoord(vid);
-            GPP::Vector3 normal = mesh->GetVertexNormal(vid);
-            GPP::Vector3 color = normal;
-            if (normal[2] < 0)
-            {
-                normal *= -1.0;
-            }
-            //GPP::Vector3 color = mesh->GetVertexColor(vid);
-            manualObj->position(textureCoord[0], textureCoord[1], textureCoord[2]);
-            manualObj->normal(normal[0], normal[1], normal[2]);
-            manualObj->colour((color[0] + 1.0) / 2.0, (color[1] + 1.0) / 2.0, (color[2] + 1.0) / 2.0);
-        }
-        int triangleCount = mesh->GetTriangleCount();
-        for (int fid = 0; fid < triangleCount; fid++)
-        {
-            int vertexIds[3];
+            int vertexIds[3] = {-1};
             mesh->GetTriangleVertexIds(fid, vertexIds);
-            manualObj->triangle(vertexIds[0], vertexIds[1], vertexIds[2]);
+            for (int fvid = 0; fvid < 3; ++fvid)
+            {
+                GPP::Vector3 texCoord = mesh->GetTriangleTexcoord(fid, fvid);
+                GPP::Vector3 color;
+                if (1)//mesh->HasColor())
+                {
+                    color = mesh->GetVertexColor(vertexIds[fvid]);
+                }
+                else
+                {
+                    color = mesh->GetVertexNormal(vertexIds[fvid]);
+                }
+                GPP::Vector3 normal = mesh->GetVertexNormal(vertexIds[fvid]);
+                if (normal[2] < 0)
+                {
+                    normal[2] *= (-1.0);
+                }
+                manualObj->position((texCoord[0] - 0.5) * 2.0, (texCoord[1] - 0.5) * 2.0, 0);
+                manualObj->normal(normal[0], normal[1], normal[2]);
+                manualObj->colour((color[0] + 1.0) / 2.0, (color[1] + 1.0) / 2.0, (color[2] + 1.0) / 2.0);
+            }
+        }
+        for (int fid = 0; fid < faceCount; ++fid)
+        {
+            manualObj->triangle(fid * 3, fid * 3 + 1, fid * 3 + 2);
         }
         manualObj->end();
     }

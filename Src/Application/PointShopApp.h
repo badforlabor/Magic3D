@@ -22,10 +22,14 @@ namespace MagicApp
             EXPORT,
             NORMALCALCULATION,
             NORMALSMOOTH,
+            NORMALUPDATE,
             OUTLIER,
             ISOLATE,
             COORDSMOOTH,
-            RECONSTRUCTION
+            RECONSTRUCTION,
+            FIT,
+            PLANEPROJECT,
+            FUSECOLOR
         };
 
         enum RightMouseType
@@ -55,19 +59,23 @@ namespace MagicApp
         void ExportPointCloud(bool isSubThread = true);
         
         void SmoothPointCloudNormal(bool isSubThread = true);
+        void UpdatePointCloudNormal(bool isSubThread = true);
         
-        void SamplePointCloud(int targetPointCount);
+        void UniformSamplePointCloud(int targetPointCount);
+        void GeometrySamplePointCloud(int targetPointCount);
 
         void SimplifyPointCloud(int resolution);
+        void FitPointCloud(int resolution, bool isSubThread = true);
 
         void CalculatePointCloudNormal(bool isDepthImage, bool isSubThread = true);
         void FlipPointCloudNormal(void);
         void ReversePatchNormal(void);
-        void ReconstructMesh(int quality, bool isSubThread = true);
+        void ReconstructMesh(bool needFillHole, int quality, bool isSubThread = true);
 
         void RemovePointCloudOutlier(bool isSubThread = true);
         void RemoveIsolatePart(bool isSubThread = true);
         void SmoothPointCloudByNormal(bool isSubThread = true);
+        void PlaneProjectFit(bool isSubThread = true);
 
         void SelectByRectangle(void);
         void EraseByRectangle(void);
@@ -75,7 +83,10 @@ namespace MagicApp
         void IgnoreBack(bool ignore);
         void MoveModel(void);
 
-        void SetPointCloud(GPP::PointCloud* pointCloud, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
+        void FusePointCloudColor(bool isSubThread = true);
+        void LoadImageColorInfo(void);
+        void SaveImageColorInfo(void);
+
         int GetPointCount(void);
 
 #if DEBUGDUMPFILE
@@ -92,6 +103,10 @@ namespace MagicApp
         void SelectControlPointByRectangle(int startCoordX, int startCoordY, int endCoordX, int endCoordY);
         void UpdateRectangleRendering(int startCoordX, int startCoordY, int endCoordX, int endCoordY);
         void ClearRectangleRendering(void);
+        
+        
+        void PickPointCloudColorFromImages(void);
+        void ConstructImageColorIdForMesh(const GPP::ITriMesh* triMesh, const GPP::IPointCloud* pointCloud);
 
     private:
         void SetupScene(void);
@@ -101,9 +116,6 @@ namespace MagicApp
 
     private:
         PointShopAppUI* mpUI;
-        GPP::PointCloud* mpPointCloud;
-        GPP::Vector3 mObjCenterCoord;
-        GPP::Real mScaleValue;
         MagicCore::ViewTool* mpViewTool;
         MagicCore::PickTool* mpPickTool;
 #if DEBUGDUMPFILE
@@ -112,12 +124,14 @@ namespace MagicApp
         CommandType mCommandType;
         bool mUpdatePointCloudRendering;
         bool mIsCommandInProgress;
-        GPP::TriMesh* mpTriMesh;
         bool mIsDepthImage;
         int mReconstructionQuality;
         std::vector<bool> mPointSelectFlag;
         RightMouseType mRightMouseType;
         GPP::Vector2 mMousePressdCoord;
         bool mIgnoreBack;
+        bool mNeedFillHole;
+        int mResolution;
+        bool mEnterMeshShop;
     };
 }

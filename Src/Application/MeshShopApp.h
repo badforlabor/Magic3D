@@ -77,13 +77,13 @@ namespace MagicApp
         void FindHole(bool isShowHole);
         void FillHole(int type, bool isSubThread = true);
         void BridgeEdges(bool isSubThread = true);
+        void UniformOffsetMesh(double offsetValue);
         void SelectByRectangle(void);
         void EraseByRectangle(void);
         void DeleteSelections(void);
         void IgnoreBack(bool ignore);
         void MoveModel(void);
 
-        void SetMesh(GPP::TriMesh* triMesh, GPP::Vector3 objCenterCoord, GPP::Real scaleValue);
         int GetMeshVertexCount(void);
         bool IsCommandInProgress(void);
 #if DEBUGDUMPFILE
@@ -103,7 +103,6 @@ namespace MagicApp
         void DoBridgeEdges();
         void ResetBridgeTags();
 
-    private:
         void InitViewTool(void);
         void UpdateMeshRendering(void);
         void SetToShowHoleLoopVrtIds(const std::vector<std::vector<GPP::Int> >& toShowHoleLoopIds);
@@ -111,11 +110,12 @@ namespace MagicApp
         void UpdateHoleRendering(void);
         void UpdateBridgeRendering(void);
 
+        void SaveImageColorInfo(void);
+        void LoadImageColorInfo(void);
+        void PickMeshColorFromImages(void);
+
     private:
         MeshShopAppUI* mpUI;
-        GPP::TriMesh* mpTriMesh;
-        GPP::Vector3 mObjCenterCoord;
-        GPP::Real mScaleValue;
         MagicCore::ViewTool* mpViewTool;
         int mDisplayMode;
 #if DEBUGDUMPFILE
@@ -137,5 +137,6 @@ namespace MagicApp
         double mFilterPositionWeight;
         std::vector<GPP::Int> mBridgeEdgeVertices;
         std::vector<bool> mVertexBridgeFlag;
+        bool mIsFlatRenderingMode;
     };
 }

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MyGUI type="Layout" version="3.2.0">
+    <Widget type="Widget" skin="PanelEmpty" position_real="0 0 1 1" align="Left Top" layer="Back">
+
+        <Widget type="Button" skin="But_Open" position="15 15 60 60" align="Left Top" name="But_ImportPointCloud"/>
+
+        <Widget type="Button" skin="But_Align" position="15 85 60 60" align="Left Top" name="But_AlignPointCloudList"/>
+        <Widget type="EditBox" skin="EditBox" position="75 100 40 30" align="Left Top" name="Edit_GroupSize">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Geometry_CN" position="115 95 43 43" align="Left Top" name="But_DoAlignPointCloudList">
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+    	<Widget type="Button" skin="But_Home" position="15 575 60 60" align="Left Top" name="But_BackToHomepage"/>
+
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 665 150 20" align="Left Top" name="APIProgress">
+            <Property key="AutoTrack" value="false"/>
+            <Property key="FlowDirection" value="LeftToRight"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+
+        <Widget type="ScrollBar" skin="ScrollBarH" position_real="0.1 0.95 0.8 0.0260417" align="HStretch Bottom" name="Slider_CurrentFrame">
+            <Property key="Range" value="100"/>
+            <Property key="RangePosition" value="1"/>
+            <Property key="Visible" value="true"/>
+            <Property key="MoveToClick" value="false"/>
+        </Widget>
+
+    </Widget>
+</MyGUI>

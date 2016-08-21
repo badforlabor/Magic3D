@@ -24,24 +24,15 @@ namespace MagicApp
         void SwitchTextureImage(MyGUI::Widget* pSender);
 
         void ImportTriMesh(MyGUI::Widget* pSender);
-        void ExportTriMesh(MyGUI::Widget* pSender);
 
-        void Geodesics(MyGUI::Widget* pSender);
-        void ConfirmGeodesics(MyGUI::Widget* pSender);
-        void DeleteGeodesics(MyGUI::Widget* pSender);
-        void SwitchMarkDisplay(MyGUI::Widget* pSender);
+        void ImageColorIds(MyGUI::Widget* pSender);
+        void LoadImageColorIds(MyGUI::Widget* pSender);
+        void SaveImageColorIds(MyGUI::Widget* pSender);
 
-        void UnfoldTriMesh(MyGUI::Widget* pSender);
-        void Optimize2Isometric(MyGUI::Widget* pSender);
-
-        void GenerateUVAtlas(MyGUI::Widget* pSender);
-        void DoGenerateUVAtlas(MyGUI::Widget* pSender);
-
-        void EnterMeshToolApp(MyGUI::Widget* pSender);
-
-        void OptimizeColorConsistency(MyGUI::Widget* pSender);
-
-        void EnterPointToolApp(MyGUI::Widget* pSender);
+        void GenerateTextureImage(MyGUI::Widget* pSender);
+        void GenerateTextureImageByVertexColor(MyGUI::Widget* pSender);
+        void GenerateTextureImageByImage(MyGUI::Widget* pSender);
+        void TuneTextureImageByVertexColor(MyGUI::Widget* pSender);
 
         void BackToHomepage(MyGUI::Widget* pSender);
 

@@ -92,12 +92,15 @@
     <ClInclude Include="..\Src\Application\AnimationAppUI.h" />
     <ClInclude Include="..\Src\Application\AppBase.h" />
     <ClInclude Include="..\Src\Application\AppManager.h" />
+    <ClInclude Include="..\Src\Application\DepthVideoApp.h" />
+    <ClInclude Include="..\Src\Application\DepthVideoAppUI.h" />
     <ClInclude Include="..\Src\Application\Homepage.h" />
     <ClInclude Include="..\Src\Application\HomepageUI.h" />
     <ClInclude Include="..\Src\Application\MeasureApp.h" />
     <ClInclude Include="..\Src\Application\MeasureAppUI.h" />
     <ClInclude Include="..\Src\Application\MeshShopApp.h" />
     <ClInclude Include="..\Src\Application\MeshShopAppUI.h" />
+    <ClInclude Include="..\Src\Application\ModelManager.h" />
     <ClInclude Include="..\Src\Application\PointShopApp.h" />
     <ClInclude Include="..\Src\Application\PointShopAppUI.h" />
     <ClInclude Include="..\Src\Application\RegistrationApp.h" />
@@ -106,6 +109,8 @@
     <ClInclude Include="..\Src\Application\ReliefAppUI.h" />
     <ClInclude Include="..\Src\Application\TextureApp.h" />
     <ClInclude Include="..\Src\Application\TextureAppUI.h" />
+    <ClInclude Include="..\Src\Application\UVUnfoldApp.h" />
+    <ClInclude Include="..\Src\Application\UVUnfoldAppUI.h" />
     <ClInclude Include="..\Src\Common\GUISystem.h" />
     <ClInclude Include="..\Src\Common\InputSystem.h" />
     <ClInclude Include="..\Src\Common\LicenseSystem.h" />
@@ -128,8 +133,12 @@
     <ClCompile Include="..\Src\Application\AnimationAppUI.cpp" />
     <ClCompile Include="..\Src\Application\AppBase.cpp" />
     <ClCompile Include="..\Src\Application\AppManager.cpp" />
+    <ClCompile Include="..\Src\Application\DepthVideoApp.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\DepthVideoAppUI.cpp" />
     <ClCompile Include="..\Src\Application\Homepage.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\HomepageUI.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -144,6 +153,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\MeshShopAppUI.cpp" />
+    <ClCompile Include="..\Src\Application\ModelManager.cpp" />
     <ClCompile Include="..\Src\Application\PointShopApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
@@ -161,6 +171,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\TextureAppUI.cpp" />
+    <ClCompile Include="..\Src\Application\UVUnfoldApp.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\UVUnfoldAppUI.cpp" />
     <ClCompile Include="..\Src\Common\GUISystem.cpp" />
     <ClCompile Include="..\Src\Common\InputSystem.cpp" />
     <ClCompile Include="..\Src\Common\LicenseSystem.cpp" />

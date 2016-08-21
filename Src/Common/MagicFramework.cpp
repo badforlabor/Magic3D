@@ -34,6 +34,18 @@ namespace MagicCore
         GUISystem::Get()->Init(RenderSystem::Get()->GetRenderWindow(), RenderSystem::Get()->GetSceneManager(), "MyGUIResource");
         InputSystem::Get()->Init(RenderSystem::Get()->GetRenderWindow());
         MagicApp::AppManager::Get()->Init();
+        std::ifstream fin("magic3d.cfg");
+        if (fin)
+        {
+            std::string str;
+            double r, g, b;
+            fin >> str >> r >> g >> b;
+            RenderSystem::Get()->SetBackgroundColor(r, g, b);
+            int fps;
+            fin >> str >> fps; 
+            mRenderDeltaTime = 1.0 / double(fps);
+            fin.close();
+        }
 #if DEBUGDUMPFILE
         GPP::RegisterDumpInfo();
 #endif

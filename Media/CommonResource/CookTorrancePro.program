@@ -22,6 +22,54 @@ fragment_program FCookTorrance cg
     }
 }
 
+vertex_program VCookTorranceColor cg
+{
+    source VCookTorrance.cg
+    entry_point main_v
+    profiles arbvp1
+
+    default_params
+    {
+        
+    }
+}
+
+fragment_program FCookTorranceColor cg
+{
+    source FCookTorrance.cg
+    entry_point main_f_color
+    profiles arbfp1
+    
+    default_params
+    {
+        
+    }
+}
+
+vertex_program VCookTorranceShade cg
+{
+    source VCookTorrance.cg
+    entry_point main_v
+    profiles arbvp1
+
+    default_params
+    {
+        
+    }
+}
+
+fragment_program FCookTorranceShade cg
+{
+    source FCookTorrance.cg
+    entry_point main_f_shade
+    profiles arbfp1
+    
+    default_params
+    {
+        
+    }
+}
+
 vertex_program VCookTorrancePoint cg
 {
 	source VCookTorrance.cg

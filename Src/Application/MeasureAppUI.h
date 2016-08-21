@@ -17,34 +17,27 @@ namespace MagicApp
         void StopProgressbar(void);
         bool IsProgressbarVisible(void);
 
-        void SetRefModelInfo(int vertexCount, int triangleCount);
-        void SetFromModelInfo(int vertexCount, int triangleCount);
-        void SetRefModelArea(double area);
-        void SetRefModelVolume(double volume);
+        void SetModelInfo(int vertexCount, int triangleCount);
+        void SetModelArea(double area);
+        void SetModelVolume(double volume);
         void SetGeodesicsInfo(double distance);
-        void SetDeviationInfo(double maxDistance);
 
     private:
         void SwitchDisplayMode(MyGUI::Widget* pSender);
 
-        void ImportModelRef(MyGUI::Widget* pSender);
+        void ImportModel(MyGUI::Widget* pSender);
 
         void Geodesics(MyGUI::Widget* pSender);
-        void DeleteMeshMarkRef(MyGUI::Widget* pSender);
+        void DeleteMeshMark(MyGUI::Widget* pSender);
         void ComputeApproximateGeodesics(MyGUI::Widget* pSender);
         void FastComputeExactGeodesics(MyGUI::Widget* pSender);
         void ComputeExactGeodesics(MyGUI::Widget* pSender);
 
-        void MeasureRefModel(MyGUI::Widget* pSender);
-        void MeasureRefArea(MyGUI::Widget* pSender);
-        void MeasureRefVolume(MyGUI::Widget* pSender);
-        void MeasureRefCurvature(MyGUI::Widget* pSender);
+        void MeasureModel(MyGUI::Widget* pSender);
+        void MeasureArea(MyGUI::Widget* pSender);
+        void MeasureVolume(MyGUI::Widget* pSender);
+        void MeasureCurvature(MyGUI::Widget* pSender);
 
-        void ImportModelFrom(MyGUI::Widget* pSender);
-        void Deviation(MyGUI::Widget* pSender);
-        void ComputeDeviation(MyGUI::Widget* pSender);
-
-        void EnterMeshTool(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
 
         void UpdateTextInfo(void);
@@ -54,13 +47,10 @@ namespace MagicApp
         bool mIsProgressbarVisible;
         MyGUI::TextBox* mTextInfo;
         // Application Information
-        int mRefVertexCount;
-        int mRefTriangleCount;
-        int mFromVertexCount;
-        int mFromTriangleCount;
-        double mRefArea;
-        double mRefVolume;
+        int mVertexCount;
+        int mTriangleCount;
+        double mArea;
+        double mVolume;
         double mGeodesicsDistance;
-        double mMaxDeviationDistance;
     };
 }

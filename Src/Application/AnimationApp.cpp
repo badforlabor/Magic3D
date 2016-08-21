@@ -3,8 +3,7 @@
 #include "AnimationApp.h"
 #include "AnimationAppUI.h"
 #include "AppManager.h"
-#include "MeshShopApp.h"
-#include "PointShopApp.h"
+#include "ModelManager.h"
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
@@ -16,10 +15,6 @@ namespace MagicApp
 {
     AnimationApp::AnimationApp() :
         mpUI(NULL),
-        mpTriMesh(NULL),
-        mpPointCloud(NULL),
-        mObjCenterCoord(),
-        mScaleValue(0),
         mpViewTool(NULL),
         mDeformation(NULL),
         mControlIds(),
@@ -39,8 +34,6 @@ namespace MagicApp
     AnimationApp::~AnimationApp()
     {
         GPPFREEPOINTER(mpUI);
-        GPPFREEPOINTER(mpTriMesh);
-        GPPFREEPOINTER(mpPointCloud);
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mDeformation);
     }
@@ -62,7 +55,6 @@ namespace MagicApp
 
     void AnimationApp::ClearPointCloudData()
     {
-        GPPFREEPOINTER(mpPointCloud);
         mIsDeformationInitialised = false;
         mPickControlId = -1;
         mTargetControlCoords.clear();
@@ -71,7 +63,6 @@ namespace MagicApp
     
     void AnimationApp::ClearMeshData()
     {
-        GPPFREEPOINTER(mpTriMesh);
         mIsDeformationInitialised = false;
         mPickControlId = -1;
         mTargetControlCoords.clear();
@@ -87,6 +78,7 @@ namespace MagicApp
         }
         mpUI->Setup();
         SetupScene();
+        UpdateModelRendering();
         return true;
     }
 
@@ -109,6 +101,9 @@ namespace MagicApp
 
     void AnimationApp::PickControlPoint(int mouseCoordX, int mouseCoordY)
     {
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+
         GPP::Vector2 mouseCoord(mouseCoordX * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getWidth() - 1.0, 
                     1.0 - mouseCoordY * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getHeight());
         if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode") == false || mControlIds.empty())
@@ -130,13 +125,13 @@ namespace MagicApp
                 continue;
             }
             GPP::Vector3 coord;
-            if (mpTriMesh)
+            if (triMesh)
             {
-                coord = mpTriMesh->GetVertexCoord(mControlIds.at(pid));
+                coord = triMesh->GetVertexCoord(mControlIds.at(pid));
             }
             else
             {
-                coord = mpPointCloud->GetPointCoord(mControlIds.at(pid));
+                coord = pointCloud->GetPointCoord(mControlIds.at(pid));
             }
             Ogre::Vector3 ogreCoord(coord[0], coord[1], coord[2]);
             ogreCoord = wvpM * ogreCoord;
@@ -171,13 +166,13 @@ namespace MagicApp
                 }
             }
             MagicCore::RenderSystem::Get()->RenderLineSegments("Test", "Simple_Line", startCoords, endCoords);*/
-            if (mpTriMesh)
+            if (triMesh)
             {
-                mPickTargetCoord = mpTriMesh->GetVertexCoord(mControlIds.at(mPickControlId));
+                mPickTargetCoord = triMesh->GetVertexCoord(mControlIds.at(mPickControlId));
             }
             else
             {
-                mPickTargetCoord = mpPointCloud->GetPointCoord(mControlIds.at(mPickControlId));
+                mPickTargetCoord = pointCloud->GetPointCoord(mControlIds.at(mPickControlId));
             }
         }
     }
@@ -260,6 +255,9 @@ namespace MagicApp
 
     void AnimationApp::SelectControlPointByRectangle(int startCoordX, int startCoordY, int endCoordX, int endCoordY)
     {
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+
         GPP::Vector2 pos0(startCoordX * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getWidth() - 1.0, 
                     1.0 - startCoordY * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getHeight());
         GPP::Vector2 pos1(endCoordX * 2.0 / MagicCore::RenderSystem::Get()->GetRenderWindow()->getWidth() - 1.0, 
@@ -276,13 +274,13 @@ namespace MagicApp
         for (GPP::Int pid = 0; pid < pointCount; pid++)
         {
             GPP::Vector3 coord;
-            if (mpTriMesh)
+            if (triMesh)
             {
-                coord = mpTriMesh->GetVertexCoord(mControlIds.at(pid));
+                coord = triMesh->GetVertexCoord(mControlIds.at(pid));
             }
             else
             {
-                coord = mpPointCloud->GetPointCoord(mControlIds.at(pid));
+                coord = pointCloud->GetPointCoord(mControlIds.at(pid));
             }
             Ogre::Vector3 ogreCoord(coord[0], coord[1], coord[2]);
             ogreCoord = wvpM * ogreCoord;
@@ -425,25 +423,13 @@ namespace MagicApp
 
     bool AnimationApp::KeyPressed( const OIS::KeyEvent &arg )
     {
-        if (arg.key == OIS::KC_V && mpTriMesh !=NULL)
-        {
-            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_POINTS);
-        }
-        else if (arg.key == OIS::KC_E && mpTriMesh !=NULL)
-        {
-            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_WIREFRAME);
-        }
-        else if (arg.key == OIS::KC_F && mpTriMesh !=NULL)
-        {
-            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_SOLID);
-        }
         return true;
     }
 
     bool AnimationApp::ImportModel()
     {
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0ASC Files(*.asc)\0*.asc\0Geometry++ Point Cloud(*.gpc)\0*.gpc\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0ASC Files(*.asc)\0*.asc\0Geometry++ Point Cloud(*.gpc)\0*.gpc\0XYZ Files(*.xyz)\0*.xyz\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             size_t dotPos = fileName.rfind('.');
@@ -456,50 +442,48 @@ namespace MagicApp
             bool updateMark = false;
             if (extName == std::string("obj") || extName == std::string("stl") || extName == std::string("off") || extName == std::string("ply"))
             {
-                GPP::TriMesh* triMesh = GPP::Parser::ImportTriMesh(fileName);
-                if (triMesh != NULL)
+                ModelManager::Get()->ClearPointCloud();
+                if (ModelManager::Get()->ImportMesh(fileName) == false)
                 {
-                    if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-                    {
-                        triMesh->FuseVertex();
-                    }
-                    triMesh->UnifyCoords(2.0, &mScaleValue, &mObjCenterCoord);
-                    triMesh->UpdateNormal();
-                    GPPFREEPOINTER(mpTriMesh);
-                    mpTriMesh = triMesh;
-                    
-                    // Clear Data
-                    ClearPointCloudData();
-                    mDeformation->Clear();
-                    mControlIds.clear();
-
-                    // Update
-                    UpdateModelRendering();
-                    UpdateControlRendering();
-
-                    return true;
+                    MessageBox(NULL, "网格导入失败", "温馨提示", MB_OK);
+                    return false;
                 }
+                GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+                if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+                {
+                    triMesh->FuseVertex();
+                }
+                    
+                // Clear Data
+                ClearPointCloudData();
+                mDeformation->Clear();
+                mControlIds.clear();
+
+                // Update
+                UpdateModelRendering();
+                UpdateControlRendering();
+
+                return true;
             }
-            else if (extName == std::string("asc") || extName == std::string("gpc"))
+            else if (extName == std::string("asc") || extName == std::string("gpc") || extName == std::string("xyz"))
             {
-                GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
-                if (pointCloud != NULL)
+                ModelManager::Get()->ClearMesh();
+                if (ModelManager::Get()->ImportPointCloud(fileName) == false)
                 {
-                    pointCloud->UnifyCoords(2.0, &mScaleValue, &mObjCenterCoord);
-                    GPPFREEPOINTER(mpPointCloud);
-                    mpPointCloud = pointCloud;
-                    
-                    // Clear Data
-                    ClearMeshData();
-                    mDeformation->Clear();
-                    mControlIds.clear();
-
-                    // Update
-                    UpdateModelRendering();
-                    UpdateControlRendering();
-
-                    return true;
+                    MessageBox(NULL, "点云导入失败", "温馨提示", MB_OK);
+                    return false;
                 }
+
+                // Clear Data
+                ClearMeshData();
+                mDeformation->Clear();
+                mControlIds.clear();
+
+                // Update
+                UpdateModelRendering();
+                UpdateControlRendering();
+
+                return true;
             }
         }
         return false;
@@ -507,19 +491,22 @@ namespace MagicApp
 
     void AnimationApp::InitDeformation(int controlPointCount)
     {
-        if (mpPointCloud == NULL && mpTriMesh == NULL)
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+
+        if (pointCloud == NULL && triMesh == NULL)
         {
             MessageBox(NULL, "请先导入点云或者网格模型", "温馨提示", MB_OK);
             return;
         }
         GPP::ErrorCode res = GPP_NO_ERROR;
-        if (mpPointCloud)
+        if (pointCloud)
         {
-            res = mDeformation->Init(mpPointCloud, controlPointCount);
+            res = mDeformation->Init(pointCloud, controlPointCount);
         }
-        else if (mpTriMesh)
+        else if (triMesh)
         {
-            res = mDeformation->Init(mpTriMesh, controlPointCount);
+            res = mDeformation->Init(triMesh, controlPointCount);
         }
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
@@ -584,43 +571,11 @@ namespace MagicApp
             UpdateControlRendering();
         }
     }
-        
-    void AnimationApp::AppJump()
-    {
-        if (mpTriMesh)
-        {
-            GPP::TriMesh* copiedTriMesh = GPP::CopyTriMesh(mpTriMesh);
-            AppManager::Get()->EnterApp(new MeshShopApp, "MeshShopApp");
-            MeshShopApp* meshShop = dynamic_cast<MeshShopApp*>(AppManager::Get()->GetApp("MeshShopApp"));
-            if (meshShop)
-            {
-                meshShop->SetMesh(copiedTriMesh, mObjCenterCoord, mScaleValue);
-            }
-            else
-            {
-                GPPFREEPOINTER(copiedTriMesh);
-            }
-        }
-        else if (mpPointCloud)
-        {
-            GPP::PointCloud* copiedPointCloud = GPP::CopyPointCloud(mpPointCloud);
-            AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
-            PointShopApp* pointShop = dynamic_cast<PointShopApp*>(AppManager::Get()->GetApp("PointShopApp"));
-            if (pointShop)
-            {
-                pointShop->SetPointCloud(copiedPointCloud, mObjCenterCoord, mScaleValue);
-            }
-            else
-            {
-                GPPFREEPOINTER(copiedPointCloud);
-            }
-        }
-    }
 
     void AnimationApp::SetupScene()
     {
         Ogre::SceneManager* sceneManager = MagicCore::RenderSystem::Get()->GetSceneManager();
-        sceneManager->setAmbientLight(Ogre::ColourValue(0.1, 0.1, 0.1));
+        sceneManager->setAmbientLight(Ogre::ColourValue(0.3, 0.3, 0.3));
         Ogre::Light* light = sceneManager->createLight("AnimationApp_SimpleLight");
         light->setPosition(0, 0, 20);
         light->setDiffuseColour(0.8, 0.8, 0.8);
@@ -636,11 +591,11 @@ namespace MagicApp
         Ogre::SceneManager* sceneManager = MagicCore::RenderSystem::Get()->GetSceneManager();
         sceneManager->setAmbientLight(Ogre::ColourValue::Black);
         sceneManager->destroyLight("AnimationApp_SimpleLight");
-        MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
-        if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
+        //MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
+        /*if (MagicCore::RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
         {
             MagicCore::RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->resetToInitialState();
-        }
+        }*/
         MagicCore::RenderSystem::Get()->HideRenderingObject("Model_AnimationApp");
         MagicCore::RenderSystem::Get()->HideRenderingObject("ControlPoint_Free_AnimationApp");
         MagicCore::RenderSystem::Get()->HideRenderingObject("ControlPoint_Fix_AnimationApp");
@@ -659,19 +614,23 @@ namespace MagicApp
 
     void AnimationApp::UpdateModelRendering()
     {
-        if (mpTriMesh)
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+
+        if (triMesh)
         {
-            MagicCore::RenderSystem::Get()->RenderMesh("Model_AnimationApp", "CookTorrance", mpTriMesh, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+            MagicCore::RenderSystem::Get()->RenderMesh("Model_AnimationApp", "CookTorrance", triMesh, 
+                MagicCore::RenderSystem::MODEL_NODE_CENTER);
         }
-        else if (mpPointCloud)
+        else if (pointCloud)
         {
-            if (mpPointCloud->HasNormal())
+            if (pointCloud->HasNormal())
             {
-                MagicCore::RenderSystem::Get()->RenderPointCloud("Model_AnimationApp", "CookTorrancePoint", mpPointCloud);
+                MagicCore::RenderSystem::Get()->RenderPointCloud("Model_AnimationApp", "CookTorrancePoint", pointCloud);
             }
             else
             {
-                MagicCore::RenderSystem::Get()->RenderPointCloud("Model_AnimationApp", "SimplePoint", mpPointCloud);
+                MagicCore::RenderSystem::Get()->RenderPointCloud("Model_AnimationApp", "SimplePoint", pointCloud);
             }
         }
         else
@@ -689,20 +648,23 @@ namespace MagicApp
         }
         else
         {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+
             std::vector<GPP::Vector3> fixCoords;
             std::vector<GPP::Vector3> freeCoords;
             std::vector<GPP::Vector3> targetCoords;
-            if (mpTriMesh)
+            if (triMesh)
             {
                 for (int cid = 0; cid < mControlIds.size(); cid++)
                 {
                     if (mControlFixFlags.at(cid))
                     {
-                        fixCoords.push_back(mpTriMesh->GetVertexCoord(mControlIds.at(cid)));
+                        fixCoords.push_back(triMesh->GetVertexCoord(mControlIds.at(cid)));
                     }
                     else
                     {
-                        freeCoords.push_back(mpTriMesh->GetVertexCoord(mControlIds.at(cid)));
+                        freeCoords.push_back(triMesh->GetVertexCoord(mControlIds.at(cid)));
                     }
                 }
                 if (mPickControlId != -1)
@@ -710,17 +672,17 @@ namespace MagicApp
                     freeCoords.push_back(mPickTargetCoord);
                 }
             }
-            else if (mpPointCloud)
+            else if (pointCloud)
             {
                 for (int cid = 0; cid < mControlIds.size(); cid++)
                 {
                     if (mControlFixFlags.at(cid))
                     {
-                        fixCoords.push_back(mpPointCloud->GetPointCoord(mControlIds.at(cid)));
+                        fixCoords.push_back(pointCloud->GetPointCoord(mControlIds.at(cid)));
                     }
                     else
                     {
-                        freeCoords.push_back(mpPointCloud->GetPointCoord(mControlIds.at(cid)));
+                        freeCoords.push_back(pointCloud->GetPointCoord(mControlIds.at(cid)));
                     }
                 }
                 if (mPickControlId != -1)

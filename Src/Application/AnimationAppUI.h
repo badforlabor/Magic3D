@@ -21,7 +21,6 @@ namespace MagicApp
         void ClearSelection(MyGUI::Widget* pSender);
         void DeformControlPoint(MyGUI::Widget* pSender);
         void MoveControlPoint(MyGUI::Widget* pSender);
-        void AppJump(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
 
     private:

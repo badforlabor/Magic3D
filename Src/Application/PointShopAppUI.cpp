@@ -23,13 +23,14 @@ namespace MagicApp
         MagicCore::ResourceManager::LoadResource("../../Media/PointShopApp", "FileSystem", "PointShopApp");
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("PointShopApp.layout");
         mRoot.at(0)->findWidget("But_ImportPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ImportPointCloud);
-        mRoot.at(0)->findWidget("But_ExportPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ExportPointCloud);
         
         mRoot.at(0)->findWidget("But_SamplePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SamplePointCloud);
-        mRoot.at(0)->findWidget("But_DoSamplePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoSamplePointCloud);
+        mRoot.at(0)->findWidget("But_UniformSamplePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoUniformSamplePointCloud);
+        mRoot.at(0)->findWidget("But_GeometrySamplePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoGeometrySamplePointCloud);
 
         mRoot.at(0)->findWidget("But_SimplifyPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SimplifyPointCloud);
         mRoot.at(0)->findWidget("But_DoSimplifyPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoSimplifyPointCloud);
+        mRoot.at(0)->findWidget("But_DoFitPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoFitPointCloud);
         
         mRoot.at(0)->findWidget("But_Normal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::PointCloudNormal);
         mRoot.at(0)->findWidget("But_CalNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::CalculatePointCloudNormalFront);
@@ -37,11 +38,13 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_FlipNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::FlipPointCloudNormal);
         mRoot.at(0)->findWidget("But_ReversePatchNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ReversePatchNormal);
         mRoot.at(0)->findWidget("But_SmoothNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SmoothPointCloudNormal);
+        mRoot.at(0)->findWidget("But_UpdateNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::UpdatePointCloudNormal);
 
         mRoot.at(0)->findWidget("But_ConsolidatePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ConsolidatePointCloud);
         mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::RemovePointCloudOutlier);
         mRoot.at(0)->findWidget("But_RemoveIsolatePart")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::RemoveIsolatePart);
         mRoot.at(0)->findWidget("But_SmoothGeometryByNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SmoothPointCloudByNormal);       
+        mRoot.at(0)->findWidget("But_PlaneProjectFit")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::PlaneProjectFit);
 
         mRoot.at(0)->findWidget("But_Selection")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SelectPoint);
         mRoot.at(0)->findWidget("But_SelectByRectangle")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SelectByRectangle);
@@ -51,7 +54,13 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_MoveModel")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::MoveModel);
 
         mRoot.at(0)->findWidget("But_Reconstruction")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ReconstructMesh);
-        mRoot.at(0)->findWidget("But_DoReconstruction")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoReconstructMesh);
+        mRoot.at(0)->findWidget("But_DoReconstructionOpen")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoReconstructMeshOpen);
+        mRoot.at(0)->findWidget("But_DoReconstructionClose")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoReconstructMeshClose);
+
+        mRoot.at(0)->findWidget("But_PointCloudColor")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::PointCloudColor);
+        mRoot.at(0)->findWidget("But_FusePointCloudColor")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::FusePointCloudColor);
+        mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::LoadImageColorIds);
+        mRoot.at(0)->findWidget("But_ExportImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SaveImageColorIds);
 
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::BackToHomepage);
 
@@ -115,20 +124,12 @@ namespace MagicApp
         }
     }
 
-    void PointShopAppUI::ExportPointCloud(MyGUI::Widget* pSender)
-    {
-        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
-        if (pointShop != NULL)
-        {
-            pointShop->ExportPointCloud();
-        }
-    }
-
     void PointShopAppUI::SamplePointCloud(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_DoSamplePointCloud")->castType<MyGUI::Button>()->isVisible();
+        bool isVisible = mRoot.at(0)->findWidget("But_UniformSamplePointCloud")->castType<MyGUI::Button>()->isVisible();
         isVisible = !isVisible;
-        mRoot.at(0)->findWidget("But_DoSamplePointCloud")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_UniformSamplePointCloud")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_GeometrySamplePointCloud")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_SampleTargetPointCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
         {
@@ -147,7 +148,7 @@ namespace MagicApp
         }
     }
 
-    void PointShopAppUI::DoSamplePointCloud(MyGUI::Widget* pSender)
+    void PointShopAppUI::DoUniformSamplePointCloud(MyGUI::Widget* pSender)
     {
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
@@ -165,7 +166,30 @@ namespace MagicApp
             }
             else
             {
-                pointShop->SamplePointCloud(targetPointCount);
+                pointShop->UniformSamplePointCloud(targetPointCount);
+            }            
+        }
+    }
+
+    void PointShopAppUI::DoGeometrySamplePointCloud(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            int pointCount = pointShop->GetPointCount();
+            std::string textString = mRoot.at(0)->findWidget("Edit_SampleTargetPointCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int targetPointCount = std::atoi(textString.c_str());
+            if (targetPointCount > pointCount || pointCount < 1)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << pointCount;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_SampleTargetPointCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                pointShop->GeometrySamplePointCloud(targetPointCount);
             }            
         }
     }
@@ -175,6 +199,7 @@ namespace MagicApp
         bool isVisible = mRoot.at(0)->findWidget("But_DoSimplifyPointCloud")->castType<MyGUI::Button>()->isVisible();
         isVisible = !isVisible;
         mRoot.at(0)->findWidget("But_DoSimplifyPointCloud")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_DoFitPointCloud")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_SimplifyResolution")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
         {
@@ -209,6 +234,28 @@ namespace MagicApp
         }
     }
 
+    void PointShopAppUI::DoFitPointCloud(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            std::string textString = mRoot.at(0)->findWidget("Edit_SimplifyResolution")->castType<MyGUI::EditBox>()->getOnlyText();
+            int resolution = std::atoi(textString.c_str());
+            if (resolution < 1)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 512;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_SimplifyResolution")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                pointShop->FitPointCloud(resolution, true);
+            }            
+        }
+    }
+
     void PointShopAppUI::PointCloudNormal(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_CalNormal")->castType<MyGUI::Button>()->isVisible();
@@ -217,6 +264,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_FlipNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_ReversePatchNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_SmoothNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_UpdateNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
     void PointShopAppUI::CalculatePointCloudNormalFront(MyGUI::Widget* pSender)
@@ -264,12 +312,31 @@ namespace MagicApp
         }
     }
 
+    void PointShopAppUI::UpdatePointCloudNormal(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->UpdatePointCloudNormal();
+        }
+    }
+
+    void PointShopAppUI::PlaneProjectFit(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->PlaneProjectFit(true);
+        }
+    }
+
     void PointShopAppUI::ConsolidatePointCloud(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_RemoveIsolatePart")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_SmoothGeometryByNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_PlaneProjectFit")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
     void PointShopAppUI::RemovePointCloudOutlier(MyGUI::Widget* pSender)
@@ -366,9 +433,10 @@ namespace MagicApp
 
     void PointShopAppUI::ReconstructMesh(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_DoReconstruction")->castType<MyGUI::Button>()->isVisible();
+        bool isVisible = mRoot.at(0)->findWidget("But_DoReconstructionOpen")->castType<MyGUI::Button>()->isVisible();
         isVisible = !isVisible;
-        mRoot.at(0)->findWidget("But_DoReconstruction")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_DoReconstructionOpen")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_DoReconstructionClose")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_ReconstructionQuality")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
         {
@@ -381,7 +449,7 @@ namespace MagicApp
         }
     }
 
-    void PointShopAppUI::DoReconstructMesh(MyGUI::Widget* pSender)
+    void PointShopAppUI::DoReconstructMeshOpen(MyGUI::Widget* pSender)
     {
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
@@ -398,8 +466,66 @@ namespace MagicApp
             }
             else
             {
-                pointShop->ReconstructMesh(quality);
+                pointShop->ReconstructMesh(false, quality);
             }            
+        }
+    }
+
+    void PointShopAppUI::DoReconstructMeshClose(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            std::string textString = mRoot.at(0)->findWidget("Edit_ReconstructionQuality")->castType<MyGUI::EditBox>()->getOnlyText();
+            int quality = std::atoi(textString.c_str());
+            if (quality < 0)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 4;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_SimplifyResolution")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                pointShop->ReconstructMesh(true, quality);
+            }            
+        }
+    }
+
+    void PointShopAppUI::PointCloudColor(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_FusePointCloudColor")->castType<MyGUI::Button>()->isVisible();
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_FusePointCloudColor")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_ExportImageColorIds")->castType<MyGUI::Button>()->setVisible(isVisible);
+    }
+
+    void PointShopAppUI::FusePointCloudColor(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->FusePointCloudColor(true);
+        }
+    }
+
+    void PointShopAppUI::LoadImageColorIds(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->LoadImageColorInfo();
+        }
+    }
+ 
+    void PointShopAppUI::SaveImageColorIds(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->SaveImageColorInfo();
         }
     }
 

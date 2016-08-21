@@ -27,7 +27,6 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_EraseSelections")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::ClearSelection);
         mRoot.at(0)->findWidget("But_DeformControlPoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::DeformControlPoint);
         mRoot.at(0)->findWidget("But_MoveControlPoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::MoveControlPoint);
-        mRoot.at(0)->findWidget("But_AppJump")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::AppJump);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::BackToHomepage);
     }
 
@@ -129,15 +128,6 @@ namespace MagicApp
         if (animationApp != NULL)
         {
             animationApp->MoveControlPoint();
-        }
-    }
-
-    void AnimationAppUI::AppJump(MyGUI::Widget* pSender)
-    {
-        AnimationApp* animationApp = dynamic_cast<AnimationApp* >(AppManager::Get()->GetApp("AnimationApp"));
-        if (animationApp != NULL)
-        {
-            animationApp->AppJump();
         }
     }
 
