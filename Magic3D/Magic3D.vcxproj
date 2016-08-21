@@ -55,15 +55,15 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../Dependencies/GeometryPlusPlus/dependency/Flann1.8.4;../Dependencies/MyGUI/include;../Dependencies/OGRE/include/OIS;../Dependencies/OGRE/include/OGRE;../Dependencies/GeometryPlusPlus/core/include;../Dependencies/GeometryPlusPlus/dependency/Eigen3.2.5;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;GPP_DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../Dependencies/GeometryPlusPlus/include;../Dependencies/MyGUI/include;../Dependencies/OGRE/include/OIS;../Dependencies/OGRE/include/OGRE;../Dependencies/OpenCV/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zm162 /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../Dependencies/OGRE/lib/debug;../Dependencies/MyGUI/lib/debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OgreMain_d.lib;OIS_d.lib;MyGUI.OgrePlatform_d.lib;MyGUIEngine_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../Dependencies/OGRE/lib/debug;../Dependencies/MyGUI/lib/debug;../Dependencies/OpenCV/lib/debug;../Dependencies/GeometryPlusPlus/lib/debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OgreMain_d.lib;OIS_d.lib;MyGUI.OgrePlatform_d.lib;MyGUIEngine_d.lib;geometryplusplus.lib;opencv_core247d.lib;opencv_highgui247d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -129,16 +129,19 @@
   <ItemGroup>
     <ClCompile Include="..\Src\Application\AnimationApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\AnimationAppUI.cpp" />
     <ClCompile Include="..\Src\Application\AppBase.cpp" />
     <ClCompile Include="..\Src\Application\AppManager.cpp" />
     <ClCompile Include="..\Src\Application\DepthVideoApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\DepthVideoAppUI.cpp" />
     <ClCompile Include="..\Src\Application\Homepage.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\HomepageUI.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -146,6 +149,7 @@
     </ClCompile>
     <ClCompile Include="..\Src\Application\MeasureApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\MeasureAppUI.cpp" />
     <ClCompile Include="..\Src\Application\MeshShopApp.cpp">
@@ -161,18 +165,22 @@
     <ClCompile Include="..\Src\Application\PointShopAppUI.cpp" />
     <ClCompile Include="..\Src\Application\RegistrationApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\RegistrationAppUI.cpp" />
     <ClCompile Include="..\Src\Application\ReliefApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\ReliefAppUI.cpp" />
     <ClCompile Include="..\Src\Application\TextureApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\TextureAppUI.cpp" />
     <ClCompile Include="..\Src\Application\UVUnfoldApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\UVUnfoldAppUI.cpp" />
     <ClCompile Include="..\Src\Common\GUISystem.cpp" />
@@ -186,6 +194,7 @@
     </ClCompile>
     <ClCompile Include="..\Src\Common\PickTool.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Common\RenderSystem.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
