@@ -64,6 +64,7 @@ namespace MagicApp
         void DoGlobalSum(MyGUI::Widget* pSender);
         void ImportPointCloudList(MyGUI::Widget* pSender);
         void ImportMarkList(MyGUI::Widget* pSender);
+        void ImportImageInfo(MyGUI::Widget* pSender);
 
         void EnterPointShop(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);

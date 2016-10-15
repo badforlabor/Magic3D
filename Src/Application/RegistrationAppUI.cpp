@@ -66,6 +66,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_DoGlobalSum")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::DoGlobalSum);
         mRoot.at(0)->findWidget("But_ImportPointCloudList")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ImportPointCloudList);
         mRoot.at(0)->findWidget("But_ImportMarkList")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ImportMarkList);
+        mRoot.at(0)->findWidget("But_ImportImageInfo")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::ImportImageInfo);
         
         mRoot.at(0)->findWidget("But_EnterPointShop")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::EnterPointShop);
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &RegistrationAppUI::BackToHomepage);
@@ -261,8 +262,19 @@ namespace MagicApp
     void RegistrationAppUI::FuseColor(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_FuseColorExact")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_FuseColorExact")->castType<MyGUI::Button>()->setVisible(!isVisible);  
-        mRoot.at(0)->findWidget("But_FuseColorBlend")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_FuseColorExact")->castType<MyGUI::Button>()->setVisible(isVisible);  
+        mRoot.at(0)->findWidget("But_FuseColorBlend")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_ColorMergeIntervalCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 1;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_ColorMergeIntervalCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_ColorMergeIntervalCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
     }
 
     void RegistrationAppUI::FuseColorExact(MyGUI::Widget* pSender)
@@ -270,7 +282,20 @@ namespace MagicApp
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->FusePointCloudColor(false, true);
+            std::string textString = mRoot.at(0)->findWidget("Edit_ColorMergeIntervalCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            double intervalCount = std::atof(textString.c_str());
+            if (intervalCount < GPP::REAL_TOL)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 1;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_ColorMergeIntervalCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                registrationApp->FusePointCloudColor(intervalCount, false, true);
+            }
         }
     }
 
@@ -279,7 +304,20 @@ namespace MagicApp
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->FusePointCloudColor(true, true);
+            std::string textString = mRoot.at(0)->findWidget("Edit_ColorMergeIntervalCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            double intervalCount = std::atof(textString.c_str());
+            if (intervalCount < GPP::REAL_TOL)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 1;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_ColorMergeIntervalCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                registrationApp->FusePointCloudColor(intervalCount, true, true);
+            }
         }
     }
 
@@ -289,6 +327,7 @@ namespace MagicApp
         isVisible = !isVisible;
         mRoot.at(0)->findWidget("But_ImportPointCloudList")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_ImportMarkList")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_ImportImageInfo")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_DoGlobalRegistrate")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_DoGlobalSum")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
@@ -300,6 +339,16 @@ namespace MagicApp
             ss >> textString;
             mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
             mRoot.at(0)->findWidget("Edit_GlobalIterationCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
+        mRoot.at(0)->findWidget("Edit_GlobalFuseIntervalCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 1;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_GlobalFuseIntervalCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_GlobalFuseIntervalCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
         }
     }
 
@@ -330,7 +379,20 @@ namespace MagicApp
         RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
         if (registrationApp != NULL)
         {
-            registrationApp->GlobalFuse(true);
+            std::string textString = mRoot.at(0)->findWidget("Edit_GlobalFuseIntervalCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            double intervalCount = std::atof(textString.c_str());
+            if (intervalCount < GPP::REAL_TOL)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 1;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_GlobalFuseIntervalCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                registrationApp->GlobalFuse(intervalCount, true);
+            }
         }
     }
 
@@ -349,6 +411,15 @@ namespace MagicApp
         if (registrationApp != NULL)
         {
             registrationApp->ImportMarkList();
+        }
+    }
+
+    void RegistrationAppUI::ImportImageInfo(MyGUI::Widget* pSender)
+    {
+        RegistrationApp* registrationApp = dynamic_cast<RegistrationApp* >(AppManager::Get()->GetApp("RegistrationApp"));
+        if (registrationApp != NULL)
+        {
+            registrationApp->ImportImageInfo();
         }
     }
 

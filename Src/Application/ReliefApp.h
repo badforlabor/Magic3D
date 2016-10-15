@@ -74,5 +74,7 @@ namespace MagicApp
         cv::Mat mDepthImage;
         int mScanResolution;
         int mImageResolution;
+        int mImageStartId;
+        int mImageSegCount;
     };
 }

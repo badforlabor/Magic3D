@@ -523,6 +523,51 @@ namespace MagicCore
         manualObj->end();
     }
 
+    void RenderSystem::RenderOBB(std::string obbName, std::string materialName, const GPP::Vector3& color, const GPP::Obb& obb, bool appendNewObb, ModelNodeType nodeType)
+    {
+        Ogre::ManualObject* manualObj = NULL;
+        if (mpSceneManager->hasManualObject(obbName))
+        {
+            manualObj = mpSceneManager->getManualObject(obbName);
+            if (!appendNewObb)
+            {
+                manualObj->clear();
+            }
+        }
+        else
+        {
+            manualObj = mpSceneManager->createManualObject(obbName);
+            AttachManualObjectToSceneNode(nodeType, manualObj);
+        }
+        std::vector<GPP::Vector3> cornerPoints;
+        obb.Get8CornerPoints(cornerPoints);
+        int faceIdx[] = {0, 2, 3, 1, 4, 5, 7, 6};
+        int lineIdx[] = {0, 4, 1, 5, 3, 7, 2, 6};
+        manualObj->begin(materialName, Ogre::RenderOperation::OT_LINE_LIST);
+        for (int faceId = 0; faceId < 2; ++faceId)
+        {
+            for (int pid = 0; pid < 4; ++pid)
+            {
+                GPP::Vector3 pt = cornerPoints.at(faceIdx[faceId * 4 + pid]);
+                GPP::Vector3 ptNext = cornerPoints.at(faceIdx[faceId * 4 + (pid + 1) % 4]);
+                manualObj->position(pt[0], pt[1], pt[2]);
+                manualObj->colour(color[0], color[1], color[2]);
+                manualObj->position(ptNext[0], ptNext[1], ptNext[2]);
+                manualObj->colour(color[0], color[1], color[2]);
+            }
+        }
+        for (int lineId = 0; lineId < 4; ++lineId)
+        {
+            for (int pid = 0; pid < 2; ++pid)
+            {
+                GPP::Vector3 pt = cornerPoints.at(lineIdx[lineId * 2 + pid]);
+                manualObj->position(pt[0], pt[1], pt[2]);
+                manualObj->colour(color[0], color[1], color[2]);
+            }
+        }
+        manualObj->end();
+    }
+
     void RenderSystem::HideRenderingObject(std::string objName)
     {
         if (mpSceneManager != NULL)

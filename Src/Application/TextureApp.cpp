@@ -28,7 +28,7 @@ namespace MagicApp
         mpUI(NULL),
         mpImageFrameMesh(NULL),
         mDistortionImage(),
-        mTextureImageSize(2048),
+        mTextureImageSize(4096),
         mpTriMeshTexture(NULL),
         mpViewTool(NULL),
         mDisplayMode(TRIMESH_SOLID),
@@ -169,6 +169,10 @@ namespace MagicApp
         {
             PickMeshColorFromImages();
         }
+        else if (arg.key == OIS::KC_O)
+        {
+            ExportObjFile();
+        }
         return true;
     }
 
@@ -244,10 +248,6 @@ namespace MagicApp
                 return;
             }
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-            if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                triMesh->FuseVertex();
-            }
             mDisplayMode = TRIMESH_SOLID;
             UpdateDisplay();
             mpUI->SetMeshInfo(triMesh->GetVertexCount(), triMesh->GetTriangleCount());
@@ -508,6 +508,88 @@ namespace MagicApp
                 texCoords.at(vid * 2) = (texCoords.at(vid * 2) - center_X) * scaleV + 0.5;
                 texCoords.at(vid * 2 + 1) = (texCoords.at(vid * 2 + 1) - center_Y) * scaleV + 0.5;
             }
+        }
+    }
+
+    void TextureApp::ExportObjFile()
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh == NULL)
+        {
+            MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
+            return;
+        }
+        if (triMesh->HasTriangleTexCoord() == false)
+        {
+            MessageBox(NULL, "请先计算纹理坐标", "温馨提示", MB_OK);
+            return;
+        }
+        std::string fileName;
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0";
+        if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
+        {
+            GPP::Real scaleValue = ModelManager::Get()->GetScaleValue();
+            GPP::Vector3 objCenterCoord = ModelManager::Get()->GetObjCenterCoord();
+            triMesh->UnifyCoords(1.0 / scaleValue, objCenterCoord * (-scaleValue));
+
+            // Export obj by texture coordinates
+            std::string objName = fileName + ".obj";
+            size_t dotPos = fileName.rfind('\\');
+            if (dotPos == std::string::npos)
+            {
+                dotPos = fileName.rfind('/');
+                if (dotPos == std::string::npos)
+                {
+                    MessageBox(NULL, "文件名字无效", "温馨提示", MB_OK);
+                    return;
+                }
+            }
+            std::string fileNameNoPath = fileName.substr(dotPos + 1);
+            std::ofstream objOut(objName.c_str());
+            objOut << "mtllib " << fileNameNoPath << ".mtl" << "\n";
+            objOut << "usemtl " << fileNameNoPath << "\n";
+            GPP::Int vertexCount = triMesh->GetVertexCount();
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 coord = triMesh->GetVertexCoord(vid);
+                objOut << "v " << coord[0] << " " << coord[1] << " " << coord[2] << "\n";
+            }
+            GPP::Int faceCount = triMesh->GetTriangleCount();
+            for (GPP::Int fid = 0; fid < faceCount; fid++)
+            {
+                for (int localId = 0; localId < 3; localId++)
+                {
+                    GPP::Vector3 texCoord = triMesh->GetTriangleTexcoord(fid, localId);
+                    objOut << "vt " << texCoord[0] << " " << texCoord[1] << "\n";
+                }
+            }
+            GPP::Int vertexIds[3];
+            for (GPP::Int fid = 0; fid < faceCount; fid++)
+            {
+                triMesh->GetTriangleVertexIds(fid, vertexIds);
+                objOut << "f " << vertexIds[0] + 1 << "/" << fid * 3 + 1 << " " 
+                    << vertexIds[1] + 1 << "/" << fid * 3 + 2 << " " << vertexIds[2] + 1 << "/" << fid * 3 + 3 << "\n"; 
+            }
+            objOut.close();
+            
+            // export mtl file
+            std::string mtlName = fileName + ".mtl";
+            std::ofstream mtlOut(mtlName.c_str());
+            mtlOut << "newmtl " << fileNameNoPath << std::endl;
+            mtlOut << "Kd " << 0.75 << " " << 0.75 << " " << 0.75 << std::endl;
+            mtlOut << "map_Kd " << fileNameNoPath << ".png" << std::endl;
+            mtlOut.close();
+            
+            // export texture image
+            std::string imageName = fileName + ".png";
+            cv::imwrite(imageName, mDistortionImage);
+            //
+
+            triMesh->UnifyCoords(scaleValue, objCenterCoord);
         }
     }
 

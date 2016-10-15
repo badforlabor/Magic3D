@@ -2,6 +2,7 @@
 #include "OIS.h"
 
 #define DEBUGDUMPFILE 0
+#define MAKEDUMPFILE 0
 
 namespace Ogre
 {

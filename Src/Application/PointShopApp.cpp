@@ -45,7 +45,10 @@ namespace MagicApp
         mIgnoreBack(true),
         mNeedFillHole(false),
         mResolution(0),
-        mEnterMeshShop(0)
+        mEnterMeshShop(0),
+        mSmoothCount(0),
+        mNeighborCount(0),
+        mColorNeighborCount(0)
     {
     }
 
@@ -68,6 +71,7 @@ namespace MagicApp
         }
         mpUI->Setup();
         SetupScene();
+        UpdatePickTool();
         ResetSelection();
         UpdatePointCloudRendering();
         return true;
@@ -325,6 +329,7 @@ namespace MagicApp
             }
             imageHList.at(fid) = imageList.at(fid).rows;
         }
+        pointCloud->SetHasColor(true);
         int pointCount = pointCloud->GetPointCount();
         for (int pid = 0; pid < pointCount; pid++)
         {
@@ -334,7 +339,6 @@ namespace MagicApp
                 colorId.GetLocalX());
             pointCloud->SetPointColor(pid, GPP::Vector3(double(pixel[2]) / 255.0, double(pixel[1]) / 255.0, double(pixel[0]) / 255.0));
         }
-        pointCloud->SetHasColor(true);
         for (int fid = 0; fid < imageCount; fid++)
         {
             imageList.at(fid).release();
@@ -433,7 +437,7 @@ namespace MagicApp
             mpPickTool->ClearPickedIds();
             if (pickedId != -1)
             {
-                GPP::ErrorCode res = GPP::ConsolidatePointCloud::ReversePatchNormal(ModelManager::Get()->GetPointCloud(), pickedId);
+                GPP::ErrorCode res = GPP::ConsolidatePointCloud::ReversePatchNormal(ModelManager::Get()->GetPointCloud(), pickedId, mNeighborCount);
                 if (res == GPP_API_IS_NOT_AVAILABLE)
                 {
                     MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
@@ -479,11 +483,7 @@ namespace MagicApp
             if (pointCloud)
             {
                 pointCloud->SetHasColor(false);
-                int pointCount = pointCloud->GetPointCount();
-                for (int pid = 0; pid < pointCount; pid++)
-                {
-                    pointCloud->SetPointColor(pid, GPP::Vector3(0.09, 0.48627, 0.69));
-                }
+                pointCloud->SetDefaultColor(GPP::Vector3(0.09, 0.48627, 0.69));
                 UpdatePointCloudRendering();
             }
         }
@@ -554,6 +554,7 @@ namespace MagicApp
             std::vector<int> colorIds = ModelManager::Get()->GetColorIds();
             if (pointCloud && pointCloud->GetPointCount() == colorIds.size())
             {
+                pointCloud->SetHasColor(true);
                 int pointCount = pointCloud->GetPointCount();
                 double deltaColor = 0.15;
                 int maxId = 9;
@@ -561,7 +562,6 @@ namespace MagicApp
                 {
                     pointCloud->SetPointColor(pid, MagicCore::ToolKit::ColorCoding((colorIds.at(pid) % maxId) * deltaColor));
                 }
-                pointCloud->SetHasColor(true);
                 UpdatePointCloudRendering();
             }
         }
@@ -647,17 +647,14 @@ namespace MagicApp
             case MagicApp::PointShopApp::EXPORT:
                 ExportPointCloud(false);
                 break;
-            case MagicApp::PointShopApp::FIT:
-                FitPointCloud(mResolution, false);
-                break;
             case MagicApp::PointShopApp::NORMALCALCULATION:
-                CalculatePointCloudNormal(mIsDepthImage, false);
+                CalculatePointCloudNormal(mIsDepthImage, mNeighborCount, false);
                 break;
             case MagicApp::PointShopApp::NORMALSMOOTH:
-                SmoothPointCloudNormal(false);
+                SmoothPointCloudNormal(mNeighborCount, false);
                 break;
             case MagicApp::PointShopApp::NORMALUPDATE:
-                UpdatePointCloudNormal(false);
+                UpdatePointCloudNormal(mNeighborCount, false);
                 break;
             case MagicApp::PointShopApp::OUTLIER:
                 RemovePointCloudOutlier(false);
@@ -665,14 +662,11 @@ namespace MagicApp
             case MagicApp::PointShopApp::ISOLATE:
                 RemoveIsolatePart(false);
                 break;
-            case MagicApp::PointShopApp::COORDSMOOTH:
-                SmoothPointCloudByNormal(false);
-                break;
-            case MagicApp::PointShopApp::PLANEPROJECT:
-                PlaneProjectFit(false);
+            case MagicApp::PointShopApp::GEOMETRYSMOOTH:
+                SmoothPointCloudGeoemtry(mSmoothCount, false);
                 break;
             case MagicApp::PointShopApp::FUSECOLOR:
-                FusePointCloudColor(false);
+                FusePointCloudColor(mColorNeighborCount, false);
                 break;
             case MagicApp::PointShopApp::RECONSTRUCTION:
                 ReconstructMesh(mNeedFillHole, mReconstructionQuality, false);
@@ -706,6 +700,7 @@ namespace MagicApp
             UpdatePickTool();
             ResetSelection();
             mRightMouseType = MOVE;
+            InfoLog << " ImportPointCloud" << std::endl;
             UpdatePointCloudRendering();
             return true;
         }
@@ -745,7 +740,7 @@ namespace MagicApp
         }
     }
 
-    void PointShopApp::SmoothPointCloudNormal(bool isSubThread)
+    void PointShopApp::SmoothPointCloudNormal(int neighborCount, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -760,13 +755,16 @@ namespace MagicApp
         if (isSubThread)
         {
             mCommandType = NORMALSMOOTH;
+            mNeighborCount = neighborCount;
             DoCommand(true);
         }
         else
         {
-            //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(pointCloud, 0.250);
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(pointCloud, 0.250, neighborCount);
             mIsCommandInProgress = false;
             mUpdatePointCloudRendering = true;
             if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -782,7 +780,7 @@ namespace MagicApp
         }
     }
 
-    void PointShopApp::UpdatePointCloudNormal(bool isSubThread)
+    void PointShopApp::UpdatePointCloudNormal(int neighborCount, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -797,13 +795,13 @@ namespace MagicApp
         if (isSubThread)
         {
             mCommandType = NORMALUPDATE;
+            mNeighborCount = neighborCount;
             DoCommand(true);
         }
         else
         {
-            //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::UpdatePointCloudNormal(pointCloud, 9);
+            GPP::ErrorCode res = GPP::UpdatePointCloudNormal(pointCloud, neighborCount);
             mIsCommandInProgress = false;
             mUpdatePointCloudRendering = true;
             if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -819,56 +817,7 @@ namespace MagicApp
         }
     }
 
-    void PointShopApp::SmoothPointCloudByNormal(bool isSubThread)
-    {
-        if (IsCommandAvaliable() == false)
-        {
-            return;
-        }
-        GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
-        if (pointCloud->HasNormal() == false)
-        {
-            MessageBox(NULL, "请先给点云计算法向量", "温馨提示", MB_OK);
-            return;
-        }
-        if (isSubThread)
-        {
-            mCommandType = COORDSMOOTH;
-            DoCommand(true);
-        }
-        else
-        {
-            mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothNormal(pointCloud);
-            mIsCommandInProgress = false;
-            if (res == GPP_API_IS_NOT_AVAILABLE)
-            {
-                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
-                MagicCore::ToolKit::Get()->SetAppRunning(false);
-            }
-            if (res != GPP_NO_ERROR)
-            {
-                MessageBox(NULL, "点云坐标光滑失败", "温馨提示", MB_OK);
-                return;
-            }
-            mIsCommandInProgress = true;
-            res = GPP::ConsolidatePointCloud::SmoothGeometryByNormal(pointCloud);
-            mIsCommandInProgress = false;
-            mUpdatePointCloudRendering = true;
-            if (res == GPP_API_IS_NOT_AVAILABLE)
-            {
-                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
-                MagicCore::ToolKit::Get()->SetAppRunning(false);
-            }
-            if (res != GPP_NO_ERROR)
-            {
-                MessageBox(NULL, "点云坐标光滑失败", "温馨提示", MB_OK);
-                return;
-            }
-        }
-    }
-
-    void PointShopApp::PlaneProjectFit(bool isSubThread)
+    void PointShopApp::SmoothPointCloudGeoemtry(int smoothCount, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -876,14 +825,18 @@ namespace MagicApp
         }
         if (isSubThread)
         {
-            mCommandType = PLANEPROJECT;
+            mCommandType = GEOMETRYSMOOTH;
+            mSmoothCount = smoothCount;
             DoCommand(true);
         }
         else
         {
             GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::FitPointCloud::PlaneProjectFit(pointCloud, 25, 5);
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::SmoothGeometry(pointCloud, 25, smoothCount);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -899,7 +852,7 @@ namespace MagicApp
         }
     }
 
-    void PointShopApp::FusePointCloudColor(bool isSubThread)
+    void PointShopApp::FusePointCloudColor(int neighborCount, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -908,6 +861,7 @@ namespace MagicApp
         if (isSubThread)
         {
             mCommandType = FUSECOLOR;
+            mColorNeighborCount = neighborCount;
             DoCommand(true);
         }
         else
@@ -936,7 +890,11 @@ namespace MagicApp
             {
                 colorIds.swap(cloudIds);
             }
-            GPP::ErrorCode res = GPP::IntrinsicColor::TuneColorFromMultiFrame(pointCloud, 12, cloudIds, pointColors);
+            InfoLog << "FusePointCloudColor: neighborCount=" << neighborCount << std::endl;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::IntrinsicColor::TuneColorFromMultiFrame(pointCloud, neighborCount, cloudIds, pointColors);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -1023,9 +981,12 @@ namespace MagicApp
                 MessageBox(NULL, "点云的点个数小于1，操作失败", "温馨提示", MB_OK);
                 return;
             }
-            std::vector<GPP::Real> uniformity;
+            std::vector<GPP::Real> outlierValue;
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateUniformity(pointCloud, &uniformity);
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateOutlier(pointCloud, &outlierValue);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -1037,11 +998,24 @@ namespace MagicApp
                 MessageBox(NULL, "点云去除飞点失败", "温馨提示", MB_OK);
                 return;
             }
+            /*GPP::Real cutValue = 0.8;
+            for (GPP::Int pid = 0; pid < pointCount; pid++)
+            {
+                if (outlierValue.at(pid) < cutValue)
+                {
+                    pointCloud->SetPointColor(pid, GPP::Vector3(1, 0, 0));
+                }
+                else
+                {
+                    pointCloud->SetPointColor(pid, GPP::Vector3(0, 0, 1));
+                }
+            }
+            pointCloud->SetHasColor(true);*/
             GPP::Real cutValue = 0.8;
             std::vector<GPP::Int> deleteIndex;
             for (GPP::Int pid = 0; pid < pointCount; pid++)
             {
-                if (uniformity[pid] > cutValue)
+                if (outlierValue.at(pid) > cutValue)
                 {
                     deleteIndex.push_back(pid);
                 }
@@ -1084,7 +1058,10 @@ namespace MagicApp
             }
             std::vector<GPP::Real> isolation;
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(pointCloud, &isolation);
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(pointCloud, &isolation, 20, NULL);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -1125,6 +1102,9 @@ namespace MagicApp
         }
         GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
         GPP::Int* sampleIndex = new GPP::Int[targetPointCount];
+#if MAKEDUMPFILE
+        GPP::DumpOnce();
+#endif
         GPP::ErrorCode res = GPP::SamplePointCloud::UniformSample(pointCloud, targetPointCount, sampleIndex, 0);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
@@ -1138,14 +1118,32 @@ namespace MagicApp
             return;
         }
 
-        GPP::PointCloud* samplePointCloud = new GPP::PointCloud;
-        for (GPP::Int sid = 0; sid < targetPointCount; sid++)
+        bool hasNormal = pointCloud->HasNormal();
+        bool hasColor = pointCloud->HasColor();
+        GPP::PointCloud* samplePointCloud = new GPP::PointCloud(hasNormal, hasColor);
+        if (hasNormal)
         {
-            samplePointCloud->InsertPoint(pointCloud->GetPointCoord(sampleIndex[sid]), pointCloud->GetPointNormal(sampleIndex[sid]));
-            samplePointCloud->SetPointColor(sid, pointCloud->GetPointColor(sampleIndex[sid]));
+            for (GPP::Int sid = 0; sid < targetPointCount; sid++)
+            {
+                samplePointCloud->InsertPoint(pointCloud->GetPointCoord(sampleIndex[sid]), 
+                    pointCloud->GetPointNormal(sampleIndex[sid]));
+                if (hasColor)
+                {
+                    samplePointCloud->SetPointColor(sid, pointCloud->GetPointColor(sampleIndex[sid]));
+                }
+            }
         }
-        samplePointCloud->SetHasNormal(pointCloud->HasNormal());
-        samplePointCloud->SetHasColor(pointCloud->HasColor());
+        else
+        {
+            for (GPP::Int sid = 0; sid < targetPointCount; sid++)
+            {
+                samplePointCloud->InsertPoint(pointCloud->GetPointCoord(sampleIndex[sid]));
+                if (hasColor)
+                {
+                    samplePointCloud->SetPointColor(sid, pointCloud->GetPointColor(sampleIndex[sid]));
+                }
+            }
+        }
         ModelManager::Get()->SetPointCloud(samplePointCloud);
         ResetSelection();
         mUpdatePointCloudRendering = true;
@@ -1166,6 +1164,9 @@ namespace MagicApp
             return;
         }
         GPP::Int* sampleIndex = new GPP::Int[targetPointCount];
+#if MAKEDUMPFILE
+        GPP::DumpOnce();
+#endif
         GPP::ErrorCode res = GPP::SamplePointCloud::GeometrySample(pointCloud, targetPointCount, sampleIndex, 0.3, 9, 0, 
             GPP::SAMPLE_QUALITY_HIGH);
         if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -1195,15 +1196,33 @@ namespace MagicApp
         //}
         //mpPointCloud->SetHasColor(true);
 
-        GPP::PointCloud* samplePointCloud = new GPP::PointCloud;
-        for (GPP::Int sid = 0; sid < targetPointCount; sid++)
+        bool hasNormal = pointCloud->HasNormal();
+        bool hasColor = pointCloud->HasColor();
+        GPP::PointCloud* samplePointCloud = new GPP::PointCloud(hasNormal, hasColor);
+        if (hasNormal)
         {
-            samplePointCloud->InsertPoint(pointCloud->GetPointCoord(sampleIndex[sid]), pointCloud->GetPointNormal(sampleIndex[sid]));
-            samplePointCloud->SetPointColor(sid, pointCloud->GetPointColor(sampleIndex[sid]));
+            for (GPP::Int sid = 0; sid < targetPointCount; sid++)
+            {
+                samplePointCloud->InsertPoint(pointCloud->GetPointCoord(sampleIndex[sid]), 
+                    pointCloud->GetPointNormal(sampleIndex[sid]));
+                if (hasColor)
+                {
+                    samplePointCloud->SetPointColor(sid, pointCloud->GetPointColor(sampleIndex[sid]));
+                }
+            }
         }
-        samplePointCloud->SetHasNormal(pointCloud->HasNormal());
-        samplePointCloud->SetHasColor(pointCloud->HasColor());
-        ModelManager::Get()->SetPointCloud(pointCloud);
+        else
+        {
+            for (GPP::Int sid = 0; sid < targetPointCount; sid++)
+            {
+                samplePointCloud->InsertPoint(pointCloud->GetPointCoord(sampleIndex[sid]));
+                if (hasColor)
+                {
+                    samplePointCloud->SetPointColor(sid, pointCloud->GetPointColor(sampleIndex[sid]));
+                }
+            }
+        }
+        ModelManager::Get()->SetPointCloud(samplePointCloud);
         ResetSelection();
 
         /*for (int sid = 0; sid < targetPointCount; sid++)
@@ -1216,41 +1235,22 @@ namespace MagicApp
         mpUI->SetPointCloudInfo(ModelManager::Get()->GetPointCloud()->GetPointCount());
     }
 
-    static GPP::PointCloud* SimplifyPointCloudLocal(const GPP::PointCloud* pointCloud, int resolution, double* interval)
+    void PointShopApp::SimplifyPointCloud(int resolution)
     {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
         if (resolution > 10000 || resolution < 1)
         {
             MessageBox(NULL, "采样分辨率区间为[1, 10000]", "温馨提示", MB_OK);
-            return NULL;
+            return;
         }
-        GPP::PointCloudPointList pointList(pointCloud);
-        GPP::Vector3 bboxMin, bboxMax;
-        GPP::ErrorCode res = GPP::CalculatePointListBoundingBox(&pointList, bboxMin, bboxMax);
-        if (res != GPP_NO_ERROR)
-        {
-            MessageBox(NULL, "点云包围盒计算失败", "温馨提示", MB_OK);
-            return NULL;
-        }
-        GPP::Vector3 delta(0.1, 0.1, 0.1);
-        bboxMin -= delta;
-        bboxMax += delta;
-		double epsilon = (bboxMax - bboxMin).Length() / double(resolution);
-		if (epsilon < 1.0e-15)
-		{
-			epsilon = 1.0e-15;
-		}
-        if (interval)
-        {
-            *interval = epsilon;
-        }
-        InfoLog << "Simplify Point Cloud: epsilon = " << epsilon << std::endl;
-		int resolutionX = int((bboxMax[0] - bboxMin[0]) / epsilon) + 1;
-		int resolutionY = int((bboxMax[1] - bboxMin[1]) / epsilon) + 1;
-		int resolutionZ = int((bboxMax[2] - bboxMin[2]) / epsilon) + 1;
-        GPP::FusePointCloud fusePointCloud(resolutionX, resolutionY, resolutionZ, bboxMin, bboxMax, pointCloud->HasNormal());
-        std::vector<GPP::Real> fields;
+        GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+        GPP::PointCloud* simplifiedCloud = new GPP::PointCloud;
         if (pointCloud->HasColor())
         {
+            std::vector<GPP::Real> fields;
             GPP::Int pointCount = pointCloud->GetPointCount();
             fields.reserve(pointCount * 3);
             for (GPP::Int pid = 0; pid < pointCount; pid++)
@@ -1260,23 +1260,11 @@ namespace MagicApp
                 fields.push_back(color[1]);
                 fields.push_back(color[2]);
             }
-        }
-        res = fusePointCloud.UpdateFuseFunction(pointCloud, NULL, &fields);
-        if (res == GPP_API_IS_NOT_AVAILABLE)
-        {
-            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
-            MagicCore::ToolKit::Get()->SetAppRunning(false);
-        }
-        if (res != GPP_NO_ERROR)
-        {
-            MessageBox(NULL, "点云简化失败", "温馨提示", MB_OK);
-            return NULL;
-        }
-        GPP::PointCloud* extractPointCloud = new GPP::PointCloud;
-        if (pointCloud->HasColor())
-        {
-            std::vector<GPP::Real> extractFields;
-            res = fusePointCloud.ExtractPointCloud(extractPointCloud, &extractFields);
+            std::vector<GPP::Real> simplifiedFields;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::SamplePointCloud::Simplify(pointCloud, resolution, simplifiedCloud, &fields, &simplifiedFields);
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
                 MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
@@ -1285,18 +1273,20 @@ namespace MagicApp
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "点云简化失败", "温馨提示", MB_OK);
-                return NULL;
+                GPPFREEPOINTER(simplifiedCloud);
+                return;
             }
-            GPP::Int pointCount = extractPointCloud->GetPointCount();
-            for (GPP::Int pid = 0; pid < pointCount; pid++)
+            simplifiedCloud->SetHasColor(true);
+            GPP::Int simplifiedCount = simplifiedCloud->GetPointCount();
+            for (GPP::Int pid = 0; pid < simplifiedCount; pid++)
             {
-                extractPointCloud->SetPointColor(pid, GPP::Vector3(extractFields.at(pid * 3), 
-                    extractFields.at(pid * 3 + 1), extractFields.at(pid * 3 + 2)));
+                simplifiedCloud->SetPointColor(pid, GPP::Vector3(simplifiedFields.at(pid * 3), 
+                    simplifiedFields.at(pid * 3 + 1), simplifiedFields.at(pid * 3 + 2)));
             }
         }
         else
         {
-            res = fusePointCloud.ExtractPointCloud(extractPointCloud, NULL);
+            GPP::ErrorCode res = GPP::SamplePointCloud::Simplify(pointCloud, resolution, simplifiedCloud, NULL, NULL);
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
                 MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
@@ -1305,76 +1295,18 @@ namespace MagicApp
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "点云简化失败", "温馨提示", MB_OK);
-                return NULL;
+                GPPFREEPOINTER(simplifiedCloud);
+                return;
             }
         }
-        //extractPointCloud->SetHasNormal(mpPointCloud->HasNormal());
-        extractPointCloud->SetHasColor(pointCloud->HasColor());
-        return extractPointCloud;
-    }
-
-    void PointShopApp::SimplifyPointCloud(int resolution)
-    {
-        if (IsCommandAvaliable() == false)
-        {
-            return;
-        }
-        GPP::PointCloud* simplifiedPointCloud = SimplifyPointCloudLocal(ModelManager::Get()->GetPointCloud(), resolution, NULL);
-        if (simplifiedPointCloud)
-        {
-            ModelManager::Get()->SetPointCloud(simplifiedPointCloud);
-        }
+        ModelManager::Get()->SetPointCloud(simplifiedCloud);
         ResetSelection();
         UpdatePickTool();
         UpdatePointCloudRendering();
         mpUI->SetPointCloudInfo(ModelManager::Get()->GetPointCloud()->GetPointCount());
     }
 
-    void PointShopApp::FitPointCloud(int resolution, bool isSubThread)
-    {
-        if (IsCommandAvaliable() == false)
-        {
-            return;
-        }
-        if (isSubThread)
-        {
-            mCommandType = FIT;
-            mResolution = resolution;
-            DoCommand(true);
-        }
-        else
-        {
-            GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
-            mIsCommandInProgress = true;
-            double interval = 0;
-            GPP::PointCloud* simplifiedPointCloud = SimplifyPointCloudLocal(pointCloud, resolution, &interval);
-            if (simplifiedPointCloud == NULL)
-            {
-                MessageBox(NULL, "点云简化失败", "温馨提示", MB_OK);
-                return;
-            }
-            GPP::PointCloudPointList refPointList(pointCloud);
-            GPP::ErrorCode res = GPP::FitPointCloud::UniformFit(simplifiedPointCloud, &refPointList, interval * 1.0, 15);
-            if (res == GPP_API_IS_NOT_AVAILABLE)
-            {
-                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
-                MagicCore::ToolKit::Get()->SetAppRunning(false);
-            }
-            if (res != GPP_NO_ERROR)
-            {
-                MessageBox(NULL, "点云拟合失败", "温馨提示", MB_OK);
-                return;
-            }
-            ModelManager::Get()->SetPointCloud(simplifiedPointCloud);
-            mIsCommandInProgress = false;
-            ResetSelection();
-            UpdatePickTool();
-            mUpdatePointCloudRendering = true;
-            mpUI->SetPointCloudInfo(ModelManager::Get()->GetPointCloud()->GetPointCount());
-        }
-    }
-
-    void PointShopApp::CalculatePointCloudNormal(bool isDepthImage, bool isSubThread)
+    void PointShopApp::CalculatePointCloudNormal(bool isDepthImage, int neighborCount, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -1384,17 +1316,16 @@ namespace MagicApp
         {
             mCommandType = NORMALCALCULATION;
             mIsDepthImage = isDepthImage;
+            mNeighborCount = neighborCount;
             DoCommand(true);
         }
         else
         {
             GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
             mIsCommandInProgress = true;
-            int neighborCount = 9;
-            if (isDepthImage)
-            {
-                neighborCount = 5;
-            }
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
             GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculatePointCloudNormal(pointCloud, isDepthImage, neighborCount);
             mIsCommandInProgress = false;
             mUpdatePointCloudRendering = true;
@@ -1431,7 +1362,7 @@ namespace MagicApp
         UpdatePointCloudRendering();
     }
 
-    void PointShopApp::ReversePatchNormal()
+    void PointShopApp::ReversePatchNormal(int neighborCount)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -1449,6 +1380,7 @@ namespace MagicApp
         else
         {
             mRightMouseType = REVERSE_NORMAL;
+            mNeighborCount = neighborCount;
         }
         if (mRightMouseType == REVERSE_NORMAL)
         {
@@ -1497,6 +1429,9 @@ namespace MagicApp
                 std::vector<GPP::Real> vertexColorField;
                 GPP::TriMesh* triMesh = new GPP::TriMesh;
                 mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::ReconstructMesh::Reconstruct(pointCloud, triMesh, quality, needFillHole, 
                     &pointColorFields, &vertexColorField);
                 mIsCommandInProgress = false;
@@ -1529,9 +1464,11 @@ namespace MagicApp
             }
             else
             {
-                GPP::Int pointCount = pointCloud->GetPointCount();
                 GPP::TriMesh* triMesh = new GPP::TriMesh;
                 mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::ReconstructMesh::Reconstruct(pointCloud, triMesh, quality, needFillHole, NULL, NULL);
                 mIsCommandInProgress = false;
                 if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -1643,6 +1580,7 @@ namespace MagicApp
 
     void PointShopApp::UpdatePointCloudRendering()
     {
+        InfoLog << " UpdatePointCloudRendering" << std::endl;
         GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
         if (pointCloud == NULL)
         {
@@ -1657,9 +1595,11 @@ namespace MagicApp
         }
         else
         {
+            InfoLog << " no color " << std::endl;
             MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloud_PointShop", "SimplePoint", pointCloud, 
                 MagicCore::RenderSystem::MODEL_NODE_CENTER, &mPointSelectFlag, &selectColor);
         }
+        InfoLog << " done" << std::endl;
     }
 
     bool PointShopApp::IsCommandAvaliable()
@@ -1688,7 +1628,10 @@ namespace MagicApp
     void PointShopApp::UpdatePickTool()
     {
         GPPFREEPOINTER(mpPickTool);
-        mpPickTool = new MagicCore::PickTool;
-        mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, ModelManager::Get()->GetPointCloud(), NULL, "ModelNode");
+        if (ModelManager::Get()->GetPointCloud())
+        {
+            mpPickTool = new MagicCore::PickTool;
+            mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, ModelManager::Get()->GetPointCloud(), NULL, "ModelNode");
+        }
     }
 }

@@ -24,7 +24,8 @@ namespace MagicApp
             NONE = 0,
             GEODESICS_APPROXIMATE,
             GEOMESICS_FAST_EXACT,
-            GEODESICS_EXACT
+            GEODESICS_EXACT,
+            DISTANCE_POINTS_TO_MESH
         };
 
     public:
@@ -43,11 +44,14 @@ namespace MagicApp
         void DoCommand(bool isSubThread);
 
         bool ImportModel(void);
+        bool ImportRefModel(void);
 
         void DeleteMeshMark(void);
         void ComputeApproximateGeodesics(bool isSubThread = true);
         void FastComputeExactGeodesics(double accuracy, bool isSubThread = true);
         void ComputeExactGeodesics(bool isSubThread = true);
+        void ComputePointsToMeshDistance(bool isSubThread = true);
+        void ShowReferenceMesh(bool isShow);
 
         void MeasureArea(void);
         void MeasureVolume(void);
@@ -70,6 +74,7 @@ namespace MagicApp
         void InitViewTool(void);
         void UpdateModelRendering(void);
         void UpdateMarkRendering(void);
+        void UpdateRefModelRendering(void);
 
     private:
         MeasureAppUI* mpUI;
@@ -87,5 +92,7 @@ namespace MagicApp
         bool mUpdateMarkRendering;
         double mGeodesicAccuracy;
         bool mIsFlatRenderingMode;
+        GPP::TriMesh* mpRefTriMesh;
+        bool mUpdateRefModelRendering;
     };
 }

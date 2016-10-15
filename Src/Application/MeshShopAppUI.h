@@ -28,6 +28,7 @@ namespace MagicApp
         void ConsolidateGeometry(MyGUI::Widget* pSender);
         void ReverseDirection(MyGUI::Widget* pSender);
         void RemoveMeshIsolatePart(MyGUI::Widget* pSender);
+        void OptimizeMesh(MyGUI::Widget* pSender);
         void FilterMesh(MyGUI::Widget* pSender);
         void RemoveMeshNoise(MyGUI::Widget* pSender);
         void SmoothMesh(MyGUI::Widget* pSender);
@@ -37,6 +38,8 @@ namespace MagicApp
         void DoRefineMesh(MyGUI::Widget* pSender);
         void SimplifyMesh(MyGUI::Widget* pSender);
         void DoSimplifyMesh(MyGUI::Widget* pSender);
+        void Remesh(MyGUI::Widget* pSender);
+        void DoUniformRemesh(MyGUI::Widget* pSender);
         void FillHole(MyGUI::Widget* pSender);
         void DoFillHoleTriangulation(MyGUI::Widget* pSender);
         void DoFillHoleFlat(MyGUI::Widget* pSender);
@@ -49,9 +52,11 @@ namespace MagicApp
         void SelectByRectangle(MyGUI::Widget* pSender);
         void EraseByRectangle(MyGUI::Widget* pSender);
         void DeleteSelections(MyGUI::Widget* pSender);
+        void SimplifySelections(MyGUI::Widget* pSender);
         void IgnoreBack(MyGUI::Widget* pSender);
         void MoveModel(MyGUI::Widget* pSender);
         void SampleMesh(MyGUI::Widget* pSender);
+        void DoUniformSampling(MyGUI::Widget* pSender);
         void BackToHomepage(MyGUI::Widget* pSender);
 
     private:

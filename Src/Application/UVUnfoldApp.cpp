@@ -42,8 +42,7 @@ namespace MagicApp
         mCutLineList(),
         mInitChartCount(1),
         mSnapIds(),
-        mTargetVertexCount(0),
-        mHasSplitted(false)
+        mTargetVertexCount(0)
     {
     }
 
@@ -64,7 +63,6 @@ namespace MagicApp
         mDisplayMode = TRIMESH_SOLID;
         mDistortionImage.release();
         ClearSplitData();
-        mHasSplitted = false;
     }
 
     void UVUnfoldApp::ClearSplitData()
@@ -225,6 +223,158 @@ namespace MagicApp
 
     bool UVUnfoldApp::KeyPressed( const OIS::KeyEvent &arg )
     {
+        if (arg.key == OIS::KC_E)
+        {
+            MagicCore::RenderSystem::Get()->GetMainCamera()->setPolygonMode(Ogre::PolygonMode::PM_WIREFRAME);
+        }
+        else if (arg.key == OIS::KC_S)
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL || (!triMesh->HasTriangleTexCoord()))
+            {
+                return true;
+            }
+
+            GPP::TriMesh* uvMesh = new GPP::TriMesh;
+            GPP::Int faceCount = triMesh->GetTriangleCount();
+            for (GPP::Int fid = 0; fid < faceCount; fid++)
+            {
+                for (int fvid = 0; fvid < 3; fvid++)
+                {
+                    uvMesh->InsertVertex(triMesh->GetTriangleTexcoord(fid, fvid));
+                }
+                uvMesh->InsertTriangle(fid * 3, fid * 3 + 1, fid * 3 + 2);
+            }
+            uvMesh->UpdateNormal();
+            GPP::Parser::ExportTriMesh("uv.stl", uvMesh);
+            GPPFREEPOINTER(uvMesh);
+        }
+        else if (arg.key == OIS::KC_T)
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL)
+            {
+                return true;
+            }
+            std::vector<std::vector<GPP::Int> > holeIds;
+            GPP::ErrorCode res = GPP::FillMeshHole::FindHoles(triMesh, &holeIds);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "找网格边界失败", "温馨提示", MB_OK);
+                return true;
+            }
+            for (int hid = 0; hid < holeIds.size(); hid++)
+            {
+                std::reverse(holeIds.at(hid).begin(), holeIds.at(hid).end());
+                holeIds.at(hid).push_back(holeIds.at(hid).at(0));
+            }
+            GPP::Int pointCount = triMesh->GetVertexCount();
+            std::vector<GPP::Vector2> pointList(pointCount);
+            for (GPP::Int pid = 0; pid < pointCount; pid++)
+            {
+                GPP::Vector3 coord = triMesh->GetVertexCoord(pid);
+                pointList.at(pid) = GPP::Vector2(coord[0], coord[1]);
+            }
+            std::vector<GPP::Int> triangleList;
+            std::vector<GPP::Int> noUsePointList;
+            res = GPP::Triangulation::ConstrainedDelaunay2D(pointList, &mCutLineList, &holeIds, triangleList, &noUsePointList);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "三角化失败", "温馨提示", MB_OK);
+                return true;
+            }
+            GPP::TriMesh* triMesh2D = new GPP::TriMesh;
+            for (GPP::Int pid = 0; pid < pointCount; pid++)
+            {
+                triMesh2D->InsertVertex(triMesh->GetVertexCoord(pid));
+            }
+            GPP::Int triangleCount = triangleList.size() / 3;
+            for (GPP::Int fid = 0; fid < triangleCount; fid++)
+            {
+                triMesh2D->InsertTriangle(triangleList.at(fid * 3), triangleList.at(fid * 3 + 1), triangleList.at(fid * 3 + 2));
+            }
+            if (noUsePointList.size() > 0)
+            {
+                res = GPP::DeleteTriMeshVertices(triMesh2D, noUsePointList);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "删除孤立点失败", "温馨提示", MB_OK);
+                    return true;
+                }
+            }
+            triMesh2D->UpdateNormal();
+            if (GPP::ConsolidateMesh::_IsTriMeshManifold(triMesh2D) == false)
+            {
+                MessageBox(NULL, "网格有非流形结构", "温馨提示", MB_OK);
+            }
+            ModelManager::Get()->SetMesh(triMesh2D);
+            SwitchDisplayMode(TRIMESH_WIREFRAME);
+            UpdateDisplay();
+            // set up pick tool
+            GPPFREEPOINTER(mpPickTool);
+            mpPickTool = new MagicCore::PickTool;
+            mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, NULL, triMesh2D, "ModelNode");
+
+            UpdateMarkDisplay();
+            mpUI->SetMeshInfo(triMesh2D->GetVertexCount(), triMesh2D->GetTriangleCount());
+        }
+        else if (arg.key == OIS::KC_U)
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL)
+            {
+                return true;
+            }
+            GPP::Int pointCount = triMesh->GetVertexCount();
+            std::vector<GPP::Vector2> pointList(pointCount);
+            for (GPP::Int pid = 0; pid < pointCount; pid++)
+            {
+                GPP::Vector3 coord = triMesh->GetVertexCoord(pid);
+                pointList.at(pid) = GPP::Vector2(coord[0], coord[1]);
+            }
+            std::vector<GPP::Int> triangleList;
+            std::vector<GPP::Int> noUsePointList;
+            GPP::ErrorCode res = GPP::Triangulation::ConstrainedDelaunay2D(pointList, &mCutLineList, NULL, triangleList, &noUsePointList);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "三角化失败", "温馨提示", MB_OK);
+                return true;
+            }
+            GPP::TriMesh* triMesh2D = new GPP::TriMesh;
+            for (GPP::Int pid = 0; pid < pointCount; pid++)
+            {
+                triMesh2D->InsertVertex(GPP::Vector3(pointList.at(pid)[0], pointList.at(pid)[1], 0));
+            }
+            GPP::Int triangleCount = triangleList.size() / 3;
+            for (GPP::Int fid = 0; fid < triangleCount; fid++)
+            {
+                triMesh2D->InsertTriangle(triangleList.at(fid * 3), triangleList.at(fid * 3 + 1), triangleList.at(fid * 3 + 2));
+            }
+            if (noUsePointList.size() > 0)
+            {
+                res = GPP::DeleteTriMeshVertices(triMesh2D, noUsePointList);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "删除孤立点失败", "温馨提示", MB_OK);
+                    return true;
+                }
+            }
+            triMesh2D->UpdateNormal();
+            if (GPP::ConsolidateMesh::_IsTriMeshManifold(triMesh2D) == false)
+            {
+                MessageBox(NULL, "网格有非流形结构", "温馨提示", MB_OK);
+            }
+            ModelManager::Get()->SetMesh(triMesh2D);
+            SwitchDisplayMode(TRIMESH_WIREFRAME);
+            UpdateDisplay();
+            // set up pick tool
+            GPPFREEPOINTER(mpPickTool);
+            mpPickTool = new MagicCore::PickTool;
+            mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, NULL, triMesh2D, "ModelNode");
+
+            UpdateMarkDisplay();
+            mpUI->SetMeshInfo(triMesh2D->GetVertexCount(), triMesh2D->GetTriangleCount());
+        }
         return true;
     }
 
@@ -304,10 +454,6 @@ namespace MagicApp
                 return;
             }
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-            if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                triMesh->FuseVertex();
-            }
             SwitchDisplayMode(TRIMESH_SOLID);
             UpdateDisplay();
             // set up pick tool
@@ -315,7 +461,6 @@ namespace MagicApp
             mpPickTool = new MagicCore::PickTool;
             mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, NULL, triMesh, "ModelNode");
             // Clear data
-            mHasSplitted = false;
             ClearSplitData();
             InsertHolesToSnapIds();
             UpdateMarkDisplay();
@@ -544,6 +689,43 @@ namespace MagicApp
         UpdateMarkDisplay();
     }
 
+    void UVUnfoldApp::GenerateSplitLines(int splitChartCount)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh == NULL)
+        {
+            MessageBox(NULL, "请导入需要UV展开的网格", "温馨提示", MB_OK);
+            return;
+        }
+        std::vector<std::vector<GPP::Int> > splitLines;
+        GPP::ErrorCode res = GPP::SplitMesh::GenerateAtlasSplitLines(triMesh, splitChartCount, splitLines);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "自动割线失败", "温馨提示", MB_OK);
+            return;
+        }
+        ClearSplitData();
+        InsertHolesToSnapIds();
+        mCutLineList.swap(splitLines);
+        for (std::vector<std::vector<GPP::Int> >::iterator itr = mCutLineList.begin(); itr != mCutLineList.end(); ++itr)
+        {
+            for (std::vector<GPP::Int>::iterator lineItr = itr->begin(); lineItr != itr->end(); ++lineItr)
+            {
+                mSnapIds.push_back(*lineItr);
+            }
+        }
+        UpdateMarkDisplay();
+    }
+
     void UVUnfoldApp::DoCommand(bool isSubThread)
     {
         if (isSubThread)
@@ -563,6 +745,9 @@ namespace MagicApp
                 break;
             case MagicApp::UVUnfoldApp::GENERATE_UV_ATLAS:
                 GenerateUVAtlas(mInitChartCount, false);
+                break;
+            case MagicApp::UVUnfoldApp::UNFOLD_DISC:
+                Unfold2Disc(false);
                 break;
             default:
                 break;
@@ -603,6 +788,7 @@ namespace MagicApp
                 }
             }
             GenerateSplitMesh();
+            bool isMultiPatchCase = false;
             // Generate fixed vertex
             std::vector<std::vector<GPP::Int> > holeIds;
             GPP::ErrorCode res = GPP::FillMeshHole::FindHoles(triMesh, &holeIds);
@@ -618,9 +804,174 @@ namespace MagicApp
             }
             if (holeIds.empty())
             {
-                MessageBox(NULL, "网格没有边界，不能展开", "温馨提示", MB_OK);
+                isMultiPatchCase = true;
+            }
+            if (!isMultiPatchCase)
+            {
+                // Is single connected region
+                std::vector<GPP::Real> isolation;
+                GPP::Int uvVertexCount = triMesh->GetVertexCount();
+                res = GPP::ConsolidateMesh::CalculateIsolation(triMesh, &isolation);
+                for (GPP::Int vid = 0; vid < uvVertexCount; vid++)
+                {
+                    if (isolation.at(vid) < 1)
+                    {
+                        isMultiPatchCase = true;
+                        break;
+                    }
+                }
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "网格展开失败：网格连通区域检测失败", "温馨提示", MB_OK);
+                    return;
+                }
+                if (!isMultiPatchCase)
+                {
+                    std::vector<GPP::Int> fixedVertexIndices(2);
+                    std::vector<GPP::Real> fixedVertexCoords(4);
+                    fixedVertexIndices.at(0) = holeIds.at(0).at(0);
+                    fixedVertexIndices.at(1) = holeIds.at(0).at(holeIds.at(0).size() / 2);
+                    fixedVertexCoords.at(0) = -1.0;
+                    fixedVertexCoords.at(1) = -1.0;
+                    fixedVertexCoords.at(2) = 1.0;
+                    fixedVertexCoords.at(3) = 1.0;
+                    std::vector<GPP::Real> texCoords;
+                    mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                    GPP::DumpOnce();
+#endif
+                    res = GPP::UnfoldMesh::ConformalMap(triMesh, &fixedVertexIndices, &fixedVertexCoords, &texCoords);
+                    if (res == GPP_NO_ERROR)
+                    {
+#if MAKEDUMPFILE
+                        GPP::DumpOnce();
+#endif
+                        res = GPP::UnfoldMesh::OptimizeIsometric(triMesh, &texCoords, 10, NULL);
+                    }
+                    mIsCommandInProgress = false;
+                    if (res == GPP_API_IS_NOT_AVAILABLE)
+                    {
+                        MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                        MagicCore::ToolKit::Get()->SetAppRunning(false);
+                    }
+                    if (res != GPP_NO_ERROR)
+                    {
+                        MessageBox(NULL, "网格展开失败", "温馨提示", MB_OK);
+                        return;
+                    }
+                    UnifyTextureCoords(texCoords, 0.9);
+                    triMesh->SetHasVertexTexCoord(true);
+                    GPP::Int vertexCount = triMesh->GetVertexCount();
+                    for (GPP::Int vid = 0; vid < vertexCount; vid++)
+                    {
+                        triMesh->SetVertexTexcoord(vid, GPP::Vector3(texCoords.at(vid * 2), texCoords.at(vid * 2 + 1), 0));
+                    }
+                    triMesh->SetHasTriangleTexCoord(true);
+                    GPP::Int faceCount = triMesh->GetTriangleCount();
+                    int vertexIds[3] = {-1};
+                    for (int fid = 0; fid < faceCount; fid++)
+                    {
+                        triMesh->GetTriangleVertexIds(fid, vertexIds);
+                        for (int lid = 0; lid < 3; lid++)
+                        {
+                            triMesh->SetTriangleTexcoord(fid, lid, triMesh->GetVertexTexcoord(vertexIds[lid]));
+                        }
+                    }
+                }
+            }
+            if (isMultiPatchCase)
+            {
+                std::vector<GPP::Real> texCoords;
+                std::vector<GPP::Int> faceTexIds;
+                mIsCommandInProgress = true;
+                GPP::ErrorCode res = GPP::UnfoldMesh::GenerateUVAtlas(triMesh, 1, &texCoords, &faceTexIds, false, false, false);
+                mIsCommandInProgress = false;
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "UV Atlas 生成失败", "温馨提示", MB_OK);
+                    return;
+                }
+                UnifyTextureCoords(texCoords, 0.9);
+                triMesh->SetHasTriangleTexCoord(true);
+                int uvFaceCount = faceTexIds.size() / 3;
+                for (int fid = 0; fid < uvFaceCount; fid++)
+                {
+                    for (int localId = 0; localId < 3; localId++)
+                    {
+                        GPP::Int tid = faceTexIds.at(fid * 3 + localId);
+                        triMesh->SetTriangleTexcoord(fid, localId, GPP::Vector3(texCoords.at(tid * 2), texCoords.at(tid * 2 + 1), 0));
+                    }
+                }
+            }
+            
+            mDisplayMode = UVMESH_WIREFRAME;
+            mUpdateDisplay = true;
+            mHideMarks = true;
+        }
+    }
+
+    void UVUnfoldApp::Unfold2Disc(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh == NULL)
+        {
+            MessageBox(NULL, "请导入需要UV展开的网格", "温馨提示", MB_OK);
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = UNFOLD_DISC;
+            DoCommand(true);
+        }
+        else
+        {
+            if (GPP::ConsolidateMesh::_IsTriMeshManifold(triMesh) == false)
+            {
+                MessageBox(NULL, "网格展开失败：网格有非流形结构，请先拓扑修复", "温馨提示", MB_OK);
                 return;
             }
+            if (GPP::ConsolidateMesh::_IsGeometryDegenerate(triMesh) == false)
+            {
+                if (MessageBox(NULL, "警告：网格有退化几何，继续计算可能得到无效结果，可以先几何修复，是否继续？", "温馨提示", MB_OKCANCEL) != IDOK)
+                {
+                    return;
+                }
+            }
+            GenerateSplitMesh();
+            bool isMultiPatchCase = false;
+            // Generate fixed vertex
+            std::vector<std::vector<GPP::Int> > holeIds;
+            GPP::ErrorCode res = GPP::FillMeshHole::FindHoles(triMesh, &holeIds);
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "找网格边界失败", "温馨提示", MB_OK);
+                return;
+            }
+            if (holeIds.empty())
+            {
+                MessageBox(NULL, "网格必须为单连通原盘拓扑结构", "温馨提示", MB_OK);
+                return;
+            }
+
             // Is single connected region
             std::vector<GPP::Real> isolation;
             GPP::Int uvVertexCount = triMesh->GetVertexCount();
@@ -629,7 +980,7 @@ namespace MagicApp
             {
                 if (isolation.at(vid) < 1)
                 {
-                    MessageBox(NULL, "网格展开失败：网格需要是单连通区域", "温馨提示", MB_OK);
+                    MessageBox(NULL, "网格必须为单连通结构", "温馨提示", MB_OK);
                     return;
                 }
             }
@@ -640,24 +991,41 @@ namespace MagicApp
             }
             if (res != GPP_NO_ERROR)
             {
-                MessageBox(NULL, "网格展开失败：网格连同区域检测失败", "温馨提示", MB_OK);
+                MessageBox(NULL, "网格展开失败：网格连通区域检测失败", "温馨提示", MB_OK);
                 return;
             }
-            std::vector<GPP::Int> fixedVertexIndices(2);
-            std::vector<GPP::Real> fixedVertexCoords(4);
-            fixedVertexIndices.at(0) = holeIds.at(0).at(0);
-            fixedVertexIndices.at(1) = holeIds.at(0).at(holeIds.at(0).size() / 2);
-            fixedVertexCoords.at(0) = -1.0;
-            fixedVertexCoords.at(1) = -1.0;
-            fixedVertexCoords.at(2) = 1.0;
-            fixedVertexCoords.at(3) = 1.0;
+
+            int maxLengthBoundaryId = -1;
+            double maxLength = -1;
+            for (int bid = 0; bid < holeIds.size(); bid++)
+            {
+                double curLength = 0;
+                for (int vid = 0; vid < holeIds.at(bid).size() - 1; vid++)
+                {
+                    curLength += (triMesh->GetVertexCoord(holeIds.at(bid).at(vid)) - triMesh->GetVertexCoord(holeIds.at(bid).at(vid + 1))).Length();
+                }
+                if (curLength > maxLength)
+                {
+                    maxLength = curLength;
+                    maxLengthBoundaryId = bid;
+                }
+            }
+            std::vector<GPP::Int> fixedVertexIndices = holeIds.at(maxLengthBoundaryId);
+            int boundaryVertexSize = fixedVertexIndices.size();
+            double theta = -2.0 * GPP::GPP_PI / double(boundaryVertexSize);
+            std::vector<GPP::Real> fixedVertexCoords;
+            fixedVertexCoords.reserve(boundaryVertexSize * 2);
+            for (int pid = 0; pid < boundaryVertexSize; pid++)
+            {
+                fixedVertexCoords.push_back(sin(pid * theta));
+                fixedVertexCoords.push_back(cos(pid * theta));
+            }
             std::vector<GPP::Real> texCoords;
             mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
             res = GPP::UnfoldMesh::ConformalMap(triMesh, &fixedVertexIndices, &fixedVertexCoords, &texCoords);
-            if (res == GPP_NO_ERROR)
-            {
-                res = GPP::UnfoldMesh::OptimizeIsometric(triMesh, &texCoords, 10, NULL);
-            }
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -687,6 +1055,7 @@ namespace MagicApp
                     triMesh->SetTriangleTexcoord(fid, lid, triMesh->GetVertexTexcoord(vertexIds[lid]));
                 }
             }
+
             mDisplayMode = UVMESH_WIREFRAME;
             mUpdateDisplay = true;
             mHideMarks = true;
@@ -728,12 +1097,11 @@ namespace MagicApp
             GenerateSplitMesh();
             std::vector<GPP::Real> texCoords;
             std::vector<GPP::Int> faceTexIds;
-            bool needInitSplit = !mHasSplitted;
-            bool needSplitFoldOver = !mHasSplitted;
-            InfoLog << "GenerateUVAtlas: needInitSplit=" << needInitSplit << " needSplitFoldOver=" << needSplitFoldOver << std::endl;
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::UnfoldMesh::GenerateUVAtlas(triMesh, initChartCount, needInitSplit, 
-                needSplitFoldOver, &texCoords, &faceTexIds);
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::UnfoldMesh::GenerateUVAtlas(triMesh, initChartCount, &texCoords, &faceTexIds, true, true, true);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -869,7 +1237,7 @@ namespace MagicApp
         else if (mDisplayMode == TRIMESH_TEXTURE)
         {
             InfoLog << "Display TRIMESH_TEXTURE" << std::endl;
-            if (triMesh == NULL)
+            if (triMesh == NULL || (!triMesh->HasTriangleTexCoord()))
             {
                 MagicCore::RenderSystem::Get()->HideRenderingObject("TriMesh_UVUnfoldApp");
                 return;
@@ -882,7 +1250,7 @@ namespace MagicApp
         else if (mDisplayMode == UVMESH_WIREFRAME)
         {
             InfoLog << "Display UVMESH_WIREFRAME" << std::endl;
-            if (triMesh == NULL)
+            if (triMesh == NULL || (!triMesh->HasTriangleTexCoord()))
             {
                 MagicCore::RenderSystem::Get()->HideRenderingObject("TriMesh_UVUnfoldApp");
                 return;
@@ -1000,7 +1368,6 @@ namespace MagicApp
             ModelManager::Get()->GetMesh()->UpdateNormal();
             ClearSplitData();
             InsertHolesToSnapIds();
-            mHasSplitted = true;
         }
     }
 

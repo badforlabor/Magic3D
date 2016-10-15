@@ -35,10 +35,18 @@
         <Widget type="Button" skin="But_Curvature_CN" position="161 155 43 43" align="Left Top" name="But_CurvatureRef">
             <Property key="Visible" value="false"/>
         </Widget>
+      
+        <Widget type="Button" skin="But_MeshDistance_CN" position="15 210 60 60" align="Left Top" name="But_PointsToMeshDist"></Widget>
+        <Widget type="Button" skin="But_Open" position="75 220 43 43" align="Left Top" name="But_ImportMeasureData">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Measure_CN" position="118 220 43 43" align="Left Top" name="But_ComputeDistance">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
-        <Widget type="Button" skin="But_Home" position="15 210 60 60" align="Left Top" name="But_BackToHomepage"/>
+      <Widget type="Button" skin="But_Home" position="15 275 60 60" align="Left Top" name="But_BackToHomepage"/>
         
-        <Widget type="ProgressBar" skin="ProgressBar" position="15 280 150 20" align="Left Top" name="APIProgress">
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 340 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>
             <Property key="FlowDirection" value="LeftToRight"/>
             <Property key="Visible" value="false"/>

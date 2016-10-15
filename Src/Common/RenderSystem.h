@@ -17,6 +17,7 @@ namespace GPP
 {
     class PointCloud;
     class TriMesh;
+    class Obb;
 }
 
 namespace MagicCore
@@ -58,6 +59,7 @@ namespace MagicCore
         void RenderUVMesh(std::string meshName, std::string materialName, const GPP::TriMesh* mesh, ModelNodeType nodeType = MODEL_NODE_CENTER);
         void RenderLineSegments(std::string lineName, std::string materialName, const std::vector<GPP::Vector3>& startCoords, const std::vector<GPP::Vector3>& endCoords);
         void RenderPolyline(std::string polylineName, std::string materialName, const GPP::Vector3& color, const std::vector<GPP::Vector3>& polylineCoords, bool appendNewPolyline = false, ModelNodeType nodeType = MODEL_NODE_CENTER);
+        void RenderOBB(std::string obbName, std::string materialName, const GPP::Vector3& color, const GPP::Obb& obb, bool appendNewObb = false, ModelNodeType nodeType = MODEL_NODE_CENTER);
         void HideRenderingObject(std::string objName);
 
         void ResertAllSceneNode(void);

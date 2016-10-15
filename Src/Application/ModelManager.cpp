@@ -126,6 +126,10 @@ namespace MagicApp
         {
             return false;
         }
+        if (mpTriMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
+        {
+            mpTriMesh->FuseVertex();
+        }
         mpTriMesh->UnifyCoords(2.0, &mScaleValue, &mObjCenterCoord);
         mpTriMesh->UpdateNormal();
         return true;

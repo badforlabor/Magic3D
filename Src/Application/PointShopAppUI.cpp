@@ -30,7 +30,6 @@ namespace MagicApp
 
         mRoot.at(0)->findWidget("But_SimplifyPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SimplifyPointCloud);
         mRoot.at(0)->findWidget("But_DoSimplifyPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoSimplifyPointCloud);
-        mRoot.at(0)->findWidget("But_DoFitPointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::DoFitPointCloud);
         
         mRoot.at(0)->findWidget("But_Normal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::PointCloudNormal);
         mRoot.at(0)->findWidget("But_CalNormalFront")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::CalculatePointCloudNormalFront);
@@ -42,9 +41,8 @@ namespace MagicApp
 
         mRoot.at(0)->findWidget("But_ConsolidatePointCloud")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::ConsolidatePointCloud);
         mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::RemovePointCloudOutlier);
-        mRoot.at(0)->findWidget("But_RemoveIsolatePart")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::RemoveIsolatePart);
-        mRoot.at(0)->findWidget("But_SmoothGeometryByNormal")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SmoothPointCloudByNormal);       
-        mRoot.at(0)->findWidget("But_PlaneProjectFit")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::PlaneProjectFit);
+        mRoot.at(0)->findWidget("But_RemoveIsolatePart")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::RemoveIsolatePart);     
+        mRoot.at(0)->findWidget("But_SmoothGeometry")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SmoothPointCloudGeoemtry);
 
         mRoot.at(0)->findWidget("But_Selection")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SelectPoint);
         mRoot.at(0)->findWidget("But_SelectByRectangle")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SelectByRectangle);
@@ -199,7 +197,6 @@ namespace MagicApp
         bool isVisible = mRoot.at(0)->findWidget("But_DoSimplifyPointCloud")->castType<MyGUI::Button>()->isVisible();
         isVisible = !isVisible;
         mRoot.at(0)->findWidget("But_DoSimplifyPointCloud")->castType<MyGUI::Button>()->setVisible(isVisible);
-        mRoot.at(0)->findWidget("But_DoFitPointCloud")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_SimplifyResolution")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
         {
@@ -234,37 +231,26 @@ namespace MagicApp
         }
     }
 
-    void PointShopAppUI::DoFitPointCloud(MyGUI::Widget* pSender)
-    {
-        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
-        if (pointShop != NULL)
-        {
-            std::string textString = mRoot.at(0)->findWidget("Edit_SimplifyResolution")->castType<MyGUI::EditBox>()->getOnlyText();
-            int resolution = std::atoi(textString.c_str());
-            if (resolution < 1)
-            {
-                std::stringstream ss;
-                std::string textString;
-                ss << 512;
-                ss >> textString;
-                mRoot.at(0)->findWidget("Edit_SimplifyResolution")->castType<MyGUI::EditBox>()->setOnlyText(textString);
-            }
-            else
-            {
-                pointShop->FitPointCloud(resolution, true);
-            }            
-        }
-    }
-
     void PointShopAppUI::PointCloudNormal(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_CalNormal")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_CalNormalFront")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_CalNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_FlipNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_ReversePatchNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_SmoothNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_UpdateNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_CalNormalFront")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_CalNormal")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_FlipNormal")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_ReversePatchNormal")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_SmoothNormal")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_UpdateNormal")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 9;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
     }
 
     void PointShopAppUI::CalculatePointCloudNormalFront(MyGUI::Widget* pSender)
@@ -272,7 +258,20 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->CalculatePointCloudNormal(true);
+            std::string textString = mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int neighborCount = std::atoi(textString.c_str());
+            if (neighborCount > 3)
+            {
+                pointShop->CalculatePointCloudNormal(true, neighborCount, true);
+            }
+            else
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 9;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
         }
     }
 
@@ -281,7 +280,20 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->CalculatePointCloudNormal(false);
+            std::string textString = mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int neighborCount = std::atoi(textString.c_str());
+            if (neighborCount > 3)
+            {
+                pointShop->CalculatePointCloudNormal(false, neighborCount, true);
+            }
+            else
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 9;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
         }
     }
 
@@ -299,7 +311,20 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->ReversePatchNormal();
+            std::string textString = mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int neighborCount = std::atoi(textString.c_str());
+            if (neighborCount > 3)
+            {
+                pointShop->ReversePatchNormal(neighborCount);
+            }
+            else
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 9;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
         }
     }
 
@@ -308,7 +333,20 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->SmoothPointCloudNormal();
+            std::string textString = mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int neighborCount = std::atoi(textString.c_str());
+            if (neighborCount > 3)
+            {
+                pointShop->SmoothPointCloudNormal(neighborCount, true);
+            }
+            else
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 9;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
         }
     }
 
@@ -317,26 +355,62 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->UpdatePointCloudNormal();
+            std::string textString = mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int neighborCount = std::atoi(textString.c_str());
+            if (neighborCount > 3)
+            {
+                pointShop->UpdatePointCloudNormal(neighborCount, true);
+            }
+            else
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 9;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_NormalNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
         }
     }
 
-    void PointShopAppUI::PlaneProjectFit(MyGUI::Widget* pSender)
+    void PointShopAppUI::SmoothPointCloudGeoemtry(MyGUI::Widget* pSender)
     {
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->PlaneProjectFit(true);
+            std::string textString = mRoot.at(0)->findWidget("Edit_SmoothGeometryCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int smoothCount = std::atoi(textString.c_str());
+            if (smoothCount < 1)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 5;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_SmoothGeometryCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                pointShop->SmoothPointCloudGeoemtry(smoothCount, true);
+            }     
         }
     }
 
     void PointShopAppUI::ConsolidatePointCloud(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_RemoveIsolatePart")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_SmoothGeometryByNormal")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_PlaneProjectFit")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_RemoveIsolatePart")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_SmoothGeometry")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_SmoothGeometryCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 5;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_SmoothGeometryCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_SmoothGeometryCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
     }
 
     void PointShopAppUI::RemovePointCloudOutlier(MyGUI::Widget* pSender)
@@ -354,15 +428,6 @@ namespace MagicApp
         if (pointShop != NULL)
         {
             pointShop->RemoveIsolatePart();
-        }
-    }
-
-    void PointShopAppUI::SmoothPointCloudByNormal(MyGUI::Widget* pSender)
-    {
-        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
-        if (pointShop != NULL)
-        {
-            pointShop->SmoothPointCloudByNormal();
         }
     }
 
@@ -500,6 +565,16 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_FusePointCloudColor")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_ExportImageColorIds")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 12;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
     }
 
     void PointShopAppUI::FusePointCloudColor(MyGUI::Widget* pSender)
@@ -507,7 +582,20 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->FusePointCloudColor(true);
+            std::string textString = mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int neighborCount = std::atoi(textString.c_str());
+            if (neighborCount < 4)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 12;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                pointShop->FusePointCloudColor(neighborCount, true);
+            }
         }
     }
 

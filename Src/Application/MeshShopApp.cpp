@@ -205,6 +205,9 @@ namespace MagicApp
             }
             GPP::Plane3 plane(planeCenter, planeNormal);
             std::vector<bool> triangleFlags;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
             GPP::ErrorCode res = GPP::SplitMesh::SplitByPlane(triMesh, &plane, &triangleFlags);
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -300,6 +303,9 @@ namespace MagicApp
             case MagicApp::MeshShopApp::REMOVEISOLATEPART:
                 RemoveMeshIsolatePart(false);
                 break;
+            case MagicApp::MeshShopApp::OPTIMIZEMESH:
+                OptimizeMesh(false);
+                break;
             case MagicApp::MeshShopApp::REMOVEMESHNOISE:
                 RemoveMeshNoise(mFilterPositionWeight, false);
                 break;
@@ -317,6 +323,12 @@ namespace MagicApp
                 break;
             case MagicApp::MeshShopApp::SIMPLIFY:
                 SimplifyMesh(mTargetVertexCount, false);
+                break;
+            case MagicApp::MeshShopApp::SIMPLIFYSELECTVERTEX:
+                SimplifySelectedVertices(false);
+                break;
+            case MagicApp::MeshShopApp::UNIFORMREMESH:
+                UniformRemesh(mTargetVertexCount, false);
                 break;
             case MagicApp::MeshShopApp::FILLHOLE:
                 FillHole(mFillHoleType, false);
@@ -557,7 +569,10 @@ namespace MagicApp
                 material->setCullingMode(Ogre::CullingMode::CULL_CLOCKWISE);
             }
         }
-        mUpdateMeshRendering = true;
+        if (!mIsCommandInProgress)
+        {
+            mUpdateMeshRendering = true;
+        }
     }
 
     bool MeshShopApp::ImportMesh()
@@ -578,10 +593,6 @@ namespace MagicApp
                 return false;
             }
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-            if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                triMesh->FuseVertex();
-            }
             ResetSelection();
             mRightMouseType = MOVE;
             mShowHoleLoopIds.clear();
@@ -688,7 +699,6 @@ namespace MagicApp
         {
             return;
         }
-        GPP::Int verticeSize = triMesh->GetVertexCount();
         GPP::Int insertedVertexSize = (triMesh->GetVertexCount() - oldTriMeshVertexSize);
         if (insertedVertexFields.size() != insertedVertexSize * 3)
         {
@@ -796,6 +806,9 @@ namespace MagicApp
         {
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
             mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
             GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(triMesh);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -914,7 +927,11 @@ namespace MagicApp
         {
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(triMesh, GPP::ONE_RADIAN * 5.0, GPP::REAL_TOL, GPP::ONE_RADIAN * 170.0);
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::ConsolidateMesh::ConsolidateGeometry(triMesh, GPP::ONE_RADIAN * 5.0, 
+                GPP::REAL_TOL, GPP::ONE_RADIAN * 170.0);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -926,6 +943,71 @@ namespace MagicApp
                 MessageBox(NULL, "几何修复失败", "温馨提示", MB_OK);
                 return;
             }
+            triMesh->UpdateNormal();
+            mUpdateMeshRendering = true;
+        }
+    }
+
+    void MeshShopApp::OptimizeMesh(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = OPTIMIZEMESH;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            mIsCommandInProgress = true;
+            double sharpAngle = 30 * GPP::ONE_RADIAN;
+            if (triMesh->HasColor())
+            {
+                std::vector<GPP::Real> vertexFields;
+                CollectTriMeshVerticesColorFields(triMesh, &vertexFields);
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
+                GPP::ErrorCode res = GPP::Triangulation::CentroidVoronoiOptimization(triMesh, &sharpAngle, &vertexFields);
+                mIsCommandInProgress = false;
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "网格优化失败", "温馨提示", MB_OK);
+                    return;
+                }
+                GPP::Int vertexCount = triMesh->GetVertexCount();
+                for (GPP::Int vid = 0; vid < vertexCount; vid++)
+                {
+                    GPP::Int baseIndex = vid * 3;
+                    triMesh->SetVertexColor(vid, GPP::Vector3(vertexFields.at(baseIndex), vertexFields.at(baseIndex + 1), vertexFields.at(baseIndex + 2)));
+                }
+            }
+            else
+            {
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
+                GPP::ErrorCode res = GPP::Triangulation::CentroidVoronoiOptimization(triMesh, &sharpAngle, NULL);
+                mIsCommandInProgress = false;
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "网格优化失败", "温馨提示", MB_OK);
+                    return;
+                }
+            }        
             triMesh->UpdateNormal();
             mUpdateMeshRendering = true;
         }
@@ -957,6 +1039,9 @@ namespace MagicApp
                 }
             }
             GPP::ErrorCode res = GPP_NO_ERROR;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
             if (isVertexSelected)
             {
                 GPP::SubTriMesh subTriMesh(triMesh, mVertexSelectFlag, GPP::SubTriMesh::BUILD_SUBTRIMESH_TYPE_BY_VERTICES);
@@ -1008,6 +1093,9 @@ namespace MagicApp
                 }
             }
             GPP::ErrorCode res = GPP_NO_ERROR;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
             if (isVertexSelected)
             {
                 GPP::SubTriMesh subTriMesh(triMesh, mVertexSelectFlag, GPP::SubTriMesh::BUILD_SUBTRIMESH_TYPE_BY_VERTICES);
@@ -1058,6 +1146,9 @@ namespace MagicApp
                 }
             }
             GPP::ErrorCode res = GPP_NO_ERROR;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
             if (isVertexSelected)
             {
                 GPP::SubTriMesh subTriMesh(triMesh, mVertexSelectFlag, GPP::SubTriMesh::BUILD_SUBTRIMESH_TYPE_BY_VERTICES);
@@ -1118,6 +1209,9 @@ namespace MagicApp
                 }
                 std::vector<GPP::Real> insertedVertexFields;
                 mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::SubdivideMesh::LoopSubdivideMesh(triMesh, &vertexFields, &insertedVertexFields);
                 mIsCommandInProgress = false;
                 if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -1140,6 +1234,9 @@ namespace MagicApp
             else
             {
                 mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::SubdivideMesh::LoopSubdivideMesh(triMesh, NULL, NULL);
                 mIsCommandInProgress = false;
                 if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -1196,6 +1293,9 @@ namespace MagicApp
                 }
                 std::vector<GPP::Real> insertedVertexFields;
                 mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::SubdivideMesh::DensifyMesh(triMesh, targetVertexCount, &vertexFields, &insertedVertexFields);
                 mIsCommandInProgress = false;
                 if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -1218,6 +1318,9 @@ namespace MagicApp
             else
             {
                 mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::SubdivideMesh::DensifyMesh(triMesh, targetVertexCount, NULL, NULL);
                 mIsCommandInProgress = false;
                 if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -1265,6 +1368,9 @@ namespace MagicApp
                 std::vector<GPP::Real> simplifiedVertexFields;
                 //GPP::DumpOnce();
                 mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(triMesh, targetVertexCount, false, &vertexFields, &simplifiedVertexFields);
                 mIsCommandInProgress = false;
                 if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -1287,6 +1393,9 @@ namespace MagicApp
             else
             {
                 mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::SimplifyMesh::QuadricSimplify(triMesh, targetVertexCount, false, NULL, NULL);
                 mIsCommandInProgress = false;
                 if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -1300,6 +1409,172 @@ namespace MagicApp
                     return;
                 }
             }
+            ResetSelection();
+            mUpdateMeshRendering = true;
+            mpUI->SetMeshInfo(triMesh->GetVertexCount(), triMesh->GetTriangleCount());
+            mpUI->ResetFillHole();
+            FindHole(false);
+        }
+    }
+
+    void MeshShopApp::SimplifySelectedVertices(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = SIMPLIFYSELECTVERTEX;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (GPP::ConsolidateMesh::_IsTriMeshManifold(triMesh) == false)
+            {
+                MessageBox(NULL, "警告：网格有非流形结构，请先拓扑修复，否则程序会出错", "温馨提示", MB_OK);
+                return;
+            }
+            std::vector<GPP::Int> removingVertices;
+            GPP::Int originVertexCount = triMesh->GetVertexCount();
+            for (GPP::Int vid = 0; vid < originVertexCount; vid++)
+            {
+                if (mVertexSelectFlag.at(vid))
+                {
+                    removingVertices.push_back(vid);
+                }
+            }
+            if (removingVertices.empty())
+            {
+                return;
+            }
+            if (triMesh->HasColor())
+            {
+                GPP::Int originVertexCount = triMesh->GetVertexCount();
+                std::vector<GPP::Vector3> vertexColors(originVertexCount);
+                for (GPP::Int vid = 0; vid < originVertexCount; vid++)
+                {
+                    vertexColors.at(vid) = triMesh->GetVertexColor(vid);
+                }
+                mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
+                std::vector<GPP::Int> vertexMap;
+                GPP::ErrorCode res = GPP::SimplifyMesh::SimplifyByRemovingVertex(triMesh, removingVertices, &vertexMap, NULL, NULL);
+                mIsCommandInProgress = false;
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "网格简化失败", "温馨提示", MB_OK);
+                    return;
+                }               
+                GPP::Int vertexCount = triMesh->GetVertexCount();
+                for (GPP::Int vid = 0; vid < vertexCount; vid++)
+                {
+                    triMesh->SetVertexColor(vid, vertexColors.at(vertexMap.at(vid)));
+                }
+            }
+            else
+            {
+                mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
+                GPP::ErrorCode res = GPP::SimplifyMesh::SimplifyByRemovingVertex(triMesh, removingVertices, NULL, NULL, NULL);
+                mIsCommandInProgress = false;
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "网格简化失败", "温馨提示", MB_OK);
+                    return;
+                }          
+            }
+            ResetSelection();
+            mUpdateMeshRendering = true;
+            mpUI->SetMeshInfo(triMesh->GetVertexCount(), triMesh->GetTriangleCount());
+            mpUI->ResetFillHole();
+            FindHole(false);
+        }
+    }
+
+    void MeshShopApp::UniformRemesh(int targetVertexCount, bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (isSubThread)
+        {
+            mTargetVertexCount = targetVertexCount;
+            mCommandType = UNIFORMREMESH;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (GPP::ConsolidateMesh::_IsTriMeshManifold(triMesh) == false)
+            {
+                MessageBox(NULL, "警告：网格有非流形结构，请先拓扑修复，否则程序会出错", "温馨提示", MB_OK);
+                return;
+            }
+            double sharpAngle = 30 * GPP::ONE_RADIAN;
+            if (triMesh->HasColor())
+            {
+                std::vector<GPP::Real> vertexFields;
+                CollectTriMeshVerticesColorFields(triMesh, &vertexFields);
+                std::vector<GPP::Real> remeshVertexFields;
+#if MAKEDUMPFILE
+        GPP::DumpOnce();
+#endif
+                mIsCommandInProgress = true;
+                GPP::ErrorCode res = GPP::Remesh::UniformRemesh(triMesh, targetVertexCount, sharpAngle, &vertexFields, &remeshVertexFields);
+                mIsCommandInProgress = false;
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "Remesh失败", "温馨提示", MB_OK);
+                    return;
+                }               
+                GPP::Int vertexCount = triMesh->GetVertexCount();
+                for (GPP::Int vid = 0; vid < vertexCount; vid++)
+                {
+                    GPP::Int baseIndex = vid * 3;
+                    triMesh->SetVertexColor(vid, GPP::Vector3(remeshVertexFields.at(baseIndex), remeshVertexFields.at(baseIndex + 1), remeshVertexFields.at(baseIndex + 2)));
+                }
+            }
+            else
+            {
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
+                mIsCommandInProgress = true;
+                GPP::ErrorCode res = GPP::Remesh::UniformRemesh(triMesh, targetVertexCount, sharpAngle, NULL, NULL);
+                mIsCommandInProgress = false;
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "Remesh失败", "温馨提示", MB_OK);
+                    return;
+                }
+            }
             triMesh->UpdateNormal();
             ResetSelection();
             mUpdateMeshRendering = true;
@@ -1309,37 +1584,74 @@ namespace MagicApp
         }
     }
 
-    void MeshShopApp::SampleMesh()
+    void MeshShopApp::UniformSampleMesh(int targetPointCount)
     {
-        if (mIsCommandInProgress)
+        if (IsCommandAvaliable() == false)
         {
-            MessageBox(NULL, "请等待当前命令执行完", "温馨提示", MB_OK);
             return;
         }
         GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-        if (triMesh == NULL)
+        std::vector<GPP::PointOnEdge> pointsOnEdge;
+        std::vector<GPP::PointOnFace> pointsOnFace;
+        std::vector<GPP::Int> pointsOnVertex;
+#if MAKEDUMPFILE
+        GPP::DumpOnce();
+#endif
+        GPP::ErrorCode res = GPP::SampleMesh::UniformSample(triMesh, targetPointCount, 70 * GPP::ONE_RADIAN, 
+            pointsOnFace, pointsOnEdge, pointsOnVertex, false); 
+        if (res == GPP_API_IS_NOT_AVAILABLE)
         {
-            AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "采样失败", "温馨提示", MB_OK);
             return;
         }
-        GPP::Int vertexCount = triMesh->GetVertexCount();
-        if (vertexCount < 1)
-        {
-            AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
-            return;
-        }
+
         bool hasColor = triMesh->HasColor();
-        GPP::PointCloud* pointCloud = new GPP::PointCloud;
-        for (GPP::Int vid = 0; vid < vertexCount; vid++)
+        GPP::PointCloud* pointCloud = new GPP::PointCloud(true, hasColor);
+        for (std::vector<GPP::PointOnEdge>::iterator itr = pointsOnEdge.begin(); itr != pointsOnEdge.end(); ++itr)
         {
-            pointCloud->InsertPoint(triMesh->GetVertexCoord(vid), triMesh->GetVertexNormal(vid));
+            GPP::Vector3 coord = triMesh->GetVertexCoord(itr->mVertexIdStart) * itr->mWeight + triMesh->GetVertexCoord(itr->mVertexIdEnd) * (1.0 - itr->mWeight);
+            GPP::Vector3 normal = triMesh->GetVertexNormal(itr->mVertexIdStart) * itr->mWeight + triMesh->GetVertexNormal(itr->mVertexIdEnd) * (1.0 - itr->mWeight);
+            normal.Normalise();
+            GPP::Int pointId = pointCloud->InsertPoint(coord, normal);
             if (hasColor)
             {
-                pointCloud->SetPointColor(vid, triMesh->GetVertexColor(vid));
+                GPP::Vector3 color = triMesh->GetVertexColor(itr->mVertexIdStart) * itr->mWeight + triMesh->GetVertexColor(itr->mVertexIdEnd) * (1.0 - itr->mWeight);
+                pointCloud->SetPointColor(pointId, color);
             }
         }
-        pointCloud->SetHasNormal(true);
-        pointCloud->SetHasColor(hasColor);
+        GPP::Int vertexIds[3] = {-1};
+        for (std::vector<GPP::PointOnFace>::iterator itr = pointsOnFace.begin(); itr != pointsOnFace.end(); ++itr)
+        {
+            triMesh->GetTriangleVertexIds(itr->mFaceId, vertexIds);
+            GPP::Vector3 coord(0, 0, 0);
+            for (int fvid = 0; fvid < 3; fvid++)
+            {
+                coord += triMesh->GetVertexCoord(vertexIds[fvid]) * itr->mCoord[fvid];
+            }
+            GPP::Int pointId = pointCloud->InsertPoint(coord, triMesh->GetTriangleNormal(itr->mFaceId));
+            if (hasColor)
+            {
+                GPP::Vector3 color(0, 0, 0);
+                for (int fvid = 0; fvid < 3; fvid++)
+                {
+                    color += triMesh->GetVertexColor(vertexIds[fvid]) * itr->mCoord[fvid];
+                }
+                pointCloud->SetPointColor(pointId, color);
+            }
+        }
+        for (std::vector<GPP::Int>::iterator itr = pointsOnVertex.begin(); itr != pointsOnVertex.end(); ++itr)
+        {
+            GPP::Int pointId = pointCloud->InsertPoint(triMesh->GetVertexCoord(*itr), triMesh->GetVertexNormal(*itr));
+            if (hasColor)
+            {
+                pointCloud->SetPointColor(pointId, triMesh->GetVertexColor(*itr));
+            }
+        }
         ModelManager::Get()->ClearMesh();
         ModelManager::Get()->SetPointCloud(pointCloud);
         AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
@@ -1485,6 +1797,9 @@ namespace MagicApp
             }
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
             GPP::ErrorCode res = GPP_NO_ERROR;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
             if (ModelManager::Get()->GetMesh()->HasColor())
             {
                 std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
@@ -1551,7 +1866,7 @@ namespace MagicApp
                     // find the "most center" id
                     int allCount = isSelectedTags.size();
                     int longestStartId = -1, longestEndId = -1;
-                    int tmpStartId = -1, tmpEndId = -1;
+                    int tmpStartId = -1;
                     int longestSize = 0;
                     int currentId = 0;
                     bool bFind = false;
@@ -1664,6 +1979,9 @@ namespace MagicApp
                 std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
                 CollectTriMeshVerticesColorFields(triMesh, &vertexScaleFields);
                 GPP::Int oldTriMeshVertexSize = triMesh->GetVertexCount();
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::FillMeshHole::BridgeEdges(triMesh, edgeVertex1, edgeVertex2, &vertexScaleFields, &outputScaleFields);
                 if (res == GPP_API_IS_NOT_AVAILABLE)
                 {
@@ -1678,6 +1996,9 @@ namespace MagicApp
             }
             else
             {
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
                 GPP::ErrorCode res = GPP::FillMeshHole::BridgeEdges(triMesh, edgeVertex1, edgeVertex2, NULL, NULL);
                 if (res == GPP_API_IS_NOT_AVAILABLE)
                 {
@@ -1726,6 +2047,9 @@ namespace MagicApp
             return;
         }
         GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+#if MAKEDUMPFILE
+        GPP::DumpOnce();
+#endif
         GPP::ErrorCode res = GPP::OffsetMesh::UniformApproximate(triMesh, offsetValue);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {

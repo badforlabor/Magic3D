@@ -21,17 +21,21 @@ namespace MagicApp
         void SetModelArea(double area);
         void SetModelVolume(double volume);
         void SetGeodesicsInfo(double distance);
+        void SetDistanceInfo(int refFaceCount, bool bCalculted, double minDist, double maxDist);
 
     private:
         void SwitchDisplayMode(MyGUI::Widget* pSender);
 
         void ImportModel(MyGUI::Widget* pSender);
+        void ImportRefModel(MyGUI::Widget* pSender);
 
         void Geodesics(MyGUI::Widget* pSender);
         void DeleteMeshMark(MyGUI::Widget* pSender);
         void ComputeApproximateGeodesics(MyGUI::Widget* pSender);
         void FastComputeExactGeodesics(MyGUI::Widget* pSender);
         void ComputeExactGeodesics(MyGUI::Widget* pSender);
+        void PointsToMeshDistance(MyGUI::Widget* pSender);
+        void ComputePointsToMeshDistance(MyGUI::Widget* pSender);
 
         void MeasureModel(MyGUI::Widget* pSender);
         void MeasureArea(MyGUI::Widget* pSender);
@@ -52,5 +56,9 @@ namespace MagicApp
         double mArea;
         double mVolume;
         double mGeodesicsDistance;
+        int mRefMeshFaceCount;
+        bool mIsCalculted;
+        double mMinDistance;
+        double mMaxDistance;
     };
 }

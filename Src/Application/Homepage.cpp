@@ -148,15 +148,16 @@ namespace MagicApp
                 return;
             }
             mpDumpInfo->LoadDumpFile(fileName);
-            if (dumpApiName == GPP::POINT_REGISTRATION_AlignPointPair || dumpApiName == GPP::POINT_REGISTRATION_ICP || 
+            if (dumpApiName == GPP::POINT_REGISTRATION_ICP || dumpApiName == GPP::POINT_REGISTRATION_GLOBAL ||
                 dumpApiName == GPP::POINT_REGISTRATION_ALIGNPOINTCLOUD || dumpApiName == GPP::POINT_REGISTRATION_ALIGNPOINTCLOUD_MARK ||
-                dumpApiName == GPP::POINT_SUM_EXTRACT_FUSION)
+                dumpApiName == GPP::INTRINSICCOLOR_TUNE_COLOR_SINGLE_LIGHT)
             {
                 AppManager::Get()->EnterApp(new RegistrationApp, "RegistrationApp");
                 RegistrationApp* registrationApp = dynamic_cast<RegistrationApp*>(AppManager::Get()->GetApp("RegistrationApp"));
                 if (registrationApp)
                 {
                     registrationApp->SetDumpInfo(mpDumpInfo);
+                    mpDumpInfo = NULL;
                 }
                 else
                 {
@@ -171,6 +172,7 @@ namespace MagicApp
                 if (measureApp)
                 {
                     measureApp->SetDumpInfo(mpDumpInfo);
+                    mpDumpInfo = NULL;
                 }
                 else
                 {
@@ -230,6 +232,7 @@ namespace MagicApp
         {
             GPP::TriMesh* copiedTriMesh = GPP::CopyTriMesh(mpDumpInfo->GetTriMesh(0));
             copiedTriMesh->UnifyCoords(2.0);
+            copiedTriMesh->UpdateNormal();
             ModelManager::Get()->SetMesh(copiedTriMesh);
             ModelManager::Get()->ClearPointCloud();
             UpdateModelRendering();

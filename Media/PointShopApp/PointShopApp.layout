@@ -25,9 +25,6 @@
         <Widget type="Button" skin="But_Simplify_CN" position="155 155 43 43" align="Left Top" name="But_DoSimplifyPointCloud">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Smooth" position="198 155 43 43" align="Left Top" name="But_DoFitPointCloud">
-            <Property key="Visible" value="false"/>
-        </Widget>
 
         <Widget type="Button" skin="But_Normal_CN" position="15 210 60 60" align="Left Top" name="But_Normal"/>
         <Widget type="Button" skin="But_Front" position="75 220 43 43" align="Left Top" name="But_CalNormalFront">
@@ -48,6 +45,10 @@
         <Widget type="Button" skin="But_Update_CN" position="290 220 43 43" align="Left Top" name="But_UpdateNormal">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="EditBox" skin="EditBox" position="333 225 30 30" align="Left Top" name="Edit_NormalNeighborCount">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
 
         <Widget type="Button" skin="But_Repair_CN" position="15 275 60 60" align="Left Top" name="But_ConsolidatePointCloud"></Widget>
         <Widget type="Button" skin="But_Outlier_CN" position="75 285 43 43" align="Left Top" name="But_RemovePointCloudOutlier">
@@ -56,10 +57,11 @@
         <Widget type="Button" skin="But_Isolate_CN" position="118 285 43 43" align="Left Top" name="But_RemoveIsolatePart">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_RemoveNoise_CN" position="161 285 43 43" align="Left Top" name="But_SmoothGeometryByNormal">
+        <Widget type="Button" skin="But_Smooth_CN" position="161 285 43 43" align="Left Top" name="But_SmoothGeometry">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="204 285 43 43" align="Left Top" name="But_PlaneProjectFit">
+        <Widget type="EditBox" skin="EditBox" position="204 290 40 30" align="Left Top" name="Edit_SmoothGeometryCount">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
 
@@ -94,6 +96,10 @@
 
         <Widget type="Button" skin="But_Color_CN" position="15 470 60 60" align="Left Top" name="But_PointCloudColor"/>
         <Widget type="Button" skin="But_ColorMerging_CN" position="75 480 43 43" align="Left Top" name="But_FusePointCloudColor">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="EditBox" skin="EditBox" position="85 523 30 30" align="Left Top" name="Edit_FuseColorNeighborCount">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
         <Widget type="Button" skin="But_PointPixelMap_CN" position="118 480 43 43" align="Left Top" name="But_LoadImageColorIds">

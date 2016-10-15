@@ -28,7 +28,8 @@ namespace MagicApp
         {
             NONE = 0,
             UNFOLD_INITIAL,
-            GENERATE_UV_ATLAS
+            GENERATE_UV_ATLAS,
+            UNFOLD_DISC
         };
 
         enum DisplayMode
@@ -65,9 +66,11 @@ namespace MagicApp
         void ConfirmGeodesics(void);
         void DeleteGeodesics(void);
         void SwitchMarkDisplay(void);
+        void GenerateSplitLines(int splitChartCount);
         
         void UnfoldTriMesh(bool isSubThread = true);
         void GenerateUVAtlas(int initChartCount, bool isSubThread = true);
+        void Unfold2Disc(bool isSubThread = true);
 
         int GetMeshVertexCount(void);
 
@@ -112,6 +115,5 @@ namespace MagicApp
         int mInitChartCount;
         std::vector<int> mSnapIds;
         int mTargetVertexCount;
-        bool mHasSplitted;
     };
 }

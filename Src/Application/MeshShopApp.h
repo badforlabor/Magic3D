@@ -31,7 +31,10 @@ namespace MagicApp
             LOOPSUBDIVIDE,
             REFINE,
             SIMPLIFY,
-            FILLHOLE
+            SIMPLIFYSELECTVERTEX,
+            FILLHOLE,
+            UNIFORMREMESH,
+            OPTIMIZEMESH
         };
 
         enum RightMouseType
@@ -64,13 +67,16 @@ namespace MagicApp
         void ReverseDirection(void);
         void RemoveMeshIsolatePart(bool isSubThread = true);
         void ConsolidateGeometry(bool isSubThread = true);
+        void OptimizeMesh(bool isSubThread = true);
         void RemoveMeshNoise(double positionWeight, bool isSubThread = true);
         void SmoothMesh(double positionWeight, bool isSubThread = true);
         void EnhanceMeshDetail(bool isSubThread = true);
         void LoopSubdivide(bool isSubThread = true);
         void RefineMesh(int targetVertexCount, bool isSubThread = true);
         void SimplifyMesh(int targetVertexCount, bool isSubThread = true);
-        void SampleMesh(void);
+        void SimplifySelectedVertices(bool isSubThread = true);
+        void UniformRemesh(int targetVertexCount, bool isSubThread = true);
+        void UniformSampleMesh(int targetPointCount);
         void EnterReliefApp(void);
         void EnterTextureApp(void);
         void EnterMeasureApp(void);

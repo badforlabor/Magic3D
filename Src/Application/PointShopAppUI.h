@@ -28,7 +28,6 @@ namespace MagicApp
 
         void SimplifyPointCloud(MyGUI::Widget* pSender);
         void DoSimplifyPointCloud(MyGUI::Widget* pSender);
-        void DoFitPointCloud(MyGUI::Widget* pSender);
 
         void PointCloudNormal(MyGUI::Widget* pSender);
         void CalculatePointCloudNormalFront(MyGUI::Widget* pSender);
@@ -41,8 +40,7 @@ namespace MagicApp
         void ConsolidatePointCloud(MyGUI::Widget* pSender);
         void RemovePointCloudOutlier(MyGUI::Widget* pSender);
         void RemoveIsolatePart(MyGUI::Widget* pSender);
-        void SmoothPointCloudByNormal(MyGUI::Widget* pSender);
-        void PlaneProjectFit(MyGUI::Widget* pSender);
+        void SmoothPointCloudGeoemtry(MyGUI::Widget* pSender);
 
         void SelectPoint(MyGUI::Widget* pSender);
         void SelectByRectangle(MyGUI::Widget* pSender);

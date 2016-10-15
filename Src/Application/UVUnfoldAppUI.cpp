@@ -32,7 +32,10 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ConfirmGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::ConfirmGeodesics);
         mRoot.at(0)->findWidget("But_DeleteGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::DeleteGeodesics);
         mRoot.at(0)->findWidget("But_SwitchMarkDisplay")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::SwitchMarkDisplay);
+        mRoot.at(0)->findWidget("But_GenerateSplitLines")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::GenerateSplitLines);
         
+        mRoot.at(0)->findWidget("But_UnFold2Disc")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::Unfold2Disc);
+
         mRoot.at(0)->findWidget("But_UnFoldTriMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::UnfoldTriMesh);
         
         mRoot.at(0)->findWidget("But_GenerateUVAtlas")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::GenerateUVAtlas);
@@ -118,12 +121,23 @@ namespace MagicApp
     void UVUnfoldAppUI::Geodesics(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_ConfirmGeodesics")->castType<MyGUI::Button>()->isVisible();
-        mRoot.at(0)->findWidget("But_SnapFrontGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_SnapBackGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_CloseGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_ConfirmGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_DeleteGeodesics")->castType<MyGUI::Button>()->setVisible(!isVisible);
-        mRoot.at(0)->findWidget("But_SwitchMarkDisplay")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_SnapFrontGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_SnapBackGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_CloseGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_ConfirmGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_DeleteGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_SwitchMarkDisplay")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_GenerateSplitLines")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_SplitChartCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 25;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_SplitChartCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+        }
     }
 
     void UVUnfoldAppUI::SnapFrontGeodesics(MyGUI::Widget* pSender)
@@ -180,12 +194,43 @@ namespace MagicApp
         }
     }
 
+    void UVUnfoldAppUI::GenerateSplitLines(MyGUI::Widget* pSender)
+    {
+        UVUnfoldApp* uvUnfoldApp = dynamic_cast<UVUnfoldApp* >(AppManager::Get()->GetApp("UVUnfoldApp"));
+        if (uvUnfoldApp != NULL)
+        {
+            std::string textString = mRoot.at(0)->findWidget("Edit_SplitChartCount")->castType<MyGUI::EditBox>()->getOnlyText();
+            int splitChartCount = std::atoi(textString.c_str());
+            if (splitChartCount > 0)
+            {
+                uvUnfoldApp->GenerateSplitLines(splitChartCount);
+            }
+            else
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 25;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_SplitChartCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+        }
+    }
+
+    void UVUnfoldAppUI::Unfold2Disc(MyGUI::Widget* pSender)
+    {
+        UVUnfoldApp* uvUnfoldApp = dynamic_cast<UVUnfoldApp* >(AppManager::Get()->GetApp("UVUnfoldApp"));
+        if (uvUnfoldApp != NULL)
+        {
+            uvUnfoldApp->Unfold2Disc(true);
+        }
+    }
+
     void UVUnfoldAppUI::UnfoldTriMesh(MyGUI::Widget* pSender)
     {
         UVUnfoldApp* uvUnfoldApp = dynamic_cast<UVUnfoldApp* >(AppManager::Get()->GetApp("UVUnfoldApp"));
         if (uvUnfoldApp != NULL)
         {
-            uvUnfoldApp->UnfoldTriMesh();
+            uvUnfoldApp->UnfoldTriMesh(true);
         }
     }
 

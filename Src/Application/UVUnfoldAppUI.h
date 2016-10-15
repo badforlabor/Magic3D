@@ -31,6 +31,9 @@ namespace MagicApp
         void ConfirmGeodesics(MyGUI::Widget* pSender);
         void DeleteGeodesics(MyGUI::Widget* pSender);
         void SwitchMarkDisplay(MyGUI::Widget* pSender);
+        void GenerateSplitLines(MyGUI::Widget* pSender);
+
+        void Unfold2Disc(MyGUI::Widget* pSender);
 
         void UnfoldTriMesh(MyGUI::Widget* pSender);
 

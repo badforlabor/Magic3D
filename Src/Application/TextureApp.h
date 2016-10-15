@@ -83,6 +83,7 @@ namespace MagicApp
         void UpdateDisplay(void);
         void UpdateTriMeshTexture(void);
         void UnifyTextureCoords(std::vector<double>& texCoords, double scaleValue);
+        void ExportObjFile(void);
 
     private:
         void SetupScene(void);

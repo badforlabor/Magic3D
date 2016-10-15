@@ -448,11 +448,6 @@ namespace MagicApp
                     MessageBox(NULL, "网格导入失败", "温馨提示", MB_OK);
                     return false;
                 }
-                GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-                if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-                {
-                    triMesh->FuseVertex();
-                }
                     
                 // Clear Data
                 ClearPointCloudData();

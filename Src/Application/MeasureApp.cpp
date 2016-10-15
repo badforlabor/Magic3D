@@ -41,7 +41,9 @@ namespace MagicApp
         mUpdateModelRendering(false),
         mUpdateMarkRendering(false),
         mGeodesicAccuracy(0.5),
-        mIsFlatRenderingMode(true)
+        mIsFlatRenderingMode(true),
+        mpRefTriMesh(NULL),
+        mUpdateRefModelRendering(false)
     {
     }
 
@@ -50,6 +52,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);        
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpPickTool);
+        GPPFREEPOINTER(mpRefTriMesh);
 #if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
 #endif
@@ -84,6 +87,11 @@ namespace MagicApp
         {
             UpdateModelRendering();
             mUpdateModelRendering = false;
+        }
+        if (mUpdateRefModelRendering)
+        {
+            UpdateRefModelRendering();
+            mUpdateRefModelRendering = false;
         }
         return true;
     }
@@ -225,6 +233,7 @@ namespace MagicApp
         sceneManager->destroyLight("MeasureApp_SimpleLight");
         //MagicCore::RenderSystem::Get()->SetupCameraDefaultParameter();
         MagicCore::RenderSystem::Get()->HideRenderingObject("Mesh_Measure");       
+        MagicCore::RenderSystem::Get()->HideRenderingObject("MeshRef_Measure");       
         MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPoints_MeasureApp");       
         MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPointLine_MeasureApp");
         //MagicCore::RenderSystem::Get()->ResertAllSceneNode();
@@ -235,6 +244,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpUI);
         GPPFREEPOINTER(mpViewTool);
         GPPFREEPOINTER(mpPickTool);
+        GPPFREEPOINTER(mpRefTriMesh);
 #if DEBUGDUMPFILE
         GPPFREEPOINTER(mpDumpInfo);
 #endif
@@ -264,6 +274,9 @@ namespace MagicApp
                 break;
             case MagicApp::MeasureApp::GEODESICS_EXACT:
                 ComputeExactGeodesics(false);
+                break;
+            case MagicApp::MeasureApp::DISTANCE_POINTS_TO_MESH:
+                ComputePointsToMeshDistance(false);
                 break;
             default:
                 break;
@@ -400,10 +413,6 @@ namespace MagicApp
                 return false;
             }
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-            if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                triMesh->FuseVertex();
-            }
             mpUI->SetModelInfo(triMesh->GetVertexCount(), triMesh->GetTriangleCount());
             UpdateModelRendering();
             mMarkIds.clear();
@@ -413,8 +422,44 @@ namespace MagicApp
             GPPFREEPOINTER(mpPickTool);
             mpPickTool = new MagicCore::PickTool;
             mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, NULL, triMesh, "ModelNode");
+            GPPFREEPOINTER(mpRefTriMesh);
+            UpdateRefModelRendering();
             return true;
         }
+        return false;
+    }
+
+    bool MeasureApp::ImportRefModel()
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return false;
+        }
+        if (ModelManager::Get()->GetMesh() == NULL)
+        {
+            MessageBox(NULL, "请先导入需要测量的网格", "温馨提示", MB_OK);
+            return false;
+        }
+        std::string fileName;
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0";
+        if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
+        {
+            mpUI->SetGeodesicsInfo(0);
+            ModelManager::Get()->ClearPointCloud();
+            GPPFREEPOINTER(mpRefTriMesh);
+            mpRefTriMesh = GPP::Parser::ImportTriMesh(fileName);
+            if (mpRefTriMesh == NULL)
+            {
+                MessageBox(NULL, "网格导入失败", "温馨提示", MB_OK);
+                return false;
+            }
+            mpRefTriMesh->UnifyCoords(ModelManager::Get()->GetScaleValue(), ModelManager::Get()->GetObjCenterCoord());
+            mpRefTriMesh->UpdateNormal();
+            mpUI->SetDistanceInfo(mpRefTriMesh->GetTriangleCount(), false, 0.0, 0.0);
+            UpdateRefModelRendering();
+            return true;
+        }
+
         return false;
     }
 
@@ -669,6 +714,70 @@ namespace MagicApp
         UpdateModelRendering();
     }
 
+    void MeasureApp::ComputePointsToMeshDistance(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (ModelManager::Get()->GetMesh() == NULL)
+        {
+            MessageBox(NULL, "请先导入需要测量的网格", "温馨提示", MB_OK);
+            return;
+        }
+        if (mpRefTriMesh == NULL)
+        {
+            MessageBox(NULL, "请先导入参考网格", "温馨提示", MB_OK);
+            return;
+        }
+
+        if (isSubThread)
+        {
+            mCommandType = DISTANCE_POINTS_TO_MESH;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::TriMesh* measureMesh = ModelManager::Get()->GetMesh();
+            std::vector<GPP::Vector3> points(measureMesh->GetVertexCount());
+            for (GPP::Int pid = 0; pid < points.size(); ++pid)
+            {
+                points.at(pid) = measureMesh->GetVertexCoord(pid);
+            }
+            std::vector<GPP::Real> distances;
+            GPP::MeshQueryTool queryTool;
+            GPP::ErrorCode res = queryTool.Init(mpRefTriMesh);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格距离工具初始化失败", "温馨提示", MB_OK);
+                return;
+            }
+            res = queryTool.QueryNearestTriangles(points, NULL, &distances);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "距离计算失败", "温馨提示", MB_OK);
+                return;
+            }
+            measureMesh->SetHasColor(true);
+            GPP::Real maxValue = *std::max_element(distances.begin(), distances.end());
+            GPP::Real minValue = *std::min_element(distances.begin(), distances.end());
+            if (maxValue < GPP::REAL_TOL)
+            {
+                maxValue = 1.0;
+            }
+            for (GPP::Int pid = 0; pid < points.size(); ++pid)
+            {
+                GPP::Real dist = distances.at(pid);
+                GPP::Vector3 color = MagicCore::ToolKit::ColorCoding(dist / maxValue + 0.2);
+                measureMesh->SetVertexColor(pid, color);
+            }
+            mpUI->SetDistanceInfo(measureMesh->GetVertexCount(), true, 
+                minValue / ModelManager::Get()->GetScaleValue(), maxValue/ ModelManager::Get()->GetScaleValue());
+            mUpdateRefModelRendering = true;
+            mUpdateModelRendering = true;
+        }
+    }
+
     void MeasureApp::InitViewTool()
     {
         if (mpViewTool == NULL)
@@ -686,6 +795,17 @@ namespace MagicApp
         }
         MagicCore::RenderSystem::Get()->RenderMesh("Mesh_Measure", "CookTorrance", ModelManager::Get()->GetMesh(), 
             MagicCore::RenderSystem::MODEL_NODE_CENTER, NULL, NULL, mIsFlatRenderingMode);
+    }
+
+    void MeasureApp::UpdateRefModelRendering()
+    {
+        if (mpRefTriMesh == NULL)
+        {
+            MagicCore::RenderSystem::Get()->HideRenderingObject("MeshRef_Measure");
+            return;
+        }
+        MagicCore::RenderSystem::Get()->RenderMesh("MeshRef_Measure", "CookTorranceTransparent", mpRefTriMesh, 
+            MagicCore::RenderSystem::MODEL_NODE_CENTER, NULL, NULL, true);
     }
 
     void MeasureApp::UpdateMarkRendering()
@@ -708,6 +828,18 @@ namespace MagicApp
         {     
             MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPoints_MeasureApp");       
             MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPointLine_MeasureApp");
+        }
+    }
+
+    void MeasureApp::ShowReferenceMesh(bool isShow)
+    {
+        if (isShow)
+        {
+            UpdateRefModelRendering();
+        }
+        else
+        {
+            MagicCore::RenderSystem::Get()->HideRenderingObject("MeshRef_Measure");
         }
     }
 }

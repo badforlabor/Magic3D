@@ -25,10 +25,8 @@ namespace MagicApp
             NORMALUPDATE,
             OUTLIER,
             ISOLATE,
-            COORDSMOOTH,
+            GEOMETRYSMOOTH,
             RECONSTRUCTION,
-            FIT,
-            PLANEPROJECT,
             FUSECOLOR
         };
 
@@ -58,24 +56,22 @@ namespace MagicApp
         bool ImportPointCloud(void);
         void ExportPointCloud(bool isSubThread = true);
         
-        void SmoothPointCloudNormal(bool isSubThread = true);
-        void UpdatePointCloudNormal(bool isSubThread = true);
+        void SmoothPointCloudNormal(int neighborCount, bool isSubThread = true);
+        void UpdatePointCloudNormal(int neighborCount, bool isSubThread = true);
         
         void UniformSamplePointCloud(int targetPointCount);
         void GeometrySamplePointCloud(int targetPointCount);
 
         void SimplifyPointCloud(int resolution);
-        void FitPointCloud(int resolution, bool isSubThread = true);
 
-        void CalculatePointCloudNormal(bool isDepthImage, bool isSubThread = true);
+        void CalculatePointCloudNormal(bool isDepthImage, int neighborCount, bool isSubThread = true);
         void FlipPointCloudNormal(void);
-        void ReversePatchNormal(void);
+        void ReversePatchNormal(int neighborCount);
         void ReconstructMesh(bool needFillHole, int quality, bool isSubThread = true);
 
         void RemovePointCloudOutlier(bool isSubThread = true);
         void RemoveIsolatePart(bool isSubThread = true);
-        void SmoothPointCloudByNormal(bool isSubThread = true);
-        void PlaneProjectFit(bool isSubThread = true);
+        void SmoothPointCloudGeoemtry(int smoothCount, bool isSubThread = true);
 
         void SelectByRectangle(void);
         void EraseByRectangle(void);
@@ -83,7 +79,7 @@ namespace MagicApp
         void IgnoreBack(bool ignore);
         void MoveModel(void);
 
-        void FusePointCloudColor(bool isSubThread = true);
+        void FusePointCloudColor(int neighborCount, bool isSubThread = true);
         void LoadImageColorInfo(void);
         void SaveImageColorInfo(void);
 
@@ -133,5 +129,8 @@ namespace MagicApp
         bool mNeedFillHole;
         int mResolution;
         bool mEnterMeshShop;
+        int mSmoothCount;
+        int mNeighborCount;
+        int mColorNeighborCount;
     };
 }

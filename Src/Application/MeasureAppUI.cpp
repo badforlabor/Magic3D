@@ -14,7 +14,11 @@ namespace MagicApp
         mTriangleCount(0),
         mArea(0),
         mVolume(0),
-        mGeodesicsDistance(0)
+        mGeodesicsDistance(0),
+        mRefMeshFaceCount(0),
+        mIsCalculted(false),
+        mMinDistance(0.0),
+        mMaxDistance(0.0)
     {
     }
 
@@ -40,6 +44,11 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureArea);
         mRoot.at(0)->findWidget("But_VolumeRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureVolume);
         mRoot.at(0)->findWidget("But_CurvatureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureCurvature);
+
+        mRoot.at(0)->findWidget("But_PointsToMeshDist")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::PointsToMeshDistance);
+        mRoot.at(0)->findWidget("But_ImportMeasureData")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ImportRefModel);
+        mRoot.at(0)->findWidget("But_ComputeDistance")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputePointsToMeshDistance);
+
 
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::BackToHomepage);
 
@@ -82,6 +91,15 @@ namespace MagicApp
     {
         mVertexCount = vertexCount;
         mTriangleCount = triangleCount;
+        UpdateTextInfo();
+    }
+
+    void MeasureAppUI::SetDistanceInfo(int refFaceCount, bool bCalculted, double minDist, double maxDist)
+    {
+        mIsCalculted = bCalculted;
+        mRefMeshFaceCount = refFaceCount;
+        mMinDistance = minDist;
+        mMaxDistance = maxDist;
         UpdateTextInfo();
     }
 
@@ -217,6 +235,36 @@ namespace MagicApp
         }
     }
 
+    void MeasureAppUI::PointsToMeshDistance(MyGUI::Widget*)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_ImportMeasureData")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_ImportMeasureData")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_ComputeDistance")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop)
+        {
+            measureShop->ShowReferenceMesh(!isVisible);
+        }
+    }
+    
+    void MeasureAppUI::ImportRefModel(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->ImportRefModel();
+        }
+    }
+
+    void MeasureAppUI::ComputePointsToMeshDistance(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->ComputePointsToMeshDistance();
+        }
+    }
+
     void MeasureAppUI::BackToHomepage(MyGUI::Widget* pSender)
     {
         MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
@@ -288,6 +336,35 @@ namespace MagicApp
             std::string numberString;
             ss >> numberString;
             textString += numberString;
+            textString += "\n";
+        }
+
+        if (mRefMeshFaceCount > 0)
+        {
+            textString += "ReferenceMesh Face count = ";
+            std::stringstream ss;
+            ss << mRefMeshFaceCount;
+            std::string numberPointCount;
+            ss >> numberPointCount;
+            textString += numberPointCount;
+            textString += "\n";
+        }
+
+        if (mIsCalculted)
+        {
+            textString += "Maximum distance = ";
+            std::stringstream ss;
+            ss << mMaxDistance;
+            std::string distanceString;
+            ss >> distanceString;
+            textString += distanceString;
+            textString += "\n";
+            textString += "Minimum distance = ";
+            std::stringstream ss2;
+            ss2 << mMinDistance;
+            std::string distanceString2;
+            ss2 >> distanceString2;
+            textString += distanceString2;
             textString += "\n";
         }
 

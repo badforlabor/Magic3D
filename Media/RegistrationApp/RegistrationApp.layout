@@ -84,6 +84,10 @@
         <Widget type="Button" skin="But_Smooth_CN" position="118 480 43 43" align="Left Top" name="But_FuseColorBlend">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="EditBox" skin="EditBox" position="161 485 40 30" align="Left Top" name="Edit_ColorMergeIntervalCount">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
 
         <Widget type="Button" skin="But_Global_CN" position="15 535 60 60" align="Left Top" name="But_GlobalRegistrate"/>
         <Widget type="EditBox" skin="EditBox" position="75 550 40 30" align="Left Top" name="Edit_GlobalIterationCount">
@@ -96,10 +100,17 @@
         <Widget type="Button" skin="But_Fuse_CN" position="158 545 43 43" align="Left Top" name="But_DoGlobalSum">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="EditBox" skin="EditBox" position="158 588 40 30" align="Left Top" name="Edit_GlobalFuseIntervalCount">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
         <Widget type="Button" skin="But_Open" position="201 545 43 43" align="Left Top" name="But_ImportPointCloudList">
             <Property key="Visible" value="false"/>
         </Widget>
         <Widget type="Button" skin="But_FeaturePoint_CN" position="244 545 43 43" align="Left Top" name="But_ImportMarkList">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_PointPixelMap_CN" position="287 545 43 43" align="Left Top" name="But_ImportImageInfo">
             <Property key="Visible" value="false"/>
         </Widget>
 

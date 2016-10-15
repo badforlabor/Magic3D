@@ -75,15 +75,16 @@ namespace MagicApp
         void FuseRef(void);
 
         void GlobalRegistrate(int maxIterationCount, bool isSubThread = true);
-        void GlobalFuse(bool isSubThread = true);
+        void GlobalFuse(double intervalCount, bool isSubThread = true);
 
         void EnterPointShop(void);
 
         void ImportPointCloudList(void);
         void ImportMarkList(void);
         void ImportPointCloudColor(GPP::PointCloud* pointCloud, std::string fileName);
+        void ImportImageInfo(void);
 
-        void FusePointCloudColor(bool needBlend, bool isSubThread = true);
+        void FusePointCloudColor(double intervalCount, bool needBlend, bool isSubThread = true);
 
 #if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -103,7 +104,6 @@ namespace MagicApp
         void UpdateMarkFromRendering(void);
         void UpdateMarkListRendering(void);
         void UpdatePointCloudListRendering(void);
-        void SetPointCloudColor(GPP::PointCloud* pointCloud, const GPP::Vector3& color);
         bool IsCommandAvaliable(void);
 
     private:
@@ -152,11 +152,12 @@ namespace MagicApp
         int mMaxSampleTripleCount;
         std::vector<std::string> mPointCloudFiles;
         std::vector<std::vector<GPP::ImageColorId> > mImageColorIdList;
-        std::vector<GPP::ImageColorId> mImageColorIds;
+        std::vector<GPP::ImageColorId> mImageColorIds;  // fused point cloud's ImageColorId
         std::vector<std::string> mTextureImageFiles;
-        std::vector<int> mCloudIds;
-        std::vector<std::vector<int> > mColorList;
-        std::vector<int> mColorIds;
+        std::vector<int> mCloudIds;  // fused point cloud's 
+        std::vector<std::vector<int> > mColorList;  // generate from FusePointCloudColor
+        std::vector<int> mColorIds;  // fused point cloud's, could be empty
         bool mNeedBlendColor;
+        double mIntervalCount;
     };
 }

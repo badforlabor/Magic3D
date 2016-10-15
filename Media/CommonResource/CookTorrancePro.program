@@ -93,3 +93,15 @@ fragment_program FCookTorrancePoint cg
         
     }
 }
+
+vertex_program VCookTorranceAlpha cg
+{
+	source VCookTorrance.cg
+	entry_point main_v_alpha
+	profiles arbvp1
+
+	default_params
+	{
+		
+	}
+}

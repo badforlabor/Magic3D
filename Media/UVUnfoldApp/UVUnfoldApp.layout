@@ -26,21 +26,30 @@
         <Widget type="Button" skin="But_Viewer" position="290 90 43 43" align="Left Top" name="But_SwitchMarkDisplay">
             <Property key="Visible" value="false"/>
         </Widget>
-
-        <Widget type="Button" skin="But_SingleUnfold_CN" position="15 145 60 60" align="Left Top" name="But_UnFoldTriMesh"/>
-
-        <Widget type="Button" skin="But_Atlas" position="15 210 60 60" align="Left Top" name="But_GenerateUVAtlas"/>
-        <Widget type="EditBox" skin="EditBox" position="75 225 40 30" align="Left Top" name="Edit_InitChartCount">
+        <Widget type="Button" skin="But_Auto_CN" position="333 90 43 43" align="Left Top" name="But_GenerateSplitLines">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="EditBox" skin="EditBox" position="376 95 40 30" align="Left Top" name="Edit_SplitChartCount">
             <Property key="TextColour" value="0.286275 0.254902 0.4"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_OK_CN" position="115 220 43 43" align="Left Top" name="But_DoGenerateUVAtlas">
+
+        <Widget type="Button" skin="But_SingleUnfold_CN" position="15 145 60 60" align="Left Top" name="But_UnFoldTriMesh"/>
+
+        <Widget type="Button" skin="But_Unfold2Disc_CN" position="15 210 60 60" align="Left Top" name="But_UnFold2Disc"/>
+
+        <Widget type="Button" skin="But_Atlas" position="15 275 60 60" align="Left Top" name="But_GenerateUVAtlas"/>
+        <Widget type="EditBox" skin="EditBox" position="75 290 40 30" align="Left Top" name="Edit_InitChartCount">
+            <Property key="TextColour" value="0.286275 0.254902 0.4"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_OK_CN" position="115 285 43 43" align="Left Top" name="But_DoGenerateUVAtlas">
             <Property key="Visible" value="false"/>
         </Widget>
 
-    	<Widget type="Button" skin="But_Home" position="15 275 60 60" align="Left Top" name="But_BackToHomepage"/>
+    	<Widget type="Button" skin="But_Home" position="15 340 60 60" align="Left Top" name="But_BackToHomepage"/>
 
-        <Widget type="ProgressBar" skin="ProgressBar" position="15 345 150 20" align="Left Top" name="APIProgress">
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 410 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>
             <Property key="FlowDirection" value="LeftToRight"/>
             <Property key="Visible" value="false"/>

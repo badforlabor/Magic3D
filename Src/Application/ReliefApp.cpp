@@ -22,7 +22,9 @@ namespace MagicApp
         mpDepthPointCloud(NULL),
         mDepthImage(),
         mScanResolution(0),
-        mImageResolution(0)
+        mImageResolution(0),
+        mImageStartId(0),
+        mImageSegCount(3)
     {
     }
 
@@ -142,6 +144,10 @@ namespace MagicApp
             RunDumpInfo();
 #endif
         }
+        else if (arg.key == OIS::KC_S)
+        {
+            mImageStartId = 0;
+        }
         return true;
     }
 
@@ -162,6 +168,7 @@ namespace MagicApp
         light->setDiffuseColour(0.7, 0.7, 0.7);
         light->setSpecularColour(0.1, 0.1, 0.1);
         InitViewTool();
+        mImageStartId = 0;
     }
 
     void ReliefApp::ShutdownScene()
@@ -188,6 +195,7 @@ namespace MagicApp
         mDisplayMode = TRIMESH;
         GPPFREEPOINTER(mpDepthPointCloud);
         mDisplayMode = TRIMESH;
+        mImageStartId = 0;
     }
 
 #if DEBUGDUMPFILE
@@ -282,11 +290,6 @@ namespace MagicApp
             {
                 MessageBox(NULL, "网格导入失败", "温馨提示", MB_OK);
                 return false;
-            }
-            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-            if (triMesh->GetMeshType() == GPP::MeshType::MT_TRIANGLE_SOUP)
-            {
-                triMesh->FuseVertex();
             }
             GPPFREEPOINTER(mpReliefMesh);   
             UpdateModelRendering();
@@ -466,7 +469,6 @@ namespace MagicApp
         {
             for (int yid = 0; yid < scanResolution; yid++)
             {
-                int baseIndex = xid * scanResolution;
                 mpDepthPointCloud->InsertPoint(GPP::Vector3(minX + deltaX * xid, minY + deltaY * yid, 
                     (depthImg.getColourAt(xid, scanResolution - 1 - yid, 0))[1]));
             }
@@ -488,6 +490,7 @@ namespace MagicApp
         // point to color
         if (triMesh->HasColor())
         {
+            mpDepthPointCloud->SetHasColor(true);
             int pointCount = mpDepthPointCloud->GetPointCount();
             for (int pid = 0; pid < pointCount; pid++)
             {
@@ -497,7 +500,6 @@ namespace MagicApp
                 const unsigned char* pixel = mDepthImage.ptr(imageResolution - imageY - 1, imageX);
                 mpDepthPointCloud->SetPointColor(pid, GPP::Vector3(pixel[2] / 255.0, pixel[1] / 255.0, pixel[0] / 255.0));
             }
-            mpDepthPointCloud->SetHasColor(true);
         }
 
         mScanResolution = scanResolution;
@@ -539,6 +541,48 @@ namespace MagicApp
             dumpStream >> imageName;
             cv::imwrite(imageName, mDepthImage);
 
+            std::vector<int> hStartList(mImageSegCount);
+            std::vector<int> hEndList(mImageSegCount);
+            if (mImageSegCount > 1)
+            {
+                int imageW = mDepthImage.cols;
+                int imageH = mDepthImage.rows;
+                int deltaH = imageH / mImageSegCount;
+                
+                for (int segId = 0; segId < mImageSegCount; segId++)
+                {
+                    hStartList.at(segId) = segId * deltaH;
+                    if (segId == mImageSegCount - 1)
+                    {
+                        hEndList.at(segId) = imageH - 1;
+                    }
+                    else
+                    {
+                        hEndList.at(segId) = (segId + 1) * deltaH - 1;
+                    }
+                    int segHeight = hEndList.at(segId) - hStartList.at(segId) + 1;
+                    cv::Mat segImage = cv::Mat(segHeight, imageW, CV_8UC4);
+                    for (int x = 0; x < imageW; ++x)
+                    {
+                        for (int y = 0; y < segHeight; ++y)
+                        {
+                            unsigned char* originPixel = mDepthImage.ptr(imageH - (y + hStartList.at(segId)) - 1, x);
+                            unsigned char* segPixel = segImage.ptr(segHeight - y - 1, x);
+                            segPixel[0] = originPixel[0];
+                            segPixel[1] = originPixel[1];
+                            segPixel[2] = originPixel[2];
+                            segPixel[3] = originPixel[3];
+                        }
+                    }
+                    std::stringstream ss;
+                    ss << fileName.substr(0, dotPos) << "_" << segId << ".jpg";
+                    std::string segImageName;
+                    ss >> segImageName;
+                    cv::imwrite(segImageName, segImage);
+                    segImage.release();
+                }
+            }
+
             double scaleValue = 2.0 / 3.0;
             double minX = -1.0 * scaleValue;
             double maxX = 1.0 * scaleValue;
@@ -553,14 +597,40 @@ namespace MagicApp
             pairStream >> pairName;
             std::ofstream pairOut(pairName);
             int pointCount = mpDepthPointCloud->GetPointCount();
+            std::vector<int> coordXList(pointCount);
+            std::vector<int> coordYList(pointCount);
             for (int pid = 0; pid < pointCount; pid++)
             {
                 GPP::Vector3 coord = mpDepthPointCloud->GetPointCoord(pid);
                 int imageX = floor((coord[0] - minX) / deltaX * mImageResolution / mScanResolution + 0.5);
                 int imageY = floor((coord[1] - minY) / deltaY * mImageResolution / mScanResolution + 0.5);
                 pairOut << imageX << " " << imageY << std::endl;
+                coordXList.at(pid) = imageX;
+                coordYList.at(pid) = imageY;
             }
             pairOut.close();
+            if (mImageSegCount > 1)
+            {
+                std::stringstream ss;
+                ss << fileName.substr(0, dotPos) << ".mmap";
+                std::string mmapName;
+                ss >> mmapName;
+                std::ofstream mmapOut(mmapName);
+                mmapOut << pointCount << std::endl;;
+                for (int pid = 0; pid < pointCount; pid++)
+                {
+                    for (int sid = 0; sid < mImageSegCount; sid++)
+                    {
+                        if (coordYList.at(pid) >= hStartList.at(sid) && coordYList.at(pid) <= hEndList.at(sid))
+                        {
+                            mmapOut << mImageStartId + sid << " " << coordXList.at(pid) << " " << coordYList.at(pid) - hStartList.at(sid) << std::endl;
+                            break;
+                        }
+                    }
+                }
+                mmapOut.close();
+                mImageStartId += mImageSegCount;
+            }
         }
     }
 
