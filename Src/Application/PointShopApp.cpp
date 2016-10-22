@@ -12,6 +12,7 @@
 #include "AppManager.h"
 #include "MeshShopApp.h"
 #include "ModelManager.h"
+#include "MagicPointCloud.h"
 #include <algorithm>
 
 namespace MagicApp
@@ -222,6 +223,25 @@ namespace MagicApp
         MagicCore::RenderSystem::Get()->HideRenderingObject("PickRectangleObj");
     }
 
+    void PointShopApp::SetupMagicPointCloud(MagicPointCloud& magicPointCloud)
+    {
+        std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
+        if (imageColorIds && imageColorIds->size() == magicPointCloud.GetPointCount())
+        {
+            magicPointCloud.SetImageColorIds(imageColorIds);
+        }
+        std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
+        if (colorIds && colorIds->size() == magicPointCloud.GetPointCount())
+        {
+            magicPointCloud.SetColorIds(colorIds);
+        }
+        std::vector<int>* cloudIds = ModelManager::Get()->GetCloudIdsPointer();
+        if (cloudIds && cloudIds->size() == magicPointCloud.GetPointCount())
+        {
+            magicPointCloud.SetCloudIds(cloudIds);
+        }
+    }
+
     void PointShopApp::SaveImageColorInfo()
     {
         std::string fileName;
@@ -350,7 +370,8 @@ namespace MagicApp
     void PointShopApp::ConstructImageColorIdForMesh(const GPP::ITriMesh* triMesh, const GPP::IPointCloud* pointCloud)
     {
         std::vector<GPP::ImageColorId> originImageColorIds = ModelManager::Get()->GetImageColorIds();
-        if (originImageColorIds.empty())
+        std::vector<int> colorIds = ModelManager::Get()->GetColorIds();
+        if (originImageColorIds.empty() && colorIds.empty())
         {
             return;
         }
@@ -364,6 +385,7 @@ namespace MagicApp
         }
         int vertexCount = triMesh->GetVertexCount();
         std::vector<GPP::ImageColorId> imageColorIds(vertexCount);
+        std::vector<GPP::Int> meshColorIds(vertexCount);
         double searchData[3] = {-1};
         int indexRes[1] = {-1};
         for (int vid = 0; vid < vertexCount; vid++)
@@ -378,10 +400,23 @@ namespace MagicApp
                 MessageBox(NULL, "Ann FindNearestNeighbors Failed", "温馨提示", MB_OK);
                 return;
             }
-            imageColorIds.at(vid) = originImageColorIds.at(indexRes[0]);
+            if (originImageColorIds.size() > 0)
+            {
+                imageColorIds.at(vid) = originImageColorIds.at(indexRes[0]);
+            }
+            if (colorIds.size() > 0)
+            {
+                meshColorIds.at(vid) = colorIds.at(indexRes[0]);
+            }
         }
-        ModelManager::Get()->SetImageColorIds(imageColorIds);
-        //mImageColorIds.swap(imageColorIds);
+        if (originImageColorIds.size() > 0)
+        {
+            ModelManager::Get()->SetImageColorIds(imageColorIds);
+        }
+        if (colorIds.size() > 0)
+        {
+            ModelManager::Get()->SetColorIds(meshColorIds);
+        }
     }
 
     bool PointShopApp::MouseMoved( const OIS::MouseEvent &arg )
@@ -538,13 +573,14 @@ namespace MagicApp
             GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
             if (pointCloud)
             {
+                GPP::Vector3 cameraDir(0, 0, 1);
                 std::vector<int> boundaryIds;
-                GPP::DetectBoundaryPointByZProjection(pointCloud, 5, boundaryIds);
+                GPP::DetectBoundaryPointByZAngle(pointCloud, GPP::ONE_RADIAN * 80, &cameraDir, boundaryIds);
                 for (std::vector<int>::iterator itr = boundaryIds.begin(); itr != boundaryIds.end(); ++itr)
                 {
                     pointCloud->SetPointColor(*itr, GPP::Vector3(1, 0, 0));
                 }
-                GPP::DeletePointCloudElements(pointCloud, boundaryIds);
+                //GPP::DeletePointCloudElements(pointCloud, boundaryIds);
                 UpdatePointCloudRendering();
             }
         }
@@ -867,13 +903,13 @@ namespace MagicApp
         else
         {
             GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
-            std::vector<int> cloudIds = ModelManager::Get()->GetCloudIds();
+            std::vector<int> colorIds = ModelManager::Get()->GetColorIds();
             if (pointCloud->HasColor() == false)
             {
                 MessageBox(NULL, "点云没有颜色信息", "温馨提示", MB_OK);
                 return;
             }
-            if (pointCloud->GetPointCount() != cloudIds.size())
+            if (pointCloud->GetPointCount() != colorIds.size())
             {
                 MessageBox(NULL, "点云颜色融合需要点云ID信息", "温馨提示", MB_OK);
                 return;
@@ -885,16 +921,11 @@ namespace MagicApp
             {
                 pointColors.at(pid) = pointCloud->GetPointColor(pid);
             }
-            std::vector<int> colorIds = ModelManager::Get()->GetColorIds();
-            if (colorIds.size() == cloudIds.size())
-            {
-                colorIds.swap(cloudIds);
-            }
             InfoLog << "FusePointCloudColor: neighborCount=" << neighborCount << std::endl;
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
-            GPP::ErrorCode res = GPP::IntrinsicColor::TuneColorFromMultiFrame(pointCloud, neighborCount, cloudIds, pointColors);
+            GPP::ErrorCode res = GPP::IntrinsicColor::TuneColorFromMultiFrame(pointCloud, neighborCount, colorIds, pointColors);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -940,7 +971,9 @@ namespace MagicApp
                 deleteIndex.push_back(pid);
             }
         }
-        GPP::ErrorCode res = GPP::DeletePointCloudElements(pointCloud, deleteIndex);
+        MagicPointCloud magicPointCloud(pointCloud);
+        SetupMagicPointCloud(magicPointCloud);
+        GPP::ErrorCode res = GPP::DeletePointCloudElements(&magicPointCloud, deleteIndex);
         if (res != GPP_NO_ERROR)
         {
             MessageBox(NULL, "删点失败", "温馨提示", MB_OK);
@@ -1020,7 +1053,9 @@ namespace MagicApp
                     deleteIndex.push_back(pid);
                 }
             }
-            res = GPP::DeletePointCloudElements(pointCloud, deleteIndex);
+            MagicPointCloud magicPointCloud(pointCloud);
+            SetupMagicPointCloud(magicPointCloud);
+            res = GPP::DeletePointCloudElements(&magicPointCloud, deleteIndex);
             if (res != GPP_NO_ERROR)
             {
                 return;
@@ -1083,7 +1118,9 @@ namespace MagicApp
                     deleteIndex.push_back(pid);
                 }
             }
-            res = GPP::DeletePointCloudElements(pointCloud, deleteIndex);
+            MagicPointCloud magicPointCloud(pointCloud);
+            SetupMagicPointCloud(magicPointCloud);
+            res = GPP::DeletePointCloudElements(&magicPointCloud, deleteIndex);
             if (res != GPP_NO_ERROR)
             {
                 return;
@@ -1094,6 +1131,40 @@ namespace MagicApp
         }
     }
 
+    static void SampleModelData(GPP::Int* sampleIndex, int sampleCount, int pointCount)
+    {
+        std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
+        if (imageColorIds && imageColorIds->size() == pointCount)
+        {
+            std::vector<GPP::ImageColorId> sampleImageColorIds(sampleCount);
+            for (int sid = 0; sid < sampleCount; sid++)
+            {
+                sampleImageColorIds.at(sid) = imageColorIds->at(sampleIndex[sid]);
+            }
+            ModelManager::Get()->SetImageColorIds(sampleImageColorIds);
+        }
+        std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
+        if (colorIds && colorIds->size() == pointCount)
+        {
+            std::vector<GPP::Int> sampleColorIds(sampleCount);
+            for (int sid = 0; sid < sampleCount; sid++)
+            {
+                sampleColorIds.at(sid) = colorIds->at(sampleIndex[sid]);
+            }
+            ModelManager::Get()->SetColorIds(sampleColorIds);
+        }
+        std::vector<int>* cloudIds = ModelManager::Get()->GetCloudIdsPointer();
+        if (cloudIds && cloudIds->size() == pointCount)
+        {
+            std::vector<GPP::Int> sampleCloudIds(sampleCount);
+            for (int sid = 0; sid < sampleCount; sid++)
+            {
+                sampleCloudIds.at(sid) = cloudIds->at(sampleIndex[sid]);
+            }
+            ModelManager::Get()->SetCloudIds(sampleCloudIds);
+        }
+    }
+
     void PointShopApp::UniformSamplePointCloud(int targetPointCount)
     {
         if (IsCommandAvaliable() == false)
@@ -1101,6 +1172,7 @@ namespace MagicApp
             return;
         }
         GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+        GPP::Int originPointCount = pointCloud->GetPointCount();
         GPP::Int* sampleIndex = new GPP::Int[targetPointCount];
 #if MAKEDUMPFILE
         GPP::DumpOnce();
@@ -1144,6 +1216,7 @@ namespace MagicApp
                 }
             }
         }
+        SampleModelData(sampleIndex, targetPointCount, originPointCount);
         ModelManager::Get()->SetPointCloud(samplePointCloud);
         ResetSelection();
         mUpdatePointCloudRendering = true;
@@ -1158,6 +1231,7 @@ namespace MagicApp
             return;
         }
         GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+        GPP::Int originPointCount = pointCloud->GetPointCount();
         if (pointCloud->HasNormal() == false)
         {
             MessageBox(NULL, "点云需要先计算法线", "温馨提示", MB_OK);
@@ -1222,6 +1296,7 @@ namespace MagicApp
                 }
             }
         }
+        SampleModelData(sampleIndex, targetPointCount, originPointCount);
         ModelManager::Get()->SetPointCloud(samplePointCloud);
         ResetSelection();
 

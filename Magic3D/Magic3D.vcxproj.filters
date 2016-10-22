@@ -165,6 +165,12 @@
     <ClInclude Include="..\Src\Application\ModelManager.h">
       <Filter>Application\Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\Src\Application\MagicMesh.h">
+      <Filter>Application\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\MagicPointCloud.h">
+      <Filter>Application\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -273,6 +279,12 @@
       <Filter>Application\DepthVideoApp</Filter>
     </ClCompile>
     <ClCompile Include="..\Src\Application\ModelManager.cpp">
+      <Filter>Application\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\MagicMesh.cpp">
+      <Filter>Application\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\MagicPointCloud.cpp">
       <Filter>Application\Common</Filter>
     </ClCompile>
   </ItemGroup>

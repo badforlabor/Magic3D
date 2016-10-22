@@ -30,6 +30,8 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::LoadImageColorIds);
         mRoot.at(0)->findWidget("But_SaveImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::SaveImageColorIds);
 
+        mRoot.at(0)->findWidget("But_FuseMeshColor")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::FuseMeshColor);
+
         mRoot.at(0)->findWidget("But_GenerateTextureImage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::GenerateTextureImage);
         mRoot.at(0)->findWidget("But_TextureImageByVertex")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::GenerateTextureImageByVertexColor);
         mRoot.at(0)->findWidget("But_TextureImageByImage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::GenerateTextureImageByImage);
@@ -143,6 +145,15 @@ namespace MagicApp
         if (textureApp != NULL)
         {
             textureApp->SaveImageColorInfo();
+        }
+    }
+
+    void TextureAppUI::FuseMeshColor(MyGUI::Widget* pSender)
+    {
+        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
+        if (textureApp != NULL)
+        {
+            textureApp->FuseMeshColor();
         }
     }
 

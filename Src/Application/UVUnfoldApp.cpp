@@ -306,6 +306,7 @@ namespace MagicApp
             if (GPP::ConsolidateMesh::_IsTriMeshManifold(triMesh2D) == false)
             {
                 MessageBox(NULL, "网格有非流形结构", "温馨提示", MB_OK);
+                return true;
             }
             ModelManager::Get()->SetMesh(triMesh2D);
             SwitchDisplayMode(TRIMESH_WIREFRAME);
@@ -334,6 +335,7 @@ namespace MagicApp
             }
             std::vector<GPP::Int> triangleList;
             std::vector<GPP::Int> noUsePointList;
+            GPP::DumpOnce();
             GPP::ErrorCode res = GPP::Triangulation::ConstrainedDelaunay2D(pointList, &mCutLineList, NULL, triangleList, &noUsePointList);
             if (res != GPP_NO_ERROR)
             {
@@ -363,6 +365,7 @@ namespace MagicApp
             if (GPP::ConsolidateMesh::_IsTriMeshManifold(triMesh2D) == false)
             {
                 MessageBox(NULL, "网格有非流形结构", "温馨提示", MB_OK);
+                return true;
             }
             ModelManager::Get()->SetMesh(triMesh2D);
             SwitchDisplayMode(TRIMESH_WIREFRAME);

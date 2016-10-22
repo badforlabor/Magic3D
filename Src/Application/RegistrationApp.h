@@ -81,7 +81,6 @@ namespace MagicApp
 
         void ImportPointCloudList(void);
         void ImportMarkList(void);
-        void ImportPointCloudColor(GPP::PointCloud* pointCloud, std::string fileName);
         void ImportImageInfo(void);
 
         void FusePointCloudColor(double intervalCount, bool needBlend, bool isSubThread = true);
@@ -150,7 +149,6 @@ namespace MagicApp
         int mMaxGlobalIterationCount;
         bool mSaveGlobalRegistrateResult;
         int mMaxSampleTripleCount;
-        std::vector<std::string> mPointCloudFiles;
         std::vector<std::vector<GPP::ImageColorId> > mImageColorIdList;
         std::vector<GPP::ImageColorId> mImageColorIds;  // fused point cloud's ImageColorId
         std::vector<std::string> mTextureImageFiles;

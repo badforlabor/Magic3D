@@ -67,7 +67,6 @@ namespace MagicApp
         mMaxGlobalIterationCount(15),
         mSaveGlobalRegistrateResult(false),
         mMaxSampleTripleCount(0),
-        mPointCloudFiles(),
         mImageColorIdList(),
         mImageColorIds(),
         mTextureImageFiles(),
@@ -409,7 +408,6 @@ namespace MagicApp
 
     void RegistrationApp::ClearAuxiliaryData()
     {
-        mPointCloudFiles.clear();
         mImageColorIdList.clear();
         mImageColorIds.clear();
         mTextureImageFiles.clear();
@@ -469,52 +467,6 @@ namespace MagicApp
         }
     }
 
-    void RegistrationApp::ImportPointCloudColor(GPP::PointCloud* pointCloud, std::string fileName)
-    {
-        // Import point cloud color
-        std::string pureFileName = MagicCore::ToolKit::GetNoSuffixName(fileName);
-        if (pureFileName == "")
-        {
-            return;
-        }
-        std::string mapName = pureFileName + ".map";
-        std::ifstream mapFin(mapName.c_str());
-        if (!mapFin)
-        {
-            return;
-        }
-        int pointCount = pointCloud->GetPointCount();
-        int imageId = mImageColorIdList.size();
-        std::vector<int> mapIndex;
-        mapIndex.reserve(pointCount * 2);
-        std::vector<GPP::ImageColorId> curImageColorIds;
-        curImageColorIds.reserve(pointCount);
-        int xid, yid;
-        for (int mid = 0; mid < pointCount; mid++)
-        {
-            mapFin >> xid >> yid;
-            mapIndex.push_back(xid);
-            mapIndex.push_back(yid);
-            curImageColorIds.push_back(GPP::ImageColorId(imageId, xid, yid));
-        }
-        mImageColorIdList.push_back(curImageColorIds);
-        mapFin.close();
-        std::string imgName = pureFileName + ".jpg";
-        cv::Mat img = cv::imread(imgName);
-        if (img.data == NULL)
-        {
-            return;
-        }
-        int imgH = img.rows;
-        pointCloud->SetHasColor(true);
-        for (int pid = 0; pid < pointCount; pid++)
-        {
-            const unsigned char* pixel = img.ptr(imgH - mapIndex.at(pid * 2 + 1) - 1, mapIndex.at(pid * 2));
-            pointCloud->SetPointColor(pid, GPP::Vector3(double(pixel[2]) / 255.0, double(pixel[1]) / 255.0, double(pixel[0]) / 255.0));
-        }
-        img.release();
-    }
-
     void RegistrationApp::ImportImageInfo()
     {
         if (IsCommandAvaliable() == false)
@@ -541,7 +493,7 @@ namespace MagicApp
         }
         MessageBox(NULL, "再导入点像对应文件", "温馨提示", MB_OK);
         std::vector<std::string> mapFileNames;
-        char mapFilterName[] = "MultiImage MAP Files(*.mmap)\0*.mmap\0";
+        char mapFilterName[] = "SingleImage MAP Files(*.map)\0*.map\0MultiImage MAP Files(*.mmap)\0*.mmap\0";
         if (MagicCore::ToolKit::MultiFileOpenDlg(mapFileNames, mapFilterName))
         {
             if (mapFileNames.size() != mPointCloudList.size())
@@ -554,29 +506,72 @@ namespace MagicApp
         {
             return;
         }
+
         int pointCloudCount = mPointCloudList.size();
         mImageColorIdList.clear();
         mImageColorIdList.reserve(pointCloudCount);
-        for (int cloudId = 0; cloudId < pointCloudCount; cloudId++)
+        size_t dotPos = mapFileNames.at(0).rfind('.');
+        if (dotPos == std::string::npos)
         {
-            std::ifstream fin(mapFileNames.at(cloudId));
-            if (!fin)
+            MessageBox(NULL, "文件名解析失败", "温馨提示", MB_OK);
+            return;
+        }
+        std::string extName = mapFileNames.at(0).substr(dotPos + 1);
+        if (extName == std::string("map"))
+        {
+            mColorList.clear();
+            mColorList.reserve(pointCloudCount);
+            for (int cloudId = 0; cloudId < pointCloudCount; cloudId++)
             {
-                MessageBox(NULL, "点像对应文件打开失败", "温馨提示", MB_OK);
-                return;
+                std::ifstream fin(mapFileNames.at(cloudId));
+                if (!fin)
+                {
+                    MessageBox(NULL, "点像对应文件打开失败", "温馨提示", MB_OK);
+                    return;
+                }
+                int curPointCount = mPointCloudList.at(cloudId)->GetPointCount();
+                std::vector<GPP::ImageColorId> curColorIdList;
+                curColorIdList.reserve(curPointCount);
+                std::vector<int> colorIds(curPointCount, cloudId);
+                int imageId = cloudId;
+                int coordX, coordY;
+                for (int pid = 0; pid < curPointCount; pid++)
+                {
+                    fin >> coordX >> coordY;
+                    curColorIdList.push_back(GPP::ImageColorId(imageId, coordX, coordY));
+                }
+                fin.close();
+                mImageColorIdList.push_back(curColorIdList);
             }
-            int pointCount = 0;
-            fin >> pointCount;
-            std::vector<GPP::ImageColorId> curColorIdList;
-            curColorIdList.reserve(pointCount);
-            int imageId, coordX, coordY;
-            for (int pid = 0; pid < pointCount; pid++)
+        }
+        else if (extName == std::string("mmap"))
+        {
+            mColorList.clear();
+            mColorList.reserve(pointCloudCount);
+            for (int cloudId = 0; cloudId < pointCloudCount; cloudId++)
             {
-                fin >> imageId >> coordX >> coordY;
-                curColorIdList.push_back(GPP::ImageColorId(imageId, coordX, coordY));
+                std::ifstream fin(mapFileNames.at(cloudId));
+                if (!fin)
+                {
+                    MessageBox(NULL, "点像对应文件打开失败", "温馨提示", MB_OK);
+                    return;
+                }
+                int pointCount = 0;
+                fin >> pointCount;
+                std::vector<GPP::ImageColorId> curColorIdList;
+                curColorIdList.reserve(pointCount);
+                std::vector<int> colorIds(pointCount);
+                int imageId, coordX, coordY;
+                for (int pid = 0; pid < pointCount; pid++)
+                {
+                    fin >> imageId >> coordX >> coordY;
+                    curColorIdList.push_back(GPP::ImageColorId(imageId, coordX, coordY));
+                    colorIds.at(pid) = imageId;
+                }
+                fin.close();
+                mImageColorIdList.push_back(curColorIdList);
+                mColorList.push_back(colorIds);
             }
-            fin.close();
-            mImageColorIdList.push_back(curColorIdList);
         }
         // Set point cloud color
         int imageCount = mTextureImageFiles.size();
@@ -607,10 +602,10 @@ namespace MagicApp
                 colorInfo = mImageColorIdList.at(cloudId).at(pid);
                 imageId = colorInfo.GetImageIndex();
                 const unsigned char* pixel = imageList.at(imageId).ptr(imageHeightList.at(imageId) - colorInfo.GetLocalY() - 1, colorInfo.GetLocalX());
-                //const unsigned char* pixel = imageList.at(imageId).ptr(colorInfo.GetLocalY(), colorInfo.GetLocalX());
                 curPointCloud->SetPointColor(pid, GPP::Vector3(double(pixel[2]) / 255.0, double(pixel[1]) / 255.0, double(pixel[0]) / 255.0));
             }
         }
+
         UpdatePointCloudListRendering();
     }
 
@@ -631,7 +626,6 @@ namespace MagicApp
                 ClearPairwiseRegistrationData();
                 ClearAuxiliaryData();
 
-                ImportPointCloudColor(pointCloud, fileName);
                 pointCloud->UnifyCoords(2.0, &mScaleValue, &mObjCenterCoord);
                 mpPointCloudRef = pointCloud;
                 mUpdateUIInfo = true;
@@ -641,8 +635,6 @@ namespace MagicApp
                 }
                 SetSeparateDisplay(false);
                 UpdatePointCloudRefRendering();
-
-                mPointCloudFiles.push_back(fileName);
 
                 // set up pick tool
                 mpPickToolRef = new MagicCore::PickTool;
@@ -1288,11 +1280,12 @@ namespace MagicApp
                 if (pointCloudFrom->HasColor())
                 {
                     hasColorInfo = true;
-                    std::vector<GPP::Real> pointColorFieldsFrom(pointCountFrom * 4, 0);
+                    int fieldDim = 5;
+                    std::vector<GPP::Real> pointColorFieldsFrom(pointCountFrom * fieldDim, 0);
                     for (GPP::Int pid = 0; pid < pointCountFrom; pid++)
                     {
                         GPP::Vector3 color = pointCloudFrom->GetPointColor(pid);
-                        GPP::Int baseId = pid * 4;
+                        GPP::Int baseId = pid * fieldDim;
                         pointColorFieldsFrom.at(baseId) = color[0];
                         pointColorFieldsFrom.at(baseId + 1) = color[1];
                         pointColorFieldsFrom.at(baseId + 2) = color[2];
@@ -1301,8 +1294,12 @@ namespace MagicApp
                     {
                         for (GPP::Int pid = 0; pid < pointCountFrom; pid++)
                         {
-                            pointColorFieldsFrom.at(pid * 4 + 3) = mColorList.at(cid).at(pid);
+                            pointColorFieldsFrom.at(pid * fieldDim + 3) = mColorList.at(cid).at(pid);
                         }
+                    }
+                    for (GPP::Int pid = 0; pid < pointCountFrom; pid++)
+                    {
+                        pointColorFieldsFrom.at(pid * fieldDim + 4) = pid;
                     }
                     res = mpSumPointCloud->UpdateSumFunction(pointCloudFrom, NULL, &pointColorFieldsFrom);
                     if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -1337,6 +1334,7 @@ namespace MagicApp
             }
             mCloudIds.clear();
             mColorIds.clear();
+            std::vector<int> pointIds;
             if (hasColorInfo)
             {
                 GPP::PointCloud* extractPointCloud = new GPP::PointCloud;
@@ -1355,11 +1353,12 @@ namespace MagicApp
                     mIsCommandInProgress = false;
                     return;
                 }
+                int fieldDim = 5;
                 extractPointCloud->SetHasColor(true);
                 GPP::Int pointCountFused = extractPointCloud->GetPointCount();
                 for (GPP::Int pid = 0; pid < pointCountFused; pid++)
                 {
-                    GPP::Int baseIndex = pid * 4;
+                    GPP::Int baseIndex = pid * fieldDim;
                     extractPointCloud->SetPointColor(pid, GPP::Vector3(pointColorFieldsFused.at(baseIndex), 
                         pointColorFieldsFused.at(baseIndex + 1), pointColorFieldsFused.at(baseIndex + 2)));
                 }
@@ -1369,8 +1368,13 @@ namespace MagicApp
                     mColorIds.resize(pointCountFused);
                     for (int pid = 0; pid < pointCountFused; pid++)
                     {
-                        mColorIds.at(pid) = int(pointColorFieldsFused.at(pid * 4 + 3));
+                        mColorIds.at(pid) = int(pointColorFieldsFused.at(pid * fieldDim + 3));
                     }
+                }
+                pointIds.resize(pointCountFused);
+                for (int pid = 0; pid < pointCountFused; pid++)
+                {
+                    pointIds.at(pid) = int(pointColorFieldsFused.at(pid * fieldDim + 4));
                 }
                 GPPFREEPOINTER(mpPointCloudRef);
                 mpPointCloudRef = extractPointCloud;
@@ -1396,61 +1400,16 @@ namespace MagicApp
                 mpPointCloudRef = extractPointCloud;
                 mpPointCloudRef->SetDefaultColor(GPP::Vector3(0.09, 0.48627, 0.69));
             }
-            InfoLog << "cloudIds.size=" << mCloudIds.size() << " mPointCloudFiles.size=" << mPointCloudFiles.size() << 
-                " mPointCloudList.size=" << mPointCloudList.size() << std::endl;
+            InfoLog << "cloudIds.size=" << mCloudIds.size() << " mPointCloudList.size=" << mPointCloudList.size() << std::endl;
             if (mCloudIds.size() > 0 && mImageColorIdList.size() == mPointCloudList.size())
             {               
                 // Setup image color ids
-                if (mTextureImageFiles.empty() && mPointCloudFiles.size() > 0)
-                {
-                    mTextureImageFiles.reserve(pointCloudCount);
-                    for (int fid = 0; fid < pointCloudCount; fid++)
-                    {
-                        mTextureImageFiles.push_back(MagicCore::ToolKit::GetNoSuffixName(mPointCloudFiles.at(fid)) + ".jpg");
-                    }
-                }
-                
-                std::vector<GPP::Ann*> annList(pointCloudCount);
-                for (int cloudId = 0; cloudId < pointCloudCount; cloudId++)
-                {
-                    annList.at(cloudId) = new GPP::Ann;
-                    GPP::PointCloudPointList pointList(mPointCloudList.at(cloudId));
-                    res = annList.at(cloudId)->Init(&pointList, NULL);
-                    if (res != GPP_NO_ERROR)
-                    {
-                        MessageBox(NULL, "点云ANN初始化失败", "温馨提示", MB_OK);
-                        mGlobalRegistrateProgress = -1;
-                        mIsCommandInProgress = false;
-                        return;
-                    }
-                }
                 mImageColorIds.clear();
                 int refPointCount = mpPointCloudRef->GetPointCount();
                 mImageColorIds.reserve(refPointCount);
-                double searchData[3] = {-1};
-                int indexRes[1] = {-1};
                 for (int pid = 0; pid < refPointCount; pid++)
                 {
-                    GPP::ImageColorId imgColorId;
-                    GPP::Vector3 curCoord = mpPointCloudRef->GetPointCoord(pid);
-                    searchData[0] = curCoord[0];
-                    searchData[1] = curCoord[1];
-                    searchData[2] = curCoord[2];
-                    int cloudId = mCloudIds.at(pid);
-                    res = annList.at(cloudId)->FindNearestNeighbors(searchData, 1, 1, indexRes, NULL);
-                    if (res != GPP_NO_ERROR)
-                    {
-                        MessageBox(NULL, "点云ANN查询失败", "温馨提示", MB_OK);
-                        mGlobalRegistrateProgress = -1;
-                        mIsCommandInProgress = false;
-                        return;
-                    }
-                    mImageColorIds.push_back(mImageColorIdList.at(cloudId).at(indexRes[0]));
-                    //InfoLog << "pid " << pid << " cloudId " << cloudId << " indexRes " << indexRes[0] << std::endl;
-                }
-                for (int cloudId = 0; cloudId < pointCloudCount; cloudId++)
-                {
-                    GPPFREEPOINTER(annList.at(cloudId));
+                    mImageColorIds.push_back(mImageColorIdList.at(mCloudIds.at(pid)).at(pointIds.at(pid)));
                 }
             }
             ResetGlobalRegistrationData();
@@ -1478,14 +1437,6 @@ namespace MagicApp
             GPP::PointCloud* pointCloud = GPP::Parser::ImportPointCloud(fileName);
             if (pointCloud != NULL)
             {
-                if (mpPointCloudFrom)
-                {
-                    mPointCloudFiles.pop_back();
-                    mImageColorIdList.pop_back();
-                }
-                mPointCloudFiles.push_back(fileName);
-                ImportPointCloudColor(pointCloud, fileName);
-
                 pointCloud->UnifyCoords(mScaleValue, mObjCenterCoord);
                 GPPFREEPOINTER(mpPointCloudFrom);
                 mpPointCloudFrom = pointCloud;
@@ -2003,7 +1954,14 @@ namespace MagicApp
         ModelManager::Get()->SetCloudIds(mCloudIds);
         ModelManager::Get()->SetTextureImageFiles(mTextureImageFiles);
         ModelManager::Get()->SetImageColorIds(mImageColorIds);
-        ModelManager::Get()->SetColorIds(mColorIds);
+        if (mColorIds.empty())
+        {
+            ModelManager::Get()->SetColorIds(mCloudIds);
+        }
+        else
+        {
+            ModelManager::Get()->SetColorIds(mColorIds);
+        }
         AppManager::Get()->EnterApp(new PointShopApp, "PointShopApp");
     }
 
@@ -2090,7 +2048,6 @@ namespace MagicApp
                 }
                 colorList.at(cloudId) = curColors;
             }
-            mColorList.clear();
             GPP::PointCloudPointList pointList(pointCloudList.at(0));
             double density = 0;
             GPP::ErrorCode res = GPP::CalculatePointListDensity(&pointList, 5, density);
@@ -2099,7 +2056,18 @@ namespace MagicApp
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
-            res = GPP::IntrinsicColor::TuneColorFromSingleLight(pointCloudList, colorList, needBlend, &mColorList);
+            if (mColorList.size() == mPointCloudList.size())
+            {
+                std::vector<std::vector<int> > fusedColorList;
+                res = GPP::IntrinsicColor::TuneColorFromSingleLight(pointCloudList, colorList, needBlend, &density, &mColorList, &fusedColorList);
+                mColorList.swap(fusedColorList);
+            }
+            else
+            {
+                mColorList.clear();
+                res = GPP::IntrinsicColor::TuneColorFromSingleLight(pointCloudList, colorList, needBlend, &density, NULL, &mColorList);
+            }
+            
             mIsCommandInProgress = false;
             if (res != GPP_NO_ERROR)
             {

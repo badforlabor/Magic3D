@@ -24,16 +24,19 @@ namespace MagicApp
         GPP::Vector3 GetObjCenterCoord(void) const;
 
         void SetImageColorIds(const std::vector<GPP::ImageColorId>& imageColorIds);
-        std::vector<GPP::ImageColorId> GetImageColorIds(void);
+        std::vector<GPP::ImageColorId> GetImageColorIds(void) const;
+        std::vector<GPP::ImageColorId>* GetImageColorIdsPointer(void);
 
         void SetTextureImageFiles(const std::vector<std::string>& textureImageFiles);
         std::vector<std::string> GetTextureImageFiles(void) const;
 
         void SetCloudIds(const std::vector<int>& cloudIds);
         std::vector<int> GetCloudIds(void) const;
+        std::vector<int>* GetCloudIdsPointer(void);
 
         void SetColorIds(const std::vector<int>& colorIds);
         std::vector<int> GetColorIds(void) const;
+        std::vector<int>* GetColorIdsPointer(void);
 
         bool ImportMesh(std::string fileName);
         void SetMesh(GPP::TriMesh* triMesh);

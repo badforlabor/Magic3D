@@ -1,5 +1,6 @@
 #pragma once
 #include "AppBase.h"
+#include "MagicPointCloud.h"
 #include "Gpp.h"
 #if DEBUGDUMPFILE
 #include "DumpBase.h"
@@ -99,7 +100,7 @@ namespace MagicApp
         void SelectControlPointByRectangle(int startCoordX, int startCoordY, int endCoordX, int endCoordY);
         void UpdateRectangleRendering(int startCoordX, int startCoordY, int endCoordX, int endCoordY);
         void ClearRectangleRendering(void);
-        
+        void SetupMagicPointCloud(MagicPointCloud& magicPointCloud);
         
         void PickPointCloudColorFromImages(void);
         void ConstructImageColorIdForMesh(const GPP::ITriMesh* triMesh, const GPP::IPointCloud* pointCloud);

@@ -96,6 +96,8 @@
     <ClInclude Include="..\Src\Application\DepthVideoAppUI.h" />
     <ClInclude Include="..\Src\Application\Homepage.h" />
     <ClInclude Include="..\Src\Application\HomepageUI.h" />
+    <ClInclude Include="..\Src\Application\MagicMesh.h" />
+    <ClInclude Include="..\Src\Application\MagicPointCloud.h" />
     <ClInclude Include="..\Src\Application\MeasureApp.h" />
     <ClInclude Include="..\Src\Application\MeasureAppUI.h" />
     <ClInclude Include="..\Src\Application\MeshShopApp.h" />
@@ -147,6 +149,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\Src\Application\MagicMesh.cpp" />
+    <ClCompile Include="..\Src\Application\MagicPointCloud.cpp" />
     <ClCompile Include="..\Src\Application\MeasureApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>

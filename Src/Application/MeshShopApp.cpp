@@ -11,6 +11,7 @@
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
+#include "MagicMesh.h"
 #if DEBUGDUMPFILE
 #include "DumpFillMeshHole.h"
 #endif
@@ -899,7 +900,19 @@ namespace MagicApp
                 }
             }
             DebugLog << "MeshShopApp::RemoveOutlier deleteIndex size=" << deleteIndex.size() << std::endl;
-            res = GPP::DeleteTriMeshVertices(triMesh, deleteIndex);
+            MagicMesh magicMesh(triMesh);
+            std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
+            if (imageColorIds && imageColorIds->size() == triMesh->GetVertexCount())
+            {
+                magicMesh.SetImageColorIds(imageColorIds);
+            }
+            std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
+            if (colorIds && colorIds->size() == triMesh->GetVertexCount())
+            {
+                magicMesh.SetColorIds(colorIds);
+            }
+            //res = GPP::DeleteTriMeshVertices(triMesh, deleteIndex);
+            res = GPP::DeleteTriMeshVertices(&magicMesh, deleteIndex);
             if (res != GPP_NO_ERROR)
             {
                 return;
@@ -2098,7 +2111,19 @@ namespace MagicApp
                 deleteIndex.push_back(vid);
             }
         }
-        GPP::ErrorCode res = GPP::DeleteTriMeshVertices(triMesh, deleteIndex);
+        MagicMesh magicMesh(triMesh);
+        std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
+        if (imageColorIds && imageColorIds->size() == triMesh->GetVertexCount())
+        {
+            magicMesh.SetImageColorIds(imageColorIds);
+        }
+        std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
+        if (colorIds && colorIds->size() == triMesh->GetVertexCount())
+        {
+            magicMesh.SetColorIds(colorIds);
+        }
+        //res = GPP::DeleteTriMeshVertices(triMesh, deleteIndex);
+        GPP::ErrorCode res = GPP::DeleteTriMeshVertices(&magicMesh, deleteIndex);
         if (res != GPP_NO_ERROR)
         {
             MessageBox(NULL, "…æµ„ ß∞‹", "Œ¬‹∞Ã· æ", MB_OK);

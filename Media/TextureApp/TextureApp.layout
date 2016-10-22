@@ -17,20 +17,22 @@
             <Property key="Visible" value="false"/>
         </Widget>
 
-        <Widget type="Button" skin="But_TextureImage_CN" position="15 145 60 60" align="Left Top" name="But_GenerateTextureImage"></Widget>
-        <Widget type="Button" skin="But_Clustering" position="75 155 43 43" align="Left Top" name="But_TextureImageByVertex">
+        <Widget type="Button" skin="But_ColorMerging_CN" position="15 145 60 60" align="Left Top" name="But_FuseMeshColor"/>
+
+        <Widget type="Button" skin="But_TextureImage_CN" position="15 210 60 60" align="Left Top" name="But_GenerateTextureImage"></Widget>
+        <Widget type="Button" skin="But_Clustering" position="75 220 43 43" align="Left Top" name="But_TextureImageByVertex">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Image" position="118 155 43 43" align="Left Top" name="But_TextureImageByImage">
+        <Widget type="Button" skin="But_Image" position="118 220 43 43" align="Left Top" name="But_TextureImageByImage">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Fuse_CN" position="161 155 43 43" align="Left Top" name="But_TuneTextureImageByVertex">
+        <Widget type="Button" skin="But_Fuse_CN" position="161 220 43 43" align="Left Top" name="But_TuneTextureImageByVertex">
             <Property key="Visible" value="false"/>
         </Widget>
 
-    	<Widget type="Button" skin="But_Home" position="15 210 60 60" align="Left Top" name="But_BackToHomepage"/>
+    	<Widget type="Button" skin="But_Home" position="15 275 60 60" align="Left Top" name="But_BackToHomepage"/>
 
-        <Widget type="ProgressBar" skin="ProgressBar" position="15 280 150 20" align="Left Top" name="APIProgress">
+        <Widget type="ProgressBar" skin="ProgressBar" position="15 340 150 20" align="Left Top" name="APIProgress">
             <Property key="AutoTrack" value="false"/>
             <Property key="FlowDirection" value="LeftToRight"/>
             <Property key="Visible" value="false"/>

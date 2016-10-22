@@ -83,9 +83,21 @@ namespace MagicApp
         mImageColorIds = imageColorIds;
     }
 
-    std::vector<GPP::ImageColorId> ModelManager::GetImageColorIds()
+    std::vector<GPP::ImageColorId> ModelManager::GetImageColorIds() const
     {
         return mImageColorIds;
+    }
+
+    std::vector<GPP::ImageColorId>* ModelManager::GetImageColorIdsPointer()
+    {
+        if (mImageColorIds.empty())
+        {
+            return NULL;
+        }
+        else
+        {
+            return &mImageColorIds;
+        }
     }
 
     void ModelManager::SetTextureImageFiles(const std::vector<std::string>& textureImageFiles)
@@ -108,6 +120,18 @@ namespace MagicApp
         return mCloudIds;
     }
 
+    std::vector<int>* ModelManager::GetCloudIdsPointer(void)
+    {
+        if (mCloudIds.empty())
+        {
+            return NULL;
+        }
+        else
+        {
+            return &mCloudIds;
+        }
+    }
+
     void ModelManager::SetColorIds(const std::vector<int>& colorIds)
     {
         mColorIds = colorIds;
@@ -116,6 +140,18 @@ namespace MagicApp
     std::vector<int> ModelManager::GetColorIds(void) const
     {
         return mColorIds;
+    }
+
+    std::vector<int>* ModelManager::GetColorIdsPointer(void)
+    {
+        if (mColorIds.empty())
+        {
+            return NULL;
+        }
+        else
+        {
+            return &mColorIds;
+        }
     }
 
     bool ModelManager::ImportMesh(std::string fileName)

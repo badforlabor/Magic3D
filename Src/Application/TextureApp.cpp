@@ -276,6 +276,9 @@ namespace MagicApp
             {
             case MagicApp::TextureApp::NONE:
                 break;
+            case MagicApp::TextureApp::FUSEMESHCOLOR:
+                FuseMeshColor(false);
+                break;
             default:
                 break;
             }
@@ -605,6 +608,11 @@ namespace MagicApp
             MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
             return;
         }
+        if (triMesh->HasTriangleTexCoord() == false)
+        {
+            MessageBox(NULL, "请先给网格计算纹理坐标", "温馨提示", MB_OK);
+            return;
+        }
 
         std::vector<GPP::ImageColorId> originImageColorIds = ModelManager::Get()->GetImageColorIds();
         if (isByVertexColor)
@@ -822,6 +830,9 @@ namespace MagicApp
             }
         }
         mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+        GPP::DumpOnce();
+#endif
         GPP::ErrorCode res = GPP::IntrinsicColor::TuneTextureImageByVertexColor(textureCoords, vertexColors,
             imgWidth, imgHeight, pixelTypes, textureColors);
         mIsCommandInProgress = false;
@@ -979,5 +990,65 @@ namespace MagicApp
         }
 
         UpdateDisplay();
+    }
+
+    void TextureApp::FuseMeshColor(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = FUSEMESHCOLOR;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL)
+            {
+                MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
+                return;
+            }
+            int vertexCount = triMesh->GetVertexCount();
+            std::vector<GPP::Int> colorIds = ModelManager::Get()->GetColorIds();
+            if (colorIds.empty())
+            {
+                MessageBox(NULL, "ColorIds is empty", "温馨提示", MB_OK);
+                return;
+            }
+            std::vector<GPP::Vector3> vertexColors(vertexCount);
+            if (triMesh->HasColor() == false)
+            {
+                MessageBox(NULL, "网格需要颜色", "温馨提示", MB_OK);
+                return;
+            }
+            for (int vid = 0; vid < vertexCount; vid++)
+            {
+                vertexColors.at(vid) = triMesh->GetVertexColor(vid);
+            }
+            mIsCommandInProgress = true;
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::IntrinsicColor::TuneMeshColorFromMultiPatch(triMesh, colorIds, vertexColors);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格颜色融合失败", "温馨提示", MB_OK);
+                return;
+            }
+            for (int vid = 0; vid < vertexCount; vid++)
+            {
+                triMesh->SetVertexColor(vid, vertexColors.at(vid));
+            }
+            mUpdateDisplay = true;
+        }
     }
 }
