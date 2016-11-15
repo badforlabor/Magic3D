@@ -11,7 +11,8 @@ namespace MagicApp
         mScaleValue(0),
         mImageColorIds(),
         mTextureImageFiles(),
-        mCloudIds()
+        mCloudIds(),
+        mImageColorIdFlags()
     {
     }
 
@@ -154,6 +155,28 @@ namespace MagicApp
         }
     }
 
+    void ModelManager::SetImageColorIdFlag(const std::vector<int>& flags)
+    {
+        mImageColorIdFlags = flags;
+    }
+    
+    std::vector<int> ModelManager::GetImageColorIdFlags() const
+    {
+        return mImageColorIdFlags;
+    }
+
+    std::vector<int>* ModelManager::GetImageColorIdFlagsPointer()
+    {
+        if (mImageColorIdFlags.empty())
+        {
+            return NULL;
+        }
+        else
+        {
+            return &mImageColorIdFlags;
+        }
+    }
+
     bool ModelManager::ImportMesh(std::string fileName)
     {
         GPPFREEPOINTER(mpTriMesh);
@@ -185,5 +208,80 @@ namespace MagicApp
     void ModelManager::ClearMesh()
     {
         GPPFREEPOINTER(mpTriMesh);
+    }
+
+    void ModelManager::DumpInfo(std::ofstream& dumpOut) const
+    {
+        dumpOut << mImageColorIds.size() << std::endl;
+        for (std::vector<GPP::ImageColorId>::const_iterator itr = mImageColorIds.begin(); itr != mImageColorIds.end(); ++itr)
+        {
+            dumpOut << itr->GetImageIndex() << " " << itr->GetLocalX() << " " << itr->GetLocalY() << " ";
+        }
+        dumpOut << std::endl;
+        
+        dumpOut << mCloudIds.size() << std::endl;
+        for (std::vector<int>::const_iterator itr = mCloudIds.begin(); itr != mCloudIds.end(); ++itr)
+        {
+            dumpOut << *itr << " ";
+        }
+        dumpOut << std::endl;
+        
+        dumpOut << mColorIds.size() << std::endl;
+        for (std::vector<int>::const_iterator itr = mColorIds.begin(); itr != mColorIds.end(); ++itr)
+        {
+            dumpOut << *itr << " ";
+        }
+        dumpOut << std::endl;
+
+        dumpOut << mImageColorIdFlags.size() << std::endl;
+        for (std::vector<int>::const_iterator itr = mImageColorIdFlags.begin(); itr != mImageColorIdFlags.end(); ++itr)
+        {
+            dumpOut << *itr << " ";
+        }
+        dumpOut << std::endl;
+    }
+
+    void ModelManager::LoadInfo(std::ifstream& loadIn)
+    {
+        mImageColorIds.clear();
+        int count = 0;
+        loadIn >> count;
+        mImageColorIds.reserve(count);
+        int imageIndex, localX, localY;
+        for (int iid = 0; iid < count; iid++)
+        {
+            loadIn >> imageIndex >> localX >> localY;
+            mImageColorIds.push_back(GPP::ImageColorId(imageIndex, localX, localY));
+        }
+
+        mCloudIds.clear();
+        loadIn >> count;
+        mCloudIds.reserve(count);
+        int cloudId;
+        for (int cid = 0; cid < count; cid++)
+        {
+            loadIn >> cloudId;
+            mCloudIds.push_back(cloudId);
+        }
+
+        mColorIds.clear();
+        loadIn >> count;
+        mColorIds.reserve(count);
+        int colorId;
+        for (int cid = 0; cid < count; cid++)
+        {
+            loadIn >> cloudId;
+            mColorIds.push_back(cloudId);
+        }
+
+        mImageColorIdFlags.clear();
+        loadIn >> count;
+        mImageColorIdFlags.reserve(count);
+        int flag;
+        for (int fid = 0; fid < count; fid++)
+        {
+            loadIn >> flag;
+            mImageColorIdFlags.push_back(flag);
+        }
     }
 }

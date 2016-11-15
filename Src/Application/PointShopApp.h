@@ -28,7 +28,8 @@ namespace MagicApp
             ISOLATE,
             GEOMETRYSMOOTH,
             RECONSTRUCTION,
-            FUSECOLOR
+            FUSECOLOR,
+            FUSETEXTURE
         };
 
         enum RightMouseType
@@ -71,7 +72,7 @@ namespace MagicApp
         void ReconstructMesh(bool needFillHole, int quality, bool isSubThread = true);
 
         void RemovePointCloudOutlier(bool isSubThread = true);
-        void RemoveIsolatePart(bool isSubThread = true);
+        void RemoveIsolatePart(double isolateValue, bool isSubThread = true);
         void SmoothPointCloudGeoemtry(int smoothCount, bool isSubThread = true);
 
         void SelectByRectangle(void);
@@ -81,6 +82,7 @@ namespace MagicApp
         void MoveModel(void);
 
         void FusePointCloudColor(int neighborCount, bool isSubThread = true);
+        void FuseTextureImage(bool isSubThread = true);
         void LoadImageColorInfo(void);
         void SaveImageColorInfo(void);
 
@@ -133,5 +135,6 @@ namespace MagicApp
         int mSmoothCount;
         int mNeighborCount;
         int mColorNeighborCount;
+        double mIsolateValue;
     };
 }

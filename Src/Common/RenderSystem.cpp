@@ -306,6 +306,12 @@ namespace MagicCore
         {
             return;
         }
+        if (selectFlags && (selectFlags->size() != mesh->GetVertexCount()))
+        {
+            InfoLog << "Internal Error: mesh vertexCount = " << mesh->GetVertexCount()
+                << " and flagCount = " << selectFlags->size() << std::endl;
+            return;
+        }
         manualObj->begin(materialName, Ogre::RenderOperation::OT_TRIANGLE_LIST);
         if (isFlat)
         {

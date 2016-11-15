@@ -12,6 +12,7 @@
 #if DEBUGDUMPFILE
 #include "DumpMeasureMesh.h"
 #endif
+#include <numeric>
 
 namespace MagicApp
 {
@@ -43,7 +44,13 @@ namespace MagicApp
         mGeodesicAccuracy(0.5),
         mIsFlatRenderingMode(true),
         mpRefTriMesh(NULL),
-        mUpdateRefModelRendering(false)
+        mUpdateRefModelRendering(false),
+        mMinCurvature(),
+        mMaxCurvature(),
+        mMinCurvatureDirs(),
+        mMaxCurvatureDirs(),
+        mDisplayPrincipalCurvature(0),
+        mCurvatureWeight(0)
     {
     }
 
@@ -236,6 +243,8 @@ namespace MagicApp
         MagicCore::RenderSystem::Get()->HideRenderingObject("MeshRef_Measure");       
         MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPoints_MeasureApp");       
         MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPointLine_MeasureApp");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPointLine_MeasureApp");
+        MagicCore::RenderSystem::Get()->HideRenderingObject("PrincipalLine_MeasureApp");
         //MagicCore::RenderSystem::Get()->ResertAllSceneNode();
     }
 
@@ -250,6 +259,11 @@ namespace MagicApp
 #endif
         mMarkIds.clear();
         mMarkPoints.clear();
+        mMinCurvature.clear();
+        mMaxCurvature.clear();
+        mMinCurvatureDirs.clear();
+        mMaxCurvatureDirs.clear();
+        mDisplayPrincipalCurvature = 0;
     }
 
     void MeasureApp::DoCommand(bool isSubThread)
@@ -277,6 +291,15 @@ namespace MagicApp
                 break;
             case MagicApp::MeasureApp::DISTANCE_POINTS_TO_MESH:
                 ComputePointsToMeshDistance(false);
+                break;
+            case MagicApp::MeasureApp::GEODESICS_CURVATURE:
+                ComputeCurvatureGeodesics(mCurvatureWeight, false);
+                break;
+            case MagicApp::MeasureApp::PRINCIPAL_CURVATURE:
+                MeasurePrincipalCurvature(false);
+                break;
+            case MagicApp::MeasureApp::THICKNESS:
+                MeasureThickness(false);
                 break;
             default:
                 break;
@@ -417,6 +440,11 @@ namespace MagicApp
             UpdateModelRendering();
             mMarkIds.clear();
             mMarkPoints.clear();
+            mMinCurvature.clear();
+            mMaxCurvature.clear();
+            mMinCurvatureDirs.clear();
+            mMaxCurvatureDirs.clear();
+            mDisplayPrincipalCurvature = 0;
             UpdateMarkRendering();
             // set up pick tool
             GPPFREEPOINTER(mpPickTool);
@@ -503,7 +531,68 @@ namespace MagicApp
             GPP::Real distance = 0;
             //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, mMarkIds, true, pathVertexIds, distance);
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, mMarkIds, false, pathVertexIds, distance);
+            mIsCommandInProgress = false;
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                return;
+            }
+            mpUI->SetGeodesicsInfo(distance / ModelManager::Get()->GetScaleValue());
+            mMarkPoints.clear();
+            for (std::vector<GPP::Int>::iterator pathItr = pathVertexIds.begin(); pathItr != pathVertexIds.end(); ++pathItr)
+            {
+                mMarkPoints.push_back(triMesh->GetVertexCoord(*pathItr));
+            }
+            mUpdateMarkRendering = true;
+        }
+    }
+
+    void MeasureApp::ComputeCurvatureGeodesics(double curvatureWeight, bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        int vertexCount = triMesh->GetVertexCount();
+        if (triMesh == NULL)
+        {
+            MessageBox(NULL, "请导入需要测量的网格", "温馨提示", MB_OK);
+            return;
+        }
+        else if (mMarkIds.size() < 2)
+        {
+            MessageBox(NULL, "请在测量的网格上选择标记点", "温馨提示", MB_OK);
+            return;
+        }
+        else if (mMinCurvature.size() != vertexCount)
+        {
+            MessageBox(NULL, "请先给网格计算主曲率", "温馨提示", MB_OK);
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = GEODESICS_CURVATURE;
+            mCurvatureWeight = curvatureWeight;
+            DoCommand(true);
+        }
+        else
+        {
+            std::vector<GPP::Int> pathVertexIds;
+            GPP::Real distance = 0;
+            //GPP::DumpOnce();
+            mIsCommandInProgress = true;
+            GPP::TriangleList triangleList(triMesh);
+            GPP::PrincipalCurvatureDistance meshDistance(&triangleList, &mMinCurvatureDirs, &mMaxCurvatureDirs, 
+                &mMinCurvature, &mMaxCurvature, curvatureWeight);
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, mMarkIds, false, pathVertexIds, 
+                distance, &meshDistance);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -555,7 +644,7 @@ namespace MagicApp
             GPP::Real distance = 0;
             //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(triMesh, mMarkIds, true, 
+            GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(triMesh, mMarkIds, false, 
                 pathPoints, distance, &pathInfos, accuracy);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -611,7 +700,7 @@ namespace MagicApp
             GPP::Real distance = 0;
             //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::MeasureMesh::ComputeExactGeodesics(triMesh, mMarkIds, true, pathPoints, distance, &pathInfos);
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeExactGeodesics(triMesh, mMarkIds, false, pathPoints, distance, &pathInfos);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -711,7 +800,107 @@ namespace MagicApp
         {
             triMesh->SetVertexColor(vid, MagicCore::ToolKit::ColorCoding(0.6 + curvature.at(vid) / 10.0));
         }
+        mDisplayPrincipalCurvature = 0;
+        UpdateMarkRendering();
         UpdateModelRendering();
+    }
+
+    void MeasureApp::MeasurePrincipalCurvature(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh == NULL)
+        {
+            MessageBox(NULL, "请导入需要测量的网格", "温馨提示", MB_OK);
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = PRINCIPAL_CURVATURE;
+            DoCommand(true);
+        }
+        else
+        {
+            if (mDisplayPrincipalCurvature != 0 && triMesh->GetVertexCount() == mMinCurvature.size())
+            {
+                mDisplayPrincipalCurvature *= -1;
+            }
+            else
+            {
+#if MAKEDUMPFILE
+                GPP::DumpOnce();
+#endif
+                GPP::ErrorCode res = GPP::MeasureMesh::ComputePrincipalCurvature(triMesh, mMinCurvature, mMaxCurvature, 
+                    mMinCurvatureDirs, mMaxCurvatureDirs);
+                if (res == GPP_API_IS_NOT_AVAILABLE)
+                {
+                    MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                    MagicCore::ToolKit::Get()->SetAppRunning(false);
+                }
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "主曲率计算失败", "温馨提示", MB_OK);
+                    return;
+                }
+                mDisplayPrincipalCurvature = 1;
+            }
+            mUpdateMarkRendering = true;
+        }
+    }
+
+    void MeasureApp::MeasureThickness(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (ModelManager::Get()->GetMesh() == NULL)
+        {
+            MessageBox(NULL, "请先导入需要测量的网格", "温馨提示", MB_OK);
+            return;
+        }
+
+        if (isSubThread)
+        {
+            mCommandType = THICKNESS;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::TriMesh* measureMesh = ModelManager::Get()->GetMesh();
+            std::vector<GPP::Real> thickness;
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeThickness(measureMesh, thickness);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "计算厚度失败", "温馨提示", MB_OK);
+                return ;
+            }
+
+            measureMesh->SetHasColor(true);
+            GPP::Real maxValue = *std::max_element(thickness.begin(), thickness.end());
+            GPP::Real minValue = *std::min_element(thickness.begin(), thickness.end());
+            GPP::Real unChangedMaxValue = maxValue;
+            if (maxValue < GPP::REAL_TOL)
+            {
+                maxValue = 1.0;
+            }
+            for (GPP::Int vid = 0; vid < measureMesh->GetVertexCount(); ++vid)
+            {
+                GPP::Real dist = thickness.at(vid);
+                GPP::Vector3 color = MagicCore::ToolKit::ColorCoding(dist + 0.2);
+                measureMesh->SetVertexColor(vid, color);
+            }
+            GPP::Int halfVId = thickness.size() / 2;
+            std::nth_element(thickness.begin(), thickness.begin() + halfVId, thickness.end());
+            GPP::Real midValue = thickness.at(halfVId);
+            InfoLog << "Median thickness is: " << midValue << std::endl;
+            mpUI->SetThicknessInfo(true, midValue / ModelManager::Get()->GetScaleValue());
+
+            mUpdateModelRendering = true;
+        }
     }
 
     void MeasureApp::ComputePointsToMeshDistance(bool isSubThread)
@@ -761,6 +950,7 @@ namespace MagicApp
             measureMesh->SetHasColor(true);
             GPP::Real maxValue = *std::max_element(distances.begin(), distances.end());
             GPP::Real minValue = *std::min_element(distances.begin(), distances.end());
+            GPP::Real unChangedMaxValue = maxValue;
             if (maxValue < GPP::REAL_TOL)
             {
                 maxValue = 1.0;
@@ -772,7 +962,7 @@ namespace MagicApp
                 measureMesh->SetVertexColor(pid, color);
             }
             mpUI->SetDistanceInfo(measureMesh->GetVertexCount(), true, 
-                minValue / ModelManager::Get()->GetScaleValue(), maxValue/ ModelManager::Get()->GetScaleValue());
+                minValue / ModelManager::Get()->GetScaleValue(), unChangedMaxValue/ ModelManager::Get()->GetScaleValue());
             mUpdateRefModelRendering = true;
             mUpdateModelRendering = true;
         }
@@ -810,16 +1000,13 @@ namespace MagicApp
 
     void MeasureApp::UpdateMarkRendering()
     {
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
         std::vector<GPP::Vector3> markCoords = mMarkPoints;
-        if (mMarkIds.size() > 0)
+        if (mMarkIds.size() > 0 && triMesh != NULL)
         {
-            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-            if (triMesh != NULL)
+            for (std::vector<GPP::Int>::iterator itr = mMarkIds.begin(); itr != mMarkIds.end(); ++itr)
             {
-                for (std::vector<GPP::Int>::iterator itr = mMarkIds.begin(); itr != mMarkIds.end(); ++itr)
-                {
-                    markCoords.push_back(triMesh->GetVertexCoord(*itr));
-                }
+                markCoords.push_back(triMesh->GetVertexCoord(*itr));
             }
             MagicCore::RenderSystem::Get()->RenderPointList("MarkPoints_MeasureApp", "SimplePoint_Large", GPP::Vector3(1, 0, 0), markCoords, MagicCore::RenderSystem::MODEL_NODE_CENTER);
             MagicCore::RenderSystem::Get()->RenderPolyline("MarkPointLine_MeasureApp", "Simple_Line", GPP::Vector3(0, 1, 0), mMarkPoints, true, MagicCore::RenderSystem::MODEL_NODE_CENTER);
@@ -828,6 +1015,60 @@ namespace MagicApp
         {     
             MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPoints_MeasureApp");       
             MagicCore::RenderSystem::Get()->HideRenderingObject("MarkPointLine_MeasureApp");
+        }
+        if (mDisplayPrincipalCurvature != 0 && triMesh != NULL)
+        {
+            int vertexCount = triMesh->GetVertexCount();
+            if (vertexCount == mMinCurvature.size() && mDisplayPrincipalCurvature == -1)
+            {
+                std::vector<GPP::Vector3> startCoords(vertexCount);
+                std::vector<GPP::Vector3> endCoords(vertexCount);
+                double curvatureLen = 0.005;
+                triMesh->SetHasColor(true);
+                for (int vid = 0; vid < vertexCount; vid++)
+                {
+                    GPP::Real minCurvature = mMinCurvature.at(vid);
+                    triMesh->SetVertexColor(vid, MagicCore::ToolKit::ColorCoding(0.8 + minCurvature));
+                    if (fabs(minCurvature) > GPP::REAL_TOL)
+                    {
+                        GPP::Vector3 vertexCoord = triMesh->GetVertexCoord(vid);
+                        GPP::Vector3 minDir = mMinCurvatureDirs.at(vid);
+                        startCoords.at(vid) = vertexCoord - minDir * curvatureLen;
+                        endCoords.at(vid) = vertexCoord + minDir * curvatureLen;
+                    }
+                }
+                MagicCore::RenderSystem::Get()->RenderLineSegments("PrincipalLine_MeasureApp", "Simple_Line", startCoords, endCoords);
+            }
+            else if (vertexCount == mMaxCurvature.size() && mDisplayPrincipalCurvature == 1)
+            {
+                std::vector<GPP::Vector3> startCoords(vertexCount);
+                std::vector<GPP::Vector3> endCoords(vertexCount);
+                double curvatureLen = 0.005;
+                triMesh->SetHasColor(true);
+                for (int vid = 0; vid < vertexCount; vid++)
+                {
+                    GPP::Real maxCurvature = mMaxCurvature.at(vid);
+                    triMesh->SetVertexColor(vid, MagicCore::ToolKit::ColorCoding(0.8 + maxCurvature));
+                    if (fabs(maxCurvature) > GPP::REAL_TOL)
+                    {
+                        GPP::Vector3 vertexCoord = triMesh->GetVertexCoord(vid);
+                        GPP::Vector3 maxDir = mMaxCurvatureDirs.at(vid);
+                        startCoords.at(vid) = vertexCoord - maxDir * curvatureLen;
+                        endCoords.at(vid) = vertexCoord + maxDir * curvatureLen;
+                    }
+                }
+                MagicCore::RenderSystem::Get()->RenderLineSegments("PrincipalLine_MeasureApp", "Simple_Line", startCoords, endCoords);
+            }
+            else
+            {
+                MagicCore::RenderSystem::Get()->HideRenderingObject("PrincipalLine_MeasureApp");
+            }
+            MagicCore::RenderSystem::Get()->RenderMesh("Mesh_Measure", "CookTorrance", ModelManager::Get()->GetMesh(), 
+                MagicCore::RenderSystem::MODEL_NODE_CENTER, NULL, NULL, mIsFlatRenderingMode);
+        }
+        else
+        {
+            MagicCore::RenderSystem::Get()->HideRenderingObject("PrincipalLine_MeasureApp");
         }
     }
 

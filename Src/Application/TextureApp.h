@@ -26,7 +26,9 @@ namespace MagicApp
         enum CommandType
         {
             NONE = 0,
-            FUSEMESHCOLOR
+            FUSEMESHCOLOR,
+            OPTIMISE_IMAGE_COLOR_ID,
+            TUNE_TEXTURE_IMAGE_BY_VERTEX_COLOR
         };
 
         enum DisplayMode
@@ -65,6 +67,7 @@ namespace MagicApp
 
         void ImportTriMesh(void);
 
+        void ComputeImageColorIds(bool isSubThread = true);
         void SaveImageColorInfo(void);
         void LoadImageColorInfo(void);
         void PickMeshColorFromImages(void);
@@ -72,7 +75,7 @@ namespace MagicApp
         void FuseMeshColor(bool isSubThread = true);
 
         void GenerateTextureImage(bool isByVertexColor);
-        void TuneTextureImageByVertexColor(void);
+        void TuneTextureImageByVertexColor(bool isSubThread = true);
 
         int GetMeshVertexCount(void);
 

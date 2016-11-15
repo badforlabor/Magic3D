@@ -52,6 +52,9 @@
     <Filter Include="Application\DepthVideoApp">
       <UniqueIdentifier>{c23095d0-3d2e-4189-872f-411ee81bdbc4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\ScriptSystem">
+      <UniqueIdentifier>{ffa36ba2-712a-41c7-ac30-3c782079f1b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -171,6 +174,12 @@
     <ClInclude Include="..\Src\Application\MagicPointCloud.h">
       <Filter>Application\Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\Src\Common\ScriptSystem.h">
+      <Filter>Core\ScriptSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Src\Application\AppApi.h">
+      <Filter>Application\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -285,6 +294,15 @@
       <Filter>Application\Common</Filter>
     </ClCompile>
     <ClCompile Include="..\Src\Application\MagicPointCloud.cpp">
+      <Filter>Application\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Common\ScriptSystem.cpp">
+      <Filter>Core\ScriptSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\Lua\LuaTinker\lua_tinker.cpp">
+      <Filter>Core\ScriptSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Src\Application\AppApi.cpp">
       <Filter>Application\Common</Filter>
     </ClCompile>
   </ItemGroup>

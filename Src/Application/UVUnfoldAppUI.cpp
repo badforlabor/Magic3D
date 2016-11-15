@@ -9,7 +9,8 @@ namespace MagicApp
 {
     UVUnfoldAppUI::UVUnfoldAppUI() :
         mIsProgressbarVisible(false),
-        mTextInfo(NULL)
+        mTextInfo(NULL),
+        mIsCutLineAccurate(false)
     {
     }
 
@@ -32,6 +33,8 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ConfirmGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::ConfirmGeodesics);
         mRoot.at(0)->findWidget("But_DeleteGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::DeleteGeodesics);
         mRoot.at(0)->findWidget("But_SwitchMarkDisplay")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::SwitchMarkDisplay);
+        mRoot.at(0)->findWidget("But_SwitchCutLineType")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::SwitchCutLineType);
+        mRoot.at(0)->findWidget("But_SmoothCutLine")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::SmoothCutLine);
         mRoot.at(0)->findWidget("But_GenerateSplitLines")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::GenerateSplitLines);
         
         mRoot.at(0)->findWidget("But_UnFold2Disc")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &UVUnfoldAppUI::Unfold2Disc);
@@ -45,6 +48,20 @@ namespace MagicApp
 
         mTextInfo = mRoot.at(0)->findWidget("Text_Info")->castType<MyGUI::TextBox>();
         mTextInfo->setTextColour(MyGUI::Colour(75.0 / 255.0, 131.0 / 255.0, 128.0 / 255.0));
+
+        if (mIsCutLineAccurate)
+        {
+            mRoot.at(0)->findWidget("But_SwitchCutLineType")->castType<MyGUI::Button>()->changeWidgetSkin("But_Exact_CN");
+        }
+        else
+        {
+            mRoot.at(0)->findWidget("But_SwitchCutLineType")->castType<MyGUI::Button>()->changeWidgetSkin("But_Approximate_CN");
+        }
+        UVUnfoldApp* uvUnfoldApp = dynamic_cast<UVUnfoldApp* >(AppManager::Get()->GetApp("UVUnfoldApp"));
+        if (uvUnfoldApp != NULL)
+        {
+            uvUnfoldApp->SetCutLineType(mIsCutLineAccurate);
+        }
     }
 
     void UVUnfoldAppUI::Shutdown()
@@ -128,6 +145,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ConfirmGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_DeleteGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_SwitchMarkDisplay")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_SwitchCutLineType")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_GenerateSplitLines")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_SplitChartCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
@@ -138,6 +156,7 @@ namespace MagicApp
             ss >> textString;
             mRoot.at(0)->findWidget("Edit_SplitChartCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
         }
+        mRoot.at(0)->findWidget("But_SmoothCutLine")->castType<MyGUI::Button>()->setVisible(!mIsCutLineAccurate);
     }
 
     void UVUnfoldAppUI::SnapFrontGeodesics(MyGUI::Widget* pSender)
@@ -191,6 +210,34 @@ namespace MagicApp
         if (uvUnfoldApp != NULL)
         {
             uvUnfoldApp->SwitchMarkDisplay();
+        }
+    }
+
+    void UVUnfoldAppUI::SwitchCutLineType(MyGUI::Widget* pSender)
+    {
+        mIsCutLineAccurate = !mIsCutLineAccurate;
+        if (mIsCutLineAccurate)
+        {
+            mRoot.at(0)->findWidget("But_SwitchCutLineType")->castType<MyGUI::Button>()->changeWidgetSkin("But_Exact_CN");
+        }
+        else
+        {
+            mRoot.at(0)->findWidget("But_SwitchCutLineType")->castType<MyGUI::Button>()->changeWidgetSkin("But_Approximate_CN");
+        }
+        mRoot.at(0)->findWidget("But_SmoothCutLine")->castType<MyGUI::Button>()->setVisible(!mIsCutLineAccurate);
+        UVUnfoldApp* uvUnfoldApp = dynamic_cast<UVUnfoldApp* >(AppManager::Get()->GetApp("UVUnfoldApp"));
+        if (uvUnfoldApp != NULL)
+        {
+            uvUnfoldApp->SetCutLineType(mIsCutLineAccurate);
+        }
+    }
+
+    void UVUnfoldAppUI::SmoothCutLine(MyGUI::Widget* pSender)
+    {
+        UVUnfoldApp* uvUnfoldApp = dynamic_cast<UVUnfoldApp* >(AppManager::Get()->GetApp("UVUnfoldApp"));
+        if (uvUnfoldApp != NULL)
+        {
+            uvUnfoldApp->SmoothCutLine();
         }
     }
 

@@ -479,7 +479,7 @@ namespace MagicApp
             return;
         }
         MessageBox(NULL, "请先导入图像", "温馨提示", MB_OK);
-        char imageFilterName[] = "JPG Image(*.jpg)\0*.jpg\0PNG Image(*.png)\0*.png\0";
+        char imageFilterName[] = "JPG Image(*.jpg)\0*.jpg\0PNG Image(*.png)\0*.png\0BMP Image(*.bmp)\0*.bmp\0";
         if (MagicCore::ToolKit::MultiFileOpenDlg(mTextureImageFiles, imageFilterName))
         {
             if (mTextureImageFiles.size() == 0)
@@ -534,11 +534,11 @@ namespace MagicApp
                 curColorIdList.reserve(curPointCount);
                 std::vector<int> colorIds(curPointCount, cloudId);
                 int imageId = cloudId;
-                int coordX, coordY;
+                double coordX, coordY;
                 for (int pid = 0; pid < curPointCount; pid++)
                 {
                     fin >> coordX >> coordY;
-                    curColorIdList.push_back(GPP::ImageColorId(imageId, coordX, coordY));
+                    curColorIdList.push_back(GPP::ImageColorId(imageId, int(coordX), int(coordY)));
                 }
                 fin.close();
                 mImageColorIdList.push_back(curColorIdList);

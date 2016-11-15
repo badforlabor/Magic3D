@@ -17,7 +17,7 @@ namespace GPP
 {
     class PointCloud;
     class TriMesh;
-    class Obb;
+    struct Obb;
 }
 
 namespace MagicCore

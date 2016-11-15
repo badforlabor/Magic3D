@@ -83,6 +83,11 @@ namespace MagicApp
         }
     }
 
+    AppBase* AppManager::GetCurrentApp()
+    {
+        return mpCurrentApp;
+    }
+
     bool AppManager::FrameStarted(const FrameEvent& evt)
     {
         if (mpCurrentApp != NULL)

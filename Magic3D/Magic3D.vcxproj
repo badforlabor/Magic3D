@@ -56,14 +56,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;GPP_DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../Dependencies/GeometryPlusPlus/include;../Dependencies/MyGUI/include;../Dependencies/OGRE/include/OIS;../Dependencies/OGRE/include/OGRE;../Dependencies/OpenCV/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../Dependencies/GeometryPlusPlus/include;../Dependencies/MyGUI/include;../Dependencies/OGRE/include/OIS;../Dependencies/OGRE/include/OGRE;../Dependencies/OpenCV/include;../Dependencies/Lua/include;../Dependencies/Lua/LuaTinker;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zm162 /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../Dependencies/OGRE/lib/debug;../Dependencies/MyGUI/lib/debug;../Dependencies/OpenCV/lib/debug;../Dependencies/GeometryPlusPlus/lib/debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OgreMain_d.lib;OIS_d.lib;MyGUI.OgrePlatform_d.lib;MyGUIEngine_d.lib;geometryplusplus.lib;opencv_core247d.lib;opencv_highgui247d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../Dependencies/OGRE/lib/debug;../Dependencies/MyGUI/lib/debug;../Dependencies/OpenCV/lib/debug;../Dependencies/GeometryPlusPlus/lib/debug;../Dependencies/Lua/lib/debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OgreMain_d.lib;OIS_d.lib;MyGUI.OgrePlatform_d.lib;MyGUIEngine_d.lib;geometryplusplus.lib;opencv_core247d.lib;opencv_highgui247d.lib;lua5.3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -75,7 +75,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>GPP_DLL_EXPORT;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../Dependencies/OpenCV/include;../Dependencies/MyGUI/include;../Dependencies/OGRE/include/OIS;../Dependencies/OGRE/include/OGRE;../Dependencies/GeometryPlusPlus/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../Dependencies/OpenCV/include;../Dependencies/MyGUI/include;../Dependencies/OGRE/include/OIS;../Dependencies/OGRE/include/OGRE;../Dependencies/GeometryPlusPlus/include;../Dependencies/Lua/include;../Dependencies/Lua/LuaTinker;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zm152 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -83,13 +83,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../Dependencies/OpenCV/lib/release;../Dependencies/OGRE/lib/release;../Dependencies/MyGUI/lib/release;../Dependencies/GeometryPlusPlus/lib/release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OgreMain.lib;OIS.lib;MyGUI.OgrePlatform.lib;MyGUIEngine.lib;geometryplusplus.lib;opencv_core247.lib;opencv_highgui247.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../Dependencies/OpenCV/lib/release;../Dependencies/OGRE/lib/release;../Dependencies/MyGUI/lib/release;../Dependencies/GeometryPlusPlus/lib/release;../Dependencies/Lua/lib/release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OgreMain.lib;OIS.lib;MyGUI.OgrePlatform.lib;MyGUIEngine.lib;geometryplusplus.lib;opencv_core247.lib;opencv_highgui247.lib;lua5.3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\Src\Application\AnimationApp.h" />
     <ClInclude Include="..\Src\Application\AnimationAppUI.h" />
+    <ClInclude Include="..\Src\Application\AppApi.h" />
     <ClInclude Include="..\Src\Application\AppBase.h" />
     <ClInclude Include="..\Src\Application\AppManager.h" />
     <ClInclude Include="..\Src\Application\DepthVideoApp.h" />
@@ -123,17 +124,23 @@
     <ClInclude Include="..\Src\Common\PickTool.h" />
     <ClInclude Include="..\Src\Common\RenderSystem.h" />
     <ClInclude Include="..\Src\Common\ResourceManager.h" />
+    <ClInclude Include="..\Src\Common\ScriptSystem.h" />
     <ClInclude Include="..\Src\Common\ToolKit.h" />
     <ClInclude Include="..\Src\Common\ViewTool.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Dependencies\Lua\LuaTinker\lua_tinker.cpp" />
     <ClCompile Include="..\Src\Application\AnimationApp.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Application\AnimationAppUI.cpp" />
+    <ClCompile Include="..\Src\Application\AppApi.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\Src\Application\AppBase.cpp" />
     <ClCompile Include="..\Src\Application\AppManager.cpp" />
     <ClCompile Include="..\Src\Application\DepthVideoApp.cpp">
@@ -205,6 +212,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Src\Common\ResourceManager.cpp" />
+    <ClCompile Include="..\Src\Common\ScriptSystem.cpp" />
     <ClCompile Include="..\Src\Common\ToolKit.cpp" />
     <ClCompile Include="..\Src\Common\ViewTool.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>

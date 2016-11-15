@@ -31,6 +31,8 @@ namespace MagicApp
         void ConfirmGeodesics(MyGUI::Widget* pSender);
         void DeleteGeodesics(MyGUI::Widget* pSender);
         void SwitchMarkDisplay(MyGUI::Widget* pSender);
+        void SwitchCutLineType(MyGUI::Widget* pSender);
+        void SmoothCutLine(MyGUI::Widget* pSender);
         void GenerateSplitLines(MyGUI::Widget* pSender);
 
         void Unfold2Disc(MyGUI::Widget* pSender);
@@ -46,5 +48,6 @@ namespace MagicApp
         MyGUI::VectorWidgetPtr mRoot;
         bool mIsProgressbarVisible;
         MyGUI::TextBox* mTextInfo;
+        bool mIsCutLineAccurate;
     };
 }

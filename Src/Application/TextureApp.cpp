@@ -279,6 +279,12 @@ namespace MagicApp
             case MagicApp::TextureApp::FUSEMESHCOLOR:
                 FuseMeshColor(false);
                 break;
+            case MagicApp::TextureApp::OPTIMISE_IMAGE_COLOR_ID:
+                ComputeImageColorIds(false);
+                break;
+            case MagicApp::TextureApp::TUNE_TEXTURE_IMAGE_BY_VERTEX_COLOR:
+                TuneTextureImageByVertexColor(false);
+                break;
             default:
                 break;
             }
@@ -688,6 +694,7 @@ namespace MagicApp
                 cv::Mat image = cv::imread(textureImageFiles.at(iid));
                 if (image.data == NULL)
                 {
+                    MessageBox(NULL, "图片读取失败", "温馨提示", MB_OK);
                     return;
                 }
                 int width = image.cols;
@@ -759,112 +766,181 @@ namespace MagicApp
         UpdateDisplay();
     }
 
-    void TextureApp::TuneTextureImageByVertexColor()
+    void TextureApp::TuneTextureImageByVertexColor(bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
             return;
         }
-        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-        if (triMesh == NULL)
+        if (isSubThread)
         {
-            MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
-            return;
-        }
-        if (triMesh->HasColor() == false)
-        {
-            MessageBox(NULL, "输入需要带颜色的网格", "温馨提示", MB_OK);
-            return;
-        }
-        GPP::Int faceCount = triMesh->GetTriangleCount();
-        std::vector<GPP::Real> textureCoords(faceCount * 3 * 2);
-        std::vector<GPP::Vector3> vertexColors(faceCount * 3);
-        GPP::Int vertexIds[3] = {-1};
-        for (GPP::Int fid = 0; fid < faceCount; fid++)
-        {
-            triMesh->GetTriangleVertexIds(fid, vertexIds);
-            for (int fvid = 0; fvid < 3; fvid++)
-            {
-                GPP::Vector3 texCoord = triMesh->GetTriangleTexcoord(fid, fvid);
-                textureCoords.push_back(texCoord[0]);
-                textureCoords.push_back(texCoord[1]);
-                vertexColors.push_back(triMesh->GetVertexColor(vertexIds[fvid]));
-            }
-        }
-
-        cv::Mat texImage = cv::imread(mTextureImageName);
-        if (texImage.data == NULL)
-        {
-            MessageBox(NULL, "纹理贴图解析失败", "温馨提示", MB_OK);
-            return;
-        }
-        int imgWidth = texImage.cols;
-        int imgHeight = texImage.rows;
-        if (imgWidth * imgHeight != mTextureImageMasks.size())
-        {
-            MessageBox(NULL, "imgWidth * imgHeight != mTextureImageMasks.size()", "温馨提示", MB_OK);
-            return;
-        }
-        std::vector<GPP::Vector3> textureColors(imgWidth * imgHeight);
-        for (int y = 0; y < imgHeight; ++y)
-        {
-            for (int x = 0; x < imgWidth; ++x)
-            {
-                const unsigned char* pixel = texImage.ptr(imgHeight - 1 - y, x);
-                GPP::Vector3 color(pixel[2] / 255.0, pixel[1] / 255.0, pixel[0] / 255.0);
-                textureColors.at(x + y * imgWidth) = color;
-            }
-        }
-
-        std::vector<GPP::PixelType> pixelTypes;
-        pixelTypes.reserve(mTextureImageMasks.size());
-        for (std::vector<GPP::Int>::iterator itr = mTextureImageMasks.begin(); itr != mTextureImageMasks.end(); ++itr)
-        {
-            if ((*itr) > 3)
-            {
-                pixelTypes.push_back(GPP::PIXEL_TYPE_IMAGE_COLOR);
-            }
-            else
-            {
-                pixelTypes.push_back(GPP::PixelType(*itr));
-            }
-        }
-        mIsCommandInProgress = true;
-#if MAKEDUMPFILE
-        GPP::DumpOnce();
-#endif
-        GPP::ErrorCode res = GPP::IntrinsicColor::TuneTextureImageByVertexColor(textureCoords, vertexColors,
-            imgWidth, imgHeight, pixelTypes, textureColors);
-        mIsCommandInProgress = false;
-        if (res != GPP_NO_ERROR)
-        {
-            MessageBox(NULL, "纹理颜色融合失败", "温馨提示", MB_OK);
-            return;
-        }
-
-        for (int y = 0; y < imgHeight; ++y)
-        {
-            for (int x = 0; x < imgWidth; ++x)
-            {
-                unsigned char* pixel = texImage.ptr(imgHeight - 1 - y, x);
-                GPP::Vector3 color = textureColors.at(x + y * imgWidth);
-                pixel[0] = color[2] * 255;
-                pixel[1] = color[1] * 255;
-                pixel[2] = color[0] * 255;
-            }
-        }
-        cv::imwrite(mTextureImageName, texImage);
-        mDistortionImage.release();
-        mDistortionImage = cv::imread(mTextureImageName);
-        if (mDistortionImage.data != NULL)
-        {
-            mTextureImageSize = mDistortionImage.rows;
+            mCommandType = TUNE_TEXTURE_IMAGE_BY_VERTEX_COLOR;
+            DoCommand(true);
         }
         else
         {
-            MessageBox(NULL, "图片打开失败", "温馨提示", MB_OK);
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL)
+            {
+                MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
+                return;
+            }
+            if (triMesh->HasColor() == false)
+            {
+                MessageBox(NULL, "输入需要带颜色的网格", "温馨提示", MB_OK);
+                return;
+            }
+            std::vector<GPP::ImageColorId> imageColorIds = ModelManager::Get()->GetImageColorIds();
+            if (imageColorIds.size() != triMesh->GetVertexCount())
+            {
+                MessageBox(NULL, "顶点与图片对应文件有错", "温馨提示", MB_OK);
+                return;
+            }
+            std::vector<int> vertexFlags = ModelManager::Get()->GetImageColorIdFlags();
+            std::vector<std::string> textureImageFiles = ModelManager::Get()->GetTextureImageFiles();
+            int imageCount = textureImageFiles.size();
+            InfoLog << "imageCount=" << imageCount << std::endl;
+            int vertexCount = triMesh->GetVertexCount();
+            int faceCount = triMesh->GetTriangleCount();
+            std::vector<int> vertex2ImageMap(vertexCount, -1);
+            std::vector<bool> faceVisitFlag(faceCount, 0);
+            for (int iid = 0; iid < imageCount; iid++)
+            {
+                std::vector<int> vertexCoords;
+                std::vector<GPP::Vector3> vertexColors;
+                for (int vid = 0; vid < vertexCount; vid++)
+                {
+                    if (imageColorIds.at(vid).GetImageIndex() != iid)
+                    {
+                        continue;
+                    }
+                    vertex2ImageMap.at(vid) = vertexColors.size();
+                    vertexCoords.push_back(imageColorIds.at(vid).GetLocalX());
+                    vertexCoords.push_back(imageColorIds.at(vid).GetLocalY());
+                    vertexColors.push_back(triMesh->GetVertexColor(vid));
+                }
+                std::vector<int> faceVertexIds;
+                int vertexIds[3] = {-1};
+                for (int fid = 0; fid < faceCount; fid++)
+                {
+                    if (faceVisitFlag.at(fid))
+                    {
+                        continue;
+                    }
+                    triMesh->GetTriangleVertexIds(fid, vertexIds);
+                    bool isValid = true;
+                    for (int fvid = 0; fvid < 3; fvid++)
+                    {
+                        if (imageColorIds.at(vertexIds[fvid]).GetImageIndex() != iid)
+                        {
+                            isValid = false;
+                            break;
+                        }
+                    }
+                    if (isValid)
+                    {
+                        faceVertexIds.push_back(vertex2ImageMap.at(vertexIds[0]));
+                        faceVertexIds.push_back(vertex2ImageMap.at(vertexIds[1]));
+                        faceVertexIds.push_back(vertex2ImageMap.at(vertexIds[2]));
+                        faceVisitFlag.at(fid) = 1;
+                    }
+                }
+                if (faceVertexIds.empty())
+                {
+                    continue;
+                }
+                cv::Mat image = cv::imread(textureImageFiles.at(iid));
+                if (image.data == NULL)
+                {
+                    MessageBox(NULL, "图片读取失败", "温馨提示", MB_OK);
+                    return;
+                }
+                int imageWidth = image.cols;
+                int imageHeight = image.rows;
+                std::vector<GPP::Vector3> imageData(imageWidth * imageHeight);
+                for (int y = 0; y < imageHeight; ++y)
+                {
+                    for (int x = 0; x < imageWidth; ++x)
+                    {
+                        const unsigned char* pixel = image.ptr(imageHeight - 1 - y, x);
+                        GPP::Vector3 color(pixel[2] / 255.0, pixel[1] / 255.0, pixel[0] / 255.0);
+                        imageData.at(x + y * imageWidth) = color;
+                    }
+                }
+                GPP::ErrorCode res = GPP::IntrinsicColor::TuneImageByTriangleColor(vertexCoords, vertexColors, vertexFlags,
+                    faceVertexIds, imageWidth, imageHeight, imageData); 
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "纹理图优化失败", "温馨提示", MB_OK);
+                    return;
+                }
+                for (int y = 0; y < imageHeight; ++y)
+                {
+                    for (int x = 0; x < imageWidth; ++x)
+                    {
+                        GPP::Vector3 curColor = imageData.at(x + y * imageWidth);
+                        unsigned char* pixel = image.ptr(imageHeight - y - 1, x);
+                        pixel[0] = unsigned char(curColor[2] * 255);
+                        pixel[1] = unsigned char(curColor[1] * 255);
+                        pixel[2] = unsigned char(curColor[0] * 255);
+                    }
+                }
+                std::string tuneImageName = textureImageFiles.at(iid) + "_tune_triangle.jpg";
+                cv::imwrite(tuneImageName, image);
+                textureImageFiles.at(iid) = tuneImageName;
+            }
+            ModelManager::Get()->SetTextureImageFiles(textureImageFiles);
         }
-        UpdateDisplay();
+    }
+
+    void TextureApp::ComputeImageColorIds(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = OPTIMISE_IMAGE_COLOR_ID;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL)
+            {
+                MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
+                return;
+            }
+            int vertexCount = triMesh->GetVertexCount();
+            std::vector<GPP::ImageColorId> imageColorIds = ModelManager::Get()->GetImageColorIds();
+            if (imageColorIds.empty())
+            {
+                MessageBox(NULL, "ImageColorId is empty", "温馨提示", MB_OK);
+                return;
+            }
+            std::vector<int> fixFlag = ModelManager::Get()->GetImageColorIdFlags();
+            if (fixFlag.empty())
+            {
+                MessageBox(NULL, "ImageColorIdFlags is empty", "温馨提示", MB_OK);
+                return;
+            }
+#if MAKEDUMPFILE
+            GPP::DumpOnce();
+#endif
+            GPP::ErrorCode res = GPP::OptimiseMapping::OptimiseImageColorIdOnMesh(triMesh, fixFlag, imageColorIds);
+            if (res == GPP_API_IS_NOT_AVAILABLE)
+            {
+                MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+                MagicCore::ToolKit::Get()->SetAppRunning(false);
+            }
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "图像对应优化失败", "温馨提示", MB_OK);
+                return;
+            }
+            ModelManager::Get()->SetImageColorIds(imageColorIds);
+        }
     }
 
     void TextureApp::SaveImageColorInfo()
@@ -874,23 +950,7 @@ namespace MagicApp
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
             std::ofstream fout(fileName);
-            std::vector<GPP::ImageColorId> imageColorIds = ModelManager::Get()->GetImageColorIds();
-            int imageIdCount = imageColorIds.size();
-            fout << imageIdCount << " ";
-            GPP::ImageColorId curId;
-            for (int iid = 0; iid < imageIdCount; iid++)
-            {
-                curId = imageColorIds.at(iid);
-                fout << curId.GetImageIndex() << " " << curId.GetLocalX() << " " << curId.GetLocalY() << " ";
-            }
-            std::vector<std::string> textureImageFiles = ModelManager::Get()->GetTextureImageFiles();
-            int imageCount = textureImageFiles.size();
-            fout << imageCount << "\n";
-            for (int fid = 0; fid < imageCount; fid++)
-            {
-                fout << textureImageFiles.at(fid) << "\n";
-            }
-            fout << std::endl;
+            ModelManager::Get()->DumpInfo(fout);
             fout.close();
         }
     }
@@ -907,37 +967,17 @@ namespace MagicApp
                 MessageBox(NULL, "GII导入失败", "温馨提示", MB_OK);
                 return;
             }
-            int imageIdCount = 0;
-            fin >> imageIdCount;
-            int imageId, posX, posY;
-            std::vector<GPP::ImageColorId> imageColorIds;
-            imageColorIds.reserve(imageIdCount);
-            for (int iid = 0; iid < imageIdCount; iid++)
-            {
-                fin >> imageId >> posX >> posY;
-                imageColorIds.push_back(GPP::ImageColorId(imageId, posX, posY));
-            }
-            ModelManager::Get()->SetImageColorIds(imageColorIds);
-
-            int imageCount = 0;
-            fin >> imageCount;
-            std::vector<std::string> textureImageFiles;
-            textureImageFiles.reserve(imageCount);
-            for (int fid = 0; fid < imageCount; fid++)
-            {
-                std::string filePath;
-                fin >> filePath;
-                textureImageFiles.push_back(filePath);
-            }
+            ModelManager::Get()->LoadInfo(fin);
             fin.close();
 
+            MessageBox(NULL, "请导入图像", "温馨提示", MB_OK);
             std::vector<std::string> fileNames;
-            char filterName[] = "JPG Files(*.jpg)\0*.jpg\0PNG Files(*.png)\0*.png\0";
+            char filterName[] = "JPG Files(*.jpg)\0*.jpg\0PNG Files(*.png)\0*.png\0BMP Image(*.bmp)\0*.bmp\0";
             if (MagicCore::ToolKit::MultiFileOpenDlg(fileNames, filterName))
             {
-                textureImageFiles = fileNames;
+                ModelManager::Get()->SetTextureImageFiles(fileNames);
             }
-            ModelManager::Get()->SetTextureImageFiles(textureImageFiles);
+            
         }
     }
 

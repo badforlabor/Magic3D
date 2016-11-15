@@ -11,6 +11,7 @@
 #include "../Common/LogSystem.h"
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
+#include "../Common/ScriptSystem.h"
 #include "MagicMesh.h"
 #if DEBUGDUMPFILE
 #include "DumpFillMeshHole.h"
@@ -80,6 +81,11 @@ namespace MagicApp
 
     bool MeshShopApp::Update(double timeElapsed)
     {
+        if (MagicCore::ScriptSystem::Get()->IsOnRunningScript())
+        {
+            return false;
+        }
+
         if (mpUI && mpUI->IsProgressbarVisible())
         {
             int progressValue = int(GPP::GetApiProgress() * 100.0);
@@ -247,11 +253,22 @@ namespace MagicApp
         }
         else if (arg.key == OIS::KC_T)
         {
-            if (ModelManager::Get()->GetMesh())
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh)
             {
-                if (GPP::ConsolidateMesh::_IsTriMeshManifold(ModelManager::Get()->GetMesh()) == false)
+                int invalidVertexId = -1;
+                if (GPP::ConsolidateMesh::_IsTriMeshManifold(triMesh, &invalidVertexId) == false)
                 {
                     MessageBox(NULL, "网格有非流形结构", "温馨提示", MB_OK);
+                    if (mVertexSelectFlag.size() == triMesh->GetVertexCount() && invalidVertexId != -1)
+                    {
+                        mVertexSelectFlag.at(invalidVertexId) = 1;
+                        UpdateMeshRendering();
+                    }
+                }
+                else
+                {
+                    MessageBox(NULL, "网格是流形结构", "温馨提示", MB_OK);
                 }
             }
         }
@@ -266,6 +283,32 @@ namespace MagicApp
         else if (arg.key == OIS::KC_P)
         {
             PickMeshColorFromImages();
+        }
+        else if (arg.key == OIS::KC_B)
+        {
+            std::vector<std::vector<GPP::Int> > holeIds;
+            GPP::ErrorCode res = GPP::FillMeshHole::FindHoles(ModelManager::Get()->GetMesh(), &holeIds);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "网格找边界失败", "温馨提示", MB_OK);
+                return true;
+            }
+            if (holeIds.size() != 1)
+            {
+                MessageBox(NULL, "网格边界条数不为1", "温馨提示", MB_OK);
+                return true;
+            }
+            InfoLog << "boundary: " << std::endl;
+            InfoLog << holeIds.at(0).size() << std::endl;
+            for (std::vector<GPP::Int>::iterator itr = holeIds.at(0).begin(); itr != holeIds.at(0).end(); ++itr)
+            {
+                InfoLog << *itr << " ";
+            }
+            InfoLog << std::endl;
+        }
+        else if (arg.key == OIS::KC_N)
+        {
+            RunScript(true);
         }
         return true;
     }
@@ -282,6 +325,11 @@ namespace MagicApp
     {
         if (isSubThread)
         {
+            if (MagicCore::ScriptSystem::Get()->IsOnRunningScript())
+            {
+                DoCommand(false);
+                return;
+            }
             GPP::ResetApiProgress();
             mpUI->StartProgressbar(100);
             _beginthreadex(NULL, 0, RunThread, (void *)this, 0, NULL);
@@ -334,10 +382,16 @@ namespace MagicApp
             case MagicApp::MeshShopApp::FILLHOLE:
                 FillHole(mFillHoleType, false);
                 break;
+            case MagicApp::MeshShopApp::RUNSCRIPT:
+                RunScript(false);
+                break;
             default:
                 break;
             }
-            mpUI->StopProgressbar();
+            if (!MagicCore::ScriptSystem::Get()->IsOnRunningScript())
+            {
+                mpUI->StopProgressbar();
+            }
         }
     }
 
@@ -458,6 +512,7 @@ namespace MagicApp
                         else if (mRightMouseType == SELECT_ADD)
                         {
                             mVertexSelectFlag.at(vid) = 1;
+                            InfoLog << vid << std::endl;
                         }
                         else
                         {
@@ -889,7 +944,6 @@ namespace MagicApp
                 MessageBox(NULL, "网格光顺失败", "温馨提示", MB_OK);
                 return;
             }
-            ResetSelection();
             GPP::Real cutValue = 0.10;
             std::vector<GPP::Int> deleteIndex;
             for (GPP::Int vid = 0; vid < vertexCount; vid++)
@@ -906,6 +960,11 @@ namespace MagicApp
             {
                 magicMesh.SetImageColorIds(imageColorIds);
             }
+            std::vector<int>* imageColorIdFlags = ModelManager::Get()->GetImageColorIdFlagsPointer();
+            if (imageColorIdFlags && imageColorIdFlags->size() == triMesh->GetVertexCount())
+            {
+                magicMesh.SetImageColorIdFlags(imageColorIdFlags);
+            }
             std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
             if (colorIds && colorIds->size() == triMesh->GetVertexCount())
             {
@@ -918,6 +977,7 @@ namespace MagicApp
                 return;
             }
             triMesh->UpdateNormal();
+            ResetSelection();
             mUpdateMeshRendering = true;
             mpUI->SetMeshInfo(triMesh->GetVertexCount(), triMesh->GetTriangleCount());
             mpUI->ResetFillHole();
@@ -957,6 +1017,7 @@ namespace MagicApp
                 return;
             }
             triMesh->UpdateNormal();
+            ResetSelection();
             mUpdateMeshRendering = true;
         }
     }
@@ -1727,8 +1788,10 @@ namespace MagicApp
             mBridgeEdgeVertices.clear();
             SetToShowHoleLoopVrtIds(holeIds);
             SetBoundarySeedIds(std::vector<GPP::Int>());
-            UpdateBridgeRendering();
-            UpdateHoleRendering();
+            mUpdateBridgeRendering = true;
+            mUpdateHoleRendering = true;
+            //UpdateBridgeRendering();
+            //UpdateHoleRendering();
             return;
         }
         GPP::ErrorCode res = GPP::FillMeshHole::FindHoles(ModelManager::Get()->GetMesh(), &holeIds);
@@ -1784,10 +1847,36 @@ namespace MagicApp
                 }
             }
             std::vector<GPP::Int> holeSeeds;
+            int holeCount = mShowHoleLoopIds.size();
+            std::vector<bool> holeValidFlags(holeCount, 1);
+            std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (imageColorIds && imageColorIds->size() == triMesh->GetVertexCount())
+            {
+                for (GPP::Int vLoop = 0; vLoop < holeCount; ++vLoop)
+                {
+                    if (mShowHoleLoopIds.at(vLoop).size() > 0)
+                    {
+                        int curImageId = imageColorIds->at(mShowHoleLoopIds.at(vLoop).at(0)).GetImageIndex();
+                        for (std::vector<GPP::Int>::iterator loopItr = mShowHoleLoopIds.at(vLoop).begin(); loopItr != mShowHoleLoopIds.at(vLoop).end(); ++loopItr)
+                        {
+                            if (imageColorIds->at(*loopItr).GetImageIndex() != curImageId)
+                            {
+                                holeValidFlags.at(vLoop) = 0;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             if (isHoleSelected)
             {
                 for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
                 {
+                    if (!holeValidFlags.at(vLoop))
+                    {
+                        continue;
+                    }
                     for (std::vector<GPP::Int>::iterator loopItr = mShowHoleLoopIds.at(vLoop).begin(); loopItr != mShowHoleLoopIds.at(vLoop).end(); ++loopItr)
                     {
                         if (mVertexSelectFlag.at(*loopItr))
@@ -1802,18 +1891,28 @@ namespace MagicApp
             {
                 for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
                 {
+                    if (!holeValidFlags.at(vLoop))
+                    {
+                        continue;
+                    }
                     if (mShowHoleLoopIds.at(vLoop).size() > 0)
                     {
                         holeSeeds.push_back(mShowHoleLoopIds.at(vLoop).at(0));
                     }
                 }
             }
-            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (imageColorIds && imageColorIds->size() == triMesh->GetVertexCount() && holeSeeds.empty())
+            {
+                MessageBox(NULL, "没有找到合理的洞", "温馨提示", MB_OK);
+                return;
+            }
+            
             GPP::ErrorCode res = GPP_NO_ERROR;
+            int originVertexCount = triMesh->GetVertexCount();
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
-            if (ModelManager::Get()->GetMesh()->HasColor())
+            if (triMesh->HasColor())
             {
                 std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
                 CollectTriMeshVerticesColorFields(triMesh, &vertexScaleFields);
@@ -1838,6 +1937,24 @@ namespace MagicApp
             {
                 MessageBox(NULL, "网格补洞失败", "温馨提示", MB_OK);
                 return;
+            }
+            if (imageColorIds && imageColorIds->size() == originVertexCount)
+            {
+                int curVertexCount = triMesh->GetVertexCount();
+                if (curVertexCount > originVertexCount)
+                {
+                    imageColorIds->resize(curVertexCount, GPP::ImageColorId(-1, 0, 0));
+                    std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
+                    if (colorIds && colorIds->size() == originVertexCount)
+                    {
+                        colorIds->resize(curVertexCount, -1);
+                    }
+                    std::vector<int>* imageColorIdFlags = ModelManager::Get()->GetImageColorIdFlagsPointer();
+                    if (imageColorIdFlags && imageColorIdFlags->size() == originVertexCount)
+                    {
+                        imageColorIdFlags->resize(curVertexCount, 0);
+                    }
+                }
             }
             ResetSelection();           
             SetToShowHoleLoopVrtIds(std::vector<std::vector<GPP::Int> >());
@@ -2117,6 +2234,11 @@ namespace MagicApp
         {
             magicMesh.SetImageColorIds(imageColorIds);
         }
+        std::vector<int>* imageColorIdFlags = ModelManager::Get()->GetImageColorIdFlagsPointer();
+        if (imageColorIdFlags && imageColorIdFlags->size() == triMesh->GetVertexCount())
+        {
+            magicMesh.SetImageColorIdFlags(imageColorIdFlags);
+        }
         std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
         if (colorIds && colorIds->size() == triMesh->GetVertexCount())
         {
@@ -2178,6 +2300,10 @@ namespace MagicApp
 
     void MeshShopApp::UpdateMeshRendering()
     {
+        if (MagicCore::ScriptSystem::Get()->IsOnRunningScript())
+        {
+            return ;
+        }
         if (ModelManager::Get()->GetMesh() == NULL)
         {
             MagicCore::RenderSystem::Get()->HideRenderingObject("Mesh_MeshShop");
@@ -2190,6 +2316,11 @@ namespace MagicApp
 
     void MeshShopApp::UpdateHoleRendering()
     {
+        if (MagicCore::ScriptSystem::Get()->IsOnRunningScript())
+        {
+            return;
+        }
+
         GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
         if (triMesh == NULL)
         {
@@ -2221,6 +2352,10 @@ namespace MagicApp
 
     void MeshShopApp::UpdateBridgeRendering()
     {
+        if (MagicCore::ScriptSystem::Get()->IsOnRunningScript())
+        {
+            return;
+        }
         GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
         if (triMesh == NULL)
         {
@@ -2313,6 +2448,53 @@ namespace MagicApp
                 textureImageFiles = fileNames;
             }
             ModelManager::Get()->SetTextureImageFiles(textureImageFiles);
+        }
+    }
+
+    void MeshShopApp::RunScript(bool isSubThread)
+    {
+        if (MagicCore::ScriptSystem::Get()->IsOnRunningScript())
+        {
+            MessageBox(NULL, "请等待前一脚本执行完毕", "温馨提示", MB_OK);
+            return;
+        }
+        if (IsCommandInProgress())
+        {
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = RUNSCRIPT;
+            DoCommand(true);
+        }
+        else
+        {
+            std::string fileName;
+            char filterName[] = "GPP Script File(*.gsf)\0*.gsf\0";
+            if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
+            {
+                InfoLog << "Run Script file: " << fileName.c_str() << std::endl;
+                if (MagicCore::ScriptSystem::Get()->RunScriptFile(fileName.c_str()))
+                {
+                    GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+                    if (triMesh)
+                    {
+                        if (mpUI)
+                        {
+                            mpUI->SetMeshInfo(triMesh->GetVertexCount(), triMesh->GetTriangleCount());
+                            mpUI->ResetFillHole();
+                            FindHole(false);
+                            mpUI->StopProgressbar();
+                        }
+                    }
+                    ResetSelection();
+                    mUpdateMeshRendering = true;
+                    mUpdateBridgeRendering = true;
+                    mUpdateHoleRendering = true;
+                    mUpdateMeshRendering = true;
+                    MessageBox(NULL, "脚本执行完毕", "温馨提示", MB_OK);
+                }
+            }
         }
     }
 

@@ -97,4 +97,20 @@ namespace MagicCore
     {
         mRightNodeFixed = fixed;
     }
+
+    void ViewTool::Rotate(double axisX, double axisY, double axisZ, double angle)
+    {
+        if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNode"))
+        {
+            RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNode")->rotate(Ogre::Vector3(axisX, axisY, axisZ), Ogre::Radian(angle));
+        }
+        if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNodeLeft") && (!mLeftNodeFixed))
+        {
+            RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeLeft")->rotate(Ogre::Vector3(axisX, axisY, axisZ), Ogre::Radian(angle));
+        }
+        if (RenderSystem::Get()->GetSceneManager()->hasSceneNode("ModelNodeRight") && (!mRightNodeFixed))
+        {
+            RenderSystem::Get()->GetSceneManager()->getSceneNode("ModelNodeRight")->rotate(Ogre::Vector3(axisX, axisY, axisZ), Ogre::Radian(angle));
+        }
+    }
 }

@@ -57,10 +57,14 @@
         <Widget type="Button" skin="But_Isolate_CN" position="118 285 43 43" align="Left Top" name="But_RemoveIsolatePart">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Smooth_CN" position="161 285 43 43" align="Left Top" name="But_SmoothGeometry">
+        <Widget type="EditBox" skin="EditBox" position="161 290 40 30" align="Left Top" name="Edit_IsolateValue">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="EditBox" skin="EditBox" position="204 290 40 30" align="Left Top" name="Edit_SmoothGeometryCount">
+        <Widget type="Button" skin="But_Smooth_CN" position="201 285 43 43" align="Left Top" name="But_SmoothGeometry">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="EditBox" skin="EditBox" position="244 290 40 30" align="Left Top" name="Edit_SmoothGeometryCount">
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
@@ -102,10 +106,13 @@
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_PointPixelMap_CN" position="118 480 43 43" align="Left Top" name="But_LoadImageColorIds">
+        <Widget type="Button" skin="But_TextureMerge_CN" position="118 480 43 43" align="Left Top" name="But_FuseTextureImage">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Save" position="161 480 43 43" align="Left Top" name="But_ExportImageColorIds">
+        <Widget type="Button" skin="But_PointPixelMap_CN" position="161 480 43 43" align="Left Top" name="But_LoadImageColorIds">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Save" position="204 480 43 43" align="Left Top" name="But_ExportImageColorIds">
             <Property key="Visible" value="false"/>
         </Widget>
 

@@ -5,7 +5,8 @@ namespace MagicApp
     MagicMesh::MagicMesh(GPP::ITriMesh* triMesh) :
         mTriMesh(triMesh),
         mImageColorIds(NULL),
-        mColorIds(NULL)
+        mColorIds(NULL),
+        mImageColorIdFlags(NULL)
     {
     }
 
@@ -89,6 +90,12 @@ namespace MagicApp
             mColorIds->at(vertexId0) = mColorIds->at(vertexId1);
             mColorIds->at(vertexId1) = temp;
         }
+        if (mImageColorIdFlags)
+        {
+            bool temp = mImageColorIdFlags->at(vertexId0);
+            mImageColorIdFlags->at(vertexId0) = mImageColorIdFlags->at(vertexId1);
+            mImageColorIdFlags->at(vertexId1) = temp;
+        }
     }
 
     void MagicMesh::PopbackVertices(GPP::Int popCount)
@@ -102,6 +109,10 @@ namespace MagicApp
         if (mColorIds)
         {
             mColorIds->erase(mColorIds->begin() + vertexCount - popCount, mColorIds->end());
+        }
+        if (mImageColorIdFlags)
+        {
+            mImageColorIdFlags->erase(mImageColorIdFlags->begin() + vertexCount - popCount, mImageColorIdFlags->end());
         }
     }
 
@@ -125,6 +136,7 @@ namespace MagicApp
         mTriMesh = NULL;
         mImageColorIds = NULL;
         mColorIds = NULL;
+        mImageColorIdFlags = NULL;
     }
 
     void MagicMesh::SetImageColorIds(std::vector<GPP::ImageColorId>* imageColorIds)
@@ -135,5 +147,10 @@ namespace MagicApp
     void MagicMesh::SetColorIds(std::vector<int>* colorIds)
     {
         mColorIds = colorIds;
+    }
+
+    void MagicMesh::SetImageColorIdFlags(std::vector<int>* flags)
+    {
+        mImageColorIdFlags = flags;
     }
 }

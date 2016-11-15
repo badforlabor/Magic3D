@@ -19,6 +19,7 @@ namespace MagicApp
         void EnterApp(AppBase* pApp, std::string name);
         bool SwitchCurrentApp(std::string name);
         AppBase* GetApp(std::string name);
+        AppBase* GetCurrentApp();
 
         bool FrameStarted(const FrameEvent& evt);
         bool FrameEnded(const FrameEvent& evt);

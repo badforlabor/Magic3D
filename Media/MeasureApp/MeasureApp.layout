@@ -17,10 +17,17 @@
         <Widget type="Button" skin="But_Fast_CN" position="161 90 43 43" align="Left Top" name="But_QuickExactGeodesics">
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="EditBox" skin="EditBox" position="161 60 40 30" align="Left Button" name="Edit_GeodesicAccuracy">
+            <Property key="TextColour" value="0.3 0.3 0.3"/>
+            <Property key="Visible" value="false"/>
+        </Widget>
         <Widget type="Button" skin="But_Exact_CN" position="204 90 43 43" align="Left Top" name="But_ExactGeodesics">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="EditBox" skin="EditBox" position="161 60 40 30" align="Left Button" name="Edit_GeodesicAccuracy">
+        <Widget type="Button" skin="But_Curvature_CN" position="247 90 43 43" align="Left Top" name="But_CurvatureGeodesics">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="EditBox" skin="EditBox" position="247 60 40 30" align="Left Button" name="Edit_CurvtureWeight">
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
@@ -33,6 +40,12 @@
             <Property key="Visible" value="false"/>
         </Widget>
         <Widget type="Button" skin="But_Curvature_CN" position="161 155 43 43" align="Left Top" name="But_CurvatureRef">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_PrincipalCurvature_CN" position="204 155 43 43" align="Left Top" name="But_PrincipalCurvature">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Thickness_CN" position="247 155 43 43" aligh="Left Top" name="But_Thickness">
             <Property key="Visible" value="false"/>
         </Widget>
       

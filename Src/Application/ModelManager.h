@@ -38,10 +38,17 @@ namespace MagicApp
         std::vector<int> GetColorIds(void) const;
         std::vector<int>* GetColorIdsPointer(void);
 
+        void SetImageColorIdFlag(const std::vector<int>& flags);
+        std::vector<int> GetImageColorIdFlags(void) const;
+        std::vector<int>* GetImageColorIdFlagsPointer(void);
+
         bool ImportMesh(std::string fileName);
         void SetMesh(GPP::TriMesh* triMesh);
         GPP::TriMesh* GetMesh(void);
         void ClearMesh(void);
+
+        void DumpInfo(std::ofstream& dumpOut) const;
+        void LoadInfo(std::ifstream& loadIn);
 
         ~ModelManager();
 
@@ -54,5 +61,6 @@ namespace MagicApp
         std::vector<std::string> mTextureImageFiles;
         std::vector<int> mCloudIds;
         std::vector<int> mColorIds;
+        std::vector<int> mImageColorIdFlags;
     };
 }

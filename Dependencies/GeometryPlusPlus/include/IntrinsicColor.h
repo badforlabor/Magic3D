@@ -26,24 +26,52 @@ namespace GPP
         IntrinsicColor();
         ~IntrinsicColor();
 
+        // Overview: pointColors will be merged into one consistent region by diffusing boundaries of different colorIds
+        // pointCloud: it should be uniform. If not, please use TuneMeshColorFromMultiPatch instead
         // neighborCount: range >= 4, usually be 12, larger value will make color fusing more
+        // colorIds: points having the same colorId should have consistent color
         // pointColors: range[0, 1]
         static ErrorCode TuneColorFromMultiFrame(const IPointCloud* pointCloud, Int neighborCount, 
             const std::vector<Int>& colorIds, std::vector<Vector3>& pointColors);
 
+        
         // Point cloud should have been aligned before calling this api
         // color value should be in range [0, 1]
+        // needBlend: colors will be blended near the boundaries of different colorId
         // pointDensity: if it is NULL, it will be calculated automatically. If pointClouds are not uniformed, please set it manually
+        // originColorIdList: points having the same colorId should have consistent color. If it is NULL, points from the same cloud will have the same colorId
+        // tunedColorIdList: output point colorIds. points having the same colorId should have consistent color
         static ErrorCode TuneColorFromSingleLight(const std::vector<IPointCloud*>& pointCloudList, 
             std::vector<std::vector<Vector3> >& colorList, bool needBlend, const Real* pointDensity,
             const std::vector<std::vector<Int> >* originColorIdList, std::vector<std::vector<Int> >* tunedColorIdList);
 
 
+        // Overview: texture image color will be tuned into one consistent region by constrained vertex color
+        // textureCoords: constrained vertex texture coordinates: coordX_0, coordY_0, coordX_1, coordY_1...... range: [0, 1]
+        // vertexColors: constrained vertex colors
         static ErrorCode TuneTextureImageByVertexColor(const std::vector<Real>& textureCoords, const std::vector<Vector3>& vertexColors, 
             Int imageWidth, Int imageHeight, const std::vector<PixelType> pixelTypes, std::vector<Vector3>& textureColors);
 
 
+        // Overview: texture image color will be tuned into one consistent region by constrained vertex color
+        // vertexCoords: vertex's coordinates in image space: x0 y0 x1 y1 ......
+        // vertexFlags: 1 - color constraints; 0 - not constraints
+        // faceVertexIds: a list of the triangle vertex indices. The size of it must be a multiple of three.
+        static ErrorCode TuneImageByTriangleColor(const std::vector<Int>& vertexCoords, const std::vector<Vector3>& vertexColors,
+            const std::vector<Int>& vertexFlags, const std::vector<Int>& faceVertexIds, 
+            Int imageWidth, Int imageHeight, std::vector<Vector3>& imageColors);
+
+
+        // Overview: texture image color will be tuned into one consistent region by constrained point color
+        // pointCoords: point's coordinates in image space: x0 y0 x1 y1 ......
+        static ErrorCode TuneImageByPointColor(const std::vector<Int>& pointCoords, const std::vector<Vector3>& pointColors,
+            Int imageWidth, Int imageHeight, std::vector<Vector3>& imageColors);
+
+
+        // colorIds: vertices having the same colorId should have consistent color
+        // vertexColors: range[0, 1]
         static ErrorCode TuneMeshColorFromMultiPatch(const ITriMesh* triMesh, const std::vector<Int>& colorIds, 
             std::vector<Vector3>& vertexColors);
+
     };
 }

@@ -66,6 +66,8 @@ namespace MagicApp
         void ConfirmGeodesics(void);
         void DeleteGeodesics(void);
         void SwitchMarkDisplay(void);
+        void SetCutLineType(bool isAccurate);
+        void SmoothCutLine(void);
         void GenerateSplitLines(int splitChartCount);
         
         void UnfoldTriMesh(bool isSubThread = true);
@@ -109,11 +111,13 @@ namespace MagicApp
         bool mHideMarks;
         MagicCore::PickTool* mpPickTool;
         GPP::Int mLastCutVertexId;
+        std::vector<GPP::Int> mCurPointsOnVertex;
         std::vector<GPP::PointOnEdge> mCurPointsOnEdge;
         std::vector<GPP::Vector3> mCurMarkCoords;
         std::vector<std::vector<GPP::Int> > mCutLineList;
         int mInitChartCount;
         std::vector<int> mSnapIds;
         int mTargetVertexCount;
+        bool mIsCutLineAccurate;
     };
 }

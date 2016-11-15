@@ -57,6 +57,7 @@ namespace MagicApp
 
         mRoot.at(0)->findWidget("But_PointCloudColor")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::PointCloudColor);
         mRoot.at(0)->findWidget("But_FusePointCloudColor")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::FusePointCloudColor);
+        mRoot.at(0)->findWidget("But_FuseTextureImage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::FuseTextureImage);
         mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::LoadImageColorIds);
         mRoot.at(0)->findWidget("But_ExportImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &PointShopAppUI::SaveImageColorIds);
 
@@ -400,6 +401,16 @@ namespace MagicApp
         isVisible = !isVisible;
         mRoot.at(0)->findWidget("But_RemovePointCloudOutlier")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_RemoveIsolatePart")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_IsolateValue")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::stringstream ss;
+            std::string textString;
+            ss << 0.05;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_IsolateValue")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_IsolateValue")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
         mRoot.at(0)->findWidget("But_SmoothGeometry")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_SmoothGeometryCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
@@ -427,7 +438,20 @@ namespace MagicApp
         PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
         if (pointShop != NULL)
         {
-            pointShop->RemoveIsolatePart();
+            std::string textString = mRoot.at(0)->findWidget("Edit_IsolateValue")->castType<MyGUI::EditBox>()->getOnlyText();
+            double isolateValue = std::atof(textString.c_str());
+            if (isolateValue > 1 || isolateValue < 0)
+            {
+                std::stringstream ss;
+                std::string textString;
+                ss << 0.05;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_IsolateValue")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            else
+            {
+                pointShop->RemoveIsolatePart(isolateValue, true);
+            }     
         }
     }
 
@@ -563,6 +587,7 @@ namespace MagicApp
         bool isVisible = mRoot.at(0)->findWidget("But_FusePointCloudColor")->castType<MyGUI::Button>()->isVisible();
         isVisible = !isVisible;
         mRoot.at(0)->findWidget("But_FusePointCloudColor")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_FuseTextureImage")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_ExportImageColorIds")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
@@ -596,6 +621,15 @@ namespace MagicApp
             {
                 pointShop->FusePointCloudColor(neighborCount, true);
             }
+        }
+    }
+
+    void PointShopAppUI::FuseTextureImage(MyGUI::Widget* pSender)
+    {
+        PointShopApp* pointShop = dynamic_cast<PointShopApp* >(AppManager::Get()->GetApp("PointShopApp"));
+        if (pointShop != NULL)
+        {
+            pointShop->FuseTextureImage();
         }
     }
 

@@ -49,7 +49,8 @@ namespace MagicApp
         mEnterMeshShop(0),
         mSmoothCount(0),
         mNeighborCount(0),
-        mColorNeighborCount(0)
+        mColorNeighborCount(0),
+        mIsolateValue(0)
     {
     }
 
@@ -249,23 +250,7 @@ namespace MagicApp
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
             std::ofstream fout(fileName);
-            std::vector<GPP::ImageColorId> imageColorIds = ModelManager::Get()->GetImageColorIds();
-            int imageIdCount = imageColorIds.size();
-            fout << imageIdCount << " ";
-            GPP::ImageColorId curId;
-            for (int iid = 0; iid < imageIdCount; iid++)
-            {
-                curId = imageColorIds.at(iid);
-                fout << curId.GetImageIndex() << " " << curId.GetLocalX() << " " << curId.GetLocalY() << " ";
-            }
-            std::vector<std::string> textureImageFiles = ModelManager::Get()->GetTextureImageFiles();
-            int imageCount = textureImageFiles.size();
-            fout << imageCount << "\n";
-            for (int fid = 0; fid < imageCount; fid++)
-            {
-                fout << textureImageFiles.at(fid) << "\n";
-            }
-            fout << std::endl;
+            ModelManager::Get()->DumpInfo(fout);
             fout.close();
         }
     }
@@ -282,37 +267,17 @@ namespace MagicApp
                 MessageBox(NULL, "GII导入失败", "温馨提示", MB_OK);
                 return;
             }
-            int imageIdCount = 0;
-            fin >> imageIdCount;
-            int imageId, posX, posY;
-            std::vector<GPP::ImageColorId> imageColorIds;
-            imageColorIds.reserve(imageIdCount);
-            for (int iid = 0; iid < imageIdCount; iid++)
-            {
-                fin >> imageId >> posX >> posY;
-                imageColorIds.push_back(GPP::ImageColorId(imageId, posX, posY));
-            }
-            ModelManager::Get()->SetImageColorIds(imageColorIds);
-
-            int imageCount = 0;
-            fin >> imageCount;
-            std::vector<std::string> textureImageFiles;
-            textureImageFiles.reserve(imageCount);
-            for (int fid = 0; fid < imageCount; fid++)
-            {
-                std::string filePath;
-                fin >> filePath;
-                textureImageFiles.push_back(filePath);
-            }
+            ModelManager::Get()->LoadInfo(fin);
             fin.close();
 
+            MessageBox(NULL, "请导入图像", "温馨提示", MB_OK);
             std::vector<std::string> fileNames;
-            char filterName[] = "JPG Files(*.jpg)\0*.jpg\0PNG Files(*.png)\0*.png\0";
+            char filterName[] = "JPG Files(*.jpg)\0*.jpg\0PNG Files(*.png)\0*.png\0BMP Image(*.bmp)\0*.bmp\0";
             if (MagicCore::ToolKit::MultiFileOpenDlg(fileNames, filterName))
             {
-                textureImageFiles = fileNames;
+                ModelManager::Get()->SetTextureImageFiles(fileNames);
             }
-            ModelManager::Get()->SetTextureImageFiles(textureImageFiles);
+            
         }
     }
 
@@ -376,8 +341,17 @@ namespace MagicApp
             return;
         }
         GPP::PointCloudPointList pointList(pointCloud);
+        GPP::Real pointDensity;
+        GPP::ErrorCode res = GPP::CalculatePointListDensity(&pointList, 5, pointDensity);
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "CalculatePointListDensity Failed", "温馨提示", MB_OK);
+            return;
+        }
+        pointDensity *= pointDensity;
+        InfoLog << "point cloud densidy: " << pointDensity << std::endl;
         GPP::Ann ann;
-        GPP::ErrorCode res = ann.Init(&pointList);
+        res = ann.Init(&pointList);
         if (res != GPP_NO_ERROR)
         {
             MessageBox(NULL, "Ann Init Failed", "温馨提示", MB_OK);
@@ -388,13 +362,16 @@ namespace MagicApp
         std::vector<GPP::Int> meshColorIds(vertexCount);
         double searchData[3] = {-1};
         int indexRes[1] = {-1};
+        double distanceRes[1] = {-1};
+        int invalidMapCount = 0;
+        std::vector<int> imageColorIdFlags(vertexCount, 1);
         for (int vid = 0; vid < vertexCount; vid++)
         {
             GPP::Vector3 coord = triMesh->GetVertexCoord(vid);
             searchData[0] = coord[0];
             searchData[1] = coord[1];
             searchData[2] = coord[2];
-            res = ann.FindNearestNeighbors(searchData, 1, 1, indexRes, NULL);
+            res = ann.FindNearestNeighbors(searchData, 1, 1, indexRes, distanceRes);
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "Ann FindNearestNeighbors Failed", "温馨提示", MB_OK);
@@ -403,15 +380,22 @@ namespace MagicApp
             if (originImageColorIds.size() > 0)
             {
                 imageColorIds.at(vid) = originImageColorIds.at(indexRes[0]);
+                if (distanceRes[0] > pointDensity)
+                {
+                    imageColorIdFlags.at(vid) = 0;
+                    invalidMapCount++;
+                }
             }
             if (colorIds.size() > 0)
             {
                 meshColorIds.at(vid) = colorIds.at(indexRes[0]);
             }
         }
+        InfoLog << " invalidMapCount=" << invalidMapCount << " vertexCount=" << vertexCount << std::endl;
         if (originImageColorIds.size() > 0)
         {
             ModelManager::Get()->SetImageColorIds(imageColorIds);
+            ModelManager::Get()->SetImageColorIdFlag(imageColorIdFlags);
         }
         if (colorIds.size() > 0)
         {
@@ -576,6 +560,7 @@ namespace MagicApp
                 GPP::Vector3 cameraDir(0, 0, 1);
                 std::vector<int> boundaryIds;
                 GPP::DetectBoundaryPointByZAngle(pointCloud, GPP::ONE_RADIAN * 80, &cameraDir, boundaryIds);
+                pointCloud->SetHasColor(true);
                 for (std::vector<int>::iterator itr = boundaryIds.begin(); itr != boundaryIds.end(); ++itr)
                 {
                     pointCloud->SetPointColor(*itr, GPP::Vector3(1, 0, 0));
@@ -696,13 +681,16 @@ namespace MagicApp
                 RemovePointCloudOutlier(false);
                 break;
             case MagicApp::PointShopApp::ISOLATE:
-                RemoveIsolatePart(false);
+                RemoveIsolatePart(mIsolateValue, false);
                 break;
             case MagicApp::PointShopApp::GEOMETRYSMOOTH:
                 SmoothPointCloudGeoemtry(mSmoothCount, false);
                 break;
             case MagicApp::PointShopApp::FUSECOLOR:
                 FusePointCloudColor(mColorNeighborCount, false);
+                break;
+            case MagicApp::PointShopApp::FUSETEXTURE:
+                FuseTextureImage(false);
                 break;
             case MagicApp::PointShopApp::RECONSTRUCTION:
                 ReconstructMesh(mNeedFillHole, mReconstructionQuality, false);
@@ -945,6 +933,97 @@ namespace MagicApp
         }
     }
 
+    void PointShopApp::FuseTextureImage(bool isSubThread)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (isSubThread)
+        {
+            mCommandType = FUSETEXTURE;
+            DoCommand(true);
+        }
+        else
+        {
+            GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+            if (pointCloud->HasColor() == false)
+            {
+                MessageBox(NULL, "输入点云需要有颜色", "温馨提示", MB_OK);
+                return;
+            }
+            std::vector<GPP::ImageColorId> imageColorIds = ModelManager::Get()->GetImageColorIds();
+            if (imageColorIds.size() != pointCloud->GetPointCount())
+            {
+                MessageBox(NULL, "顶点与图片对应文件有错", "温馨提示", MB_OK);
+                return;
+            }
+            std::vector<std::string> textureImageFiles = ModelManager::Get()->GetTextureImageFiles();
+            int imageCount = textureImageFiles.size();
+            InfoLog << "imageCount=" << imageCount << std::endl;
+            int pointCount = pointCloud->GetPointCount();
+            for (int iid = 0; iid < imageCount; iid++)
+            {
+                std::vector<int> pointCoords;
+                std::vector<GPP::Vector3> pointColors;
+                for (int pid = 0; pid < pointCount; pid++)
+                {
+                    if (imageColorIds.at(pid).GetImageIndex() != iid)
+                    {
+                        continue;
+                    }
+                    pointCoords.push_back(imageColorIds.at(pid).GetLocalX());
+                    pointCoords.push_back(imageColorIds.at(pid).GetLocalY());
+                    pointColors.push_back(pointCloud->GetPointColor(pid));
+                }
+                if (pointColors.empty())
+                {
+                    continue;
+                }
+                cv::Mat image = cv::imread(textureImageFiles.at(iid));
+                if (image.data == NULL)
+                {
+                    MessageBox(NULL, "图片读取失败", "温馨提示", MB_OK);
+                    return;
+                }
+                int imageWidth = image.cols;
+                int imageHeight = image.rows;
+                std::vector<GPP::Vector3> imageData(imageWidth * imageHeight);
+                for (int y = 0; y < imageHeight; ++y)
+                {
+                    for (int x = 0; x < imageWidth; ++x)
+                    {
+                        const unsigned char* pixel = image.ptr(imageHeight - 1 - y, x);
+                        GPP::Vector3 color(pixel[2] / 255.0, pixel[1] / 255.0, pixel[0] / 255.0);
+                        imageData.at(x + y * imageWidth) = color;
+                    }
+                }
+                GPP::ErrorCode res = GPP::IntrinsicColor::TuneImageByPointColor(pointCoords, pointColors, 
+                    imageWidth, imageHeight, imageData); 
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "纹理图优化失败", "温馨提示", MB_OK);
+                    return;
+                }
+                for (int y = 0; y < imageHeight; ++y)
+                {
+                    for (int x = 0; x < imageWidth; ++x)
+                    {
+                        GPP::Vector3 curColor = imageData.at(x + y * imageWidth);
+                        unsigned char* pixel = image.ptr(imageHeight - y - 1, x);
+                        pixel[0] = unsigned char(curColor[2] * 255);
+                        pixel[1] = unsigned char(curColor[1] * 255);
+                        pixel[2] = unsigned char(curColor[0] * 255);
+                    }
+                }
+                std::string tuneImageName = textureImageFiles.at(iid) + "_tune_point.jpg";
+                cv::imwrite(tuneImageName, image);
+                textureImageFiles.at(iid) = tuneImageName;
+            }
+            ModelManager::Get()->SetTextureImageFiles(textureImageFiles);
+        }
+    }
+
     void PointShopApp::SelectByRectangle()
     {
         mRightMouseType = SELECT_ADD;
@@ -1066,7 +1145,7 @@ namespace MagicApp
         }
     }
 
-    void PointShopApp::RemoveIsolatePart(bool isSubThread)
+    void PointShopApp::RemoveIsolatePart(double isolateValue, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -1081,6 +1160,7 @@ namespace MagicApp
         if (isSubThread)
         {
             mCommandType = ISOLATE;
+            mIsolateValue = isolateValue;
             DoCommand(true);
         }
         else
@@ -1093,10 +1173,11 @@ namespace MagicApp
             }
             std::vector<GPP::Real> isolation;
             mIsCommandInProgress = true;
+            std::vector<int>* cloudIds = ModelManager::Get()->GetCloudIdsPointer();
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(pointCloud, &isolation, 20, NULL);
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(pointCloud, &isolation, 20, cloudIds);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -1109,11 +1190,10 @@ namespace MagicApp
                 return;
             }
 
-            GPP::Real cutValue = 0.05;
             std::vector<GPP::Int> deleteIndex;
             for (GPP::Int pid = 0; pid < pointCount; pid++)
             {
-                if (isolation[pid] < cutValue)
+                if (isolation[pid] < isolateValue)
                 {
                     deleteIndex.push_back(pid);
                 }
@@ -1655,7 +1735,7 @@ namespace MagicApp
 
     void PointShopApp::UpdatePointCloudRendering()
     {
-        InfoLog << " UpdatePointCloudRendering" << std::endl;
+        //InfoLog << " UpdatePointCloudRendering" << std::endl;
         GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
         if (pointCloud == NULL)
         {
@@ -1674,7 +1754,7 @@ namespace MagicApp
             MagicCore::RenderSystem::Get()->RenderPointCloud("PointCloud_PointShop", "SimplePoint", pointCloud, 
                 MagicCore::RenderSystem::MODEL_NODE_CENTER, &mPointSelectFlag, &selectColor);
         }
-        InfoLog << " done" << std::endl;
+        //InfoLog << " done" << std::endl;
     }
 
     bool PointShopApp::IsCommandAvaliable()

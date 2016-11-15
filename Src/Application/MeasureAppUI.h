@@ -22,6 +22,7 @@ namespace MagicApp
         void SetModelVolume(double volume);
         void SetGeodesicsInfo(double distance);
         void SetDistanceInfo(int refFaceCount, bool bCalculted, double minDist, double maxDist);
+        void SetThicknessInfo(bool bShow, double medianThickness = 0.0);
 
     private:
         void SwitchDisplayMode(MyGUI::Widget* pSender);
@@ -34,6 +35,8 @@ namespace MagicApp
         void ComputeApproximateGeodesics(MyGUI::Widget* pSender);
         void FastComputeExactGeodesics(MyGUI::Widget* pSender);
         void ComputeExactGeodesics(MyGUI::Widget* pSender);
+        void ComputeCurvatureGeodesics(MyGUI::Widget* pSender);
+
         void PointsToMeshDistance(MyGUI::Widget* pSender);
         void ComputePointsToMeshDistance(MyGUI::Widget* pSender);
 
@@ -41,6 +44,8 @@ namespace MagicApp
         void MeasureArea(MyGUI::Widget* pSender);
         void MeasureVolume(MyGUI::Widget* pSender);
         void MeasureCurvature(MyGUI::Widget* pSender);
+        void MeasurePrincipalCurvature(MyGUI::Widget* pSender);
+        void MeasureThickness(MyGUI::Widget* pSender);
 
         void BackToHomepage(MyGUI::Widget* pSender);
 
@@ -57,8 +62,10 @@ namespace MagicApp
         double mVolume;
         double mGeodesicsDistance;
         int mRefMeshFaceCount;
-        bool mIsCalculted;
+        bool mIsShowDistance;
         double mMinDistance;
         double mMaxDistance;
+        bool mIsShowThickness;
+        double mMedianThickness;
     };
 }

@@ -26,10 +26,16 @@
         <Widget type="Button" skin="But_Viewer" position="290 90 43 43" align="Left Top" name="But_SwitchMarkDisplay">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Auto_CN" position="333 90 43 43" align="Left Top" name="But_GenerateSplitLines">
+        <Widget type="Button" skin="But_Approximate_CN" position="333 90 43 43" align="Left Top" name="But_SwitchCutLineType">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="EditBox" skin="EditBox" position="376 95 40 30" align="Left Top" name="Edit_SplitChartCount">
+        <Widget type="Button" skin="But_Smooth_CN" position="333 47 43 43" align="Left Top" name="But_SmoothCutLine">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Auto_CN" position="376 90 43 43" align="Left Top" name="But_GenerateSplitLines">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="EditBox" skin="EditBox" position="419 95 40 30" align="Left Top" name="Edit_SplitChartCount">
             <Property key="TextColour" value="0.286275 0.254902 0.4"/>
             <Property key="Visible" value="false"/>
         </Widget>

@@ -55,6 +55,7 @@ namespace MagicApp
 
         void PointCloudColor(MyGUI::Widget* pSender);
         void FusePointCloudColor(MyGUI::Widget* pSender);
+        void FuseTextureImage(MyGUI::Widget* pSender);
         void LoadImageColorIds(MyGUI::Widget* pSender);
         void SaveImageColorIds(MyGUI::Widget* pSender);
 

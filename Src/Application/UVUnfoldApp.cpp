@@ -37,12 +37,14 @@ namespace MagicApp
         mHideMarks(false),
         mpPickTool(NULL),
         mLastCutVertexId(-1),
+        mCurPointsOnVertex(),
         mCurPointsOnEdge(),
         mCurMarkCoords(),
         mCutLineList(),
         mInitChartCount(1),
         mSnapIds(),
-        mTargetVertexCount(0)
+        mTargetVertexCount(0),
+        mIsCutLineAccurate(false)
     {
     }
 
@@ -68,6 +70,7 @@ namespace MagicApp
     void UVUnfoldApp::ClearSplitData()
     {
         mLastCutVertexId = -1;
+        mCurPointsOnVertex.clear();
         mCurPointsOnEdge.clear();
         mCurMarkCoords.clear();
         mCutLineList.clear();
@@ -181,6 +184,7 @@ namespace MagicApp
             mpPickTool->ClearPickedIds();
             if (pickedId != -1)
             {
+                InfoLog << "pickId " << pickedId << std::endl;
                 if (mLastCutVertexId == -1)
                 {
                     mLastCutVertexId = pickedId;
@@ -190,28 +194,54 @@ namespace MagicApp
                     std::vector<GPP::Int> sectionVertexIds;
                     sectionVertexIds.push_back(mLastCutVertexId);
                     sectionVertexIds.push_back(pickedId);
-                    std::vector<GPP::Vector3> pathCoords;
-                    std::vector<GPP::PointOnEdge> pathInfos;
-                    GPP::Real distance = 0;
-                    GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(ModelManager::Get()->GetMesh(), 
-                        sectionVertexIds, false, pathCoords, distance, &pathInfos, 0.5);
-                    if (res != GPP_NO_ERROR)
+                    if (mIsCutLineAccurate)
                     {
-                        MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
-                        return true;
+                        std::vector<GPP::Vector3> pathCoords;
+                        std::vector<GPP::PointOnEdge> pathInfos;
+                        GPP::Real distance = 0;
+                        GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(ModelManager::Get()->GetMesh(), 
+                            sectionVertexIds, false, pathCoords, distance, &pathInfos, 0.5);
+                        if (res != GPP_NO_ERROR)
+                        {
+                            MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                            return true;
+                        }
+                        int startId = 1;
+                        if (mCurPointsOnEdge.empty())
+                        {
+                            startId = 0;
+                        }
+                        for (int pvid = startId; pvid < pathInfos.size(); pvid++)
+                        {
+                            mCurPointsOnEdge.push_back(pathInfos.at(pvid));
+                        }
+                        for (int pvid = startId; pvid < pathCoords.size(); pvid++)
+                        {
+                            mCurMarkCoords.push_back(pathCoords.at(pvid));
+                        }
                     }
-                    int startId = 1;
-                    if (mCurPointsOnEdge.empty())
+                    else
                     {
-                        startId = 0;
-                    }
-                    for (int pvid = startId; pvid < pathInfos.size(); pvid++)
-                    {
-                        mCurPointsOnEdge.push_back(pathInfos.at(pvid));
-                    }
-                    for (int pvid = startId; pvid < pathCoords.size(); pvid++)
-                    {
-                        mCurMarkCoords.push_back(pathCoords.at(pvid));
+                        std::vector<int> pathVertexIds;
+                        GPP::Real distance = 0;
+                        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+                        GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, sectionVertexIds, false, 
+                            pathVertexIds, distance);
+                        if (res != GPP_NO_ERROR)
+                        {
+                            MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                            return true;
+                        }
+                        int startId = 1;
+                        if (mCurPointsOnVertex.empty())
+                        {
+                            startId = 0;
+                        }
+                        for (int pvid = startId; pvid < pathVertexIds.size(); pvid++)
+                        {
+                            mCurPointsOnVertex.push_back(pathVertexIds.at(pvid));
+                            mCurMarkCoords.push_back(triMesh->GetVertexCoord(pathVertexIds.at(pvid)));
+                        }
                     }
                     mLastCutVertexId = pickedId;
                 }
@@ -375,8 +405,52 @@ namespace MagicApp
             mpPickTool = new MagicCore::PickTool;
             mpPickTool->SetPickParameter(MagicCore::PM_POINT, true, NULL, triMesh2D, "ModelNode");
 
+            ClearSplitData();
+            InsertHolesToSnapIds();
+
             UpdateMarkDisplay();
             mpUI->SetMeshInfo(triMesh2D->GetVertexCount(), triMesh2D->GetTriangleCount());
+        }
+        else if (arg.key == OIS::KC_B)
+        {
+            InfoLog << "boundary: " << std::endl;
+            InfoLog << mCurPointsOnVertex.size() - 1 << std::endl;
+            for (int vid = 0; vid < mCurPointsOnVertex.size() - 1; vid++)
+            {
+                InfoLog << mCurPointsOnVertex.at(vid) << " ";
+            }
+            InfoLog << std::endl;
+        }
+        else if (arg.key == OIS::KC_N)
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL || mCurPointsOnVertex.empty())
+            {
+                return true;
+            }
+            int polyVertexCount = mCurPointsOnVertex.size() - 1;
+            int minStartVertex = -1;
+            double minLength = GPP::REAL_LARGE;
+            int halfPolyVertexCount = polyVertexCount / 2;
+            for (int svid = 0; svid < polyVertexCount; svid++)
+            {
+                int startVertexId = svid;
+                int endVertexId = (svid - 1 + polyVertexCount) % polyVertexCount;
+                double curLength = 0;
+                for (int pvid = 0; pvid < halfPolyVertexCount; pvid++)
+                {
+                    curLength = (triMesh->GetVertexCoord(mCurPointsOnVertex.at((startVertexId + pvid) % polyVertexCount)) - 
+                        triMesh->GetVertexCoord(mCurPointsOnVertex.at((endVertexId - pvid + polyVertexCount) % polyVertexCount))).Length();
+                }
+                if (curLength < minLength)
+                {
+                    minLength = curLength;
+                    minStartVertex = startVertexId;
+                }
+            }
+            mSnapIds.push_back(mCurPointsOnVertex.at(minStartVertex));
+            mSnapIds.push_back(mCurPointsOnVertex.at((minStartVertex + halfPolyVertexCount) % polyVertexCount));
+            UpdateMarkDisplay();
         }
         return true;
     }
@@ -473,6 +547,11 @@ namespace MagicApp
 
     void UVUnfoldApp::ConfirmGeodesics()
     {
+        if (mCurPointsOnVertex.size() > 0 && mCurPointsOnEdge.size() > 0)
+        {
+            MessageBox(NULL, "割线信息有错", "温馨提示", MB_OK);
+            return;
+        }
         if (mCurPointsOnEdge.size() > 0)
         {
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
@@ -500,6 +579,23 @@ namespace MagicApp
             UpdateMarkDisplay();
             UpdateDisplay();
         }
+        else if (mCurPointsOnVertex.size() > 0)
+        {
+            mCurMarkCoords.clear();
+            mLastCutVertexId = -1;
+            mCutLineList.push_back(mCurPointsOnVertex);
+            if (mSnapIds.empty())
+            {
+                InsertHolesToSnapIds();
+            }
+            for (std::vector<GPP::Int>::iterator itr = mCurPointsOnVertex.begin(); itr != mCurPointsOnVertex.end(); ++itr)
+            {
+                mSnapIds.push_back(*itr);
+            }
+            mCurPointsOnVertex.clear();
+            UpdateMarkDisplay();
+            UpdateDisplay();
+        }
     }
 
     void UVUnfoldApp::CloseGeodesics()
@@ -508,45 +604,84 @@ namespace MagicApp
         {
             return;
         }
-        if (mCurPointsOnEdge.empty())
+        if (mIsCutLineAccurate)
         {
-            return;
+            if (mCurPointsOnEdge.empty())
+            {
+                return;
+            }
+            int pickedId = mCurPointsOnEdge.at(0).mVertexIdStart;
+            if (mLastCutVertexId == pickedId)
+            {
+                return;
+            }
+            std::vector<GPP::Int> sectionVertexIds;
+            sectionVertexIds.push_back(mLastCutVertexId);
+            sectionVertexIds.push_back(pickedId);
+            std::vector<GPP::Vector3> pathCoords;
+            std::vector<GPP::PointOnEdge> pathInfos;
+            GPP::Real distance = 0;
+            GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(ModelManager::Get()->GetMesh(), sectionVertexIds, false, 
+                pathCoords, distance, &pathInfos, 0.5);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                return;
+            }
+            int startId = 1;
+            for (int pvid = startId; pvid < pathInfos.size(); pvid++)
+            {
+                mCurPointsOnEdge.push_back(pathInfos.at(pvid));
+            }
+            for (int pvid = startId; pvid < pathCoords.size(); pvid++)
+            {
+                mCurMarkCoords.push_back(pathCoords.at(pvid));
+            }
+            mLastCutVertexId = pickedId;
+            UpdateMarkDisplay();
         }
-        int pickedId = mCurPointsOnEdge.at(0).mVertexIdStart;
-        if (mLastCutVertexId == pickedId)
+        else
         {
-            return;
+            if (mCurPointsOnVertex.empty())
+            {
+                return;
+            }
+            int pickedId = mCurPointsOnVertex.at(0);
+            if (mLastCutVertexId == pickedId)
+            {
+                return;
+            }
+            std::vector<GPP::Int> sectionVertexIds;
+            sectionVertexIds.push_back(mLastCutVertexId);
+            sectionVertexIds.push_back(pickedId);
+            std::vector<int> pathVertexIds;
+            GPP::Real distance = 0;
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, sectionVertexIds, false, pathVertexIds, distance);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                return;
+            }
+            int startId = 1;
+            for (int pvid = startId; pvid < pathVertexIds.size(); pvid++)
+            {
+                mCurPointsOnVertex.push_back(pathVertexIds.at(pvid));
+                mCurMarkCoords.push_back(triMesh->GetVertexCoord(pathVertexIds.at(pvid)));
+            }
+            mLastCutVertexId = pickedId;
+            UpdateMarkDisplay();
         }
-        std::vector<GPP::Int> sectionVertexIds;
-        sectionVertexIds.push_back(mLastCutVertexId);
-        sectionVertexIds.push_back(pickedId);
-        std::vector<GPP::Vector3> pathCoords;
-        std::vector<GPP::PointOnEdge> pathInfos;
-        GPP::Real distance = 0;
-        GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(ModelManager::Get()->GetMesh(), sectionVertexIds, false, 
-            pathCoords, distance, &pathInfos, 0.5);
-        if (res != GPP_NO_ERROR)
-        {
-            MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
-            return;
-        }
-        int startId = 1;
-        for (int pvid = startId; pvid < pathInfos.size(); pvid++)
-        {
-            mCurPointsOnEdge.push_back(pathInfos.at(pvid));
-        }
-        for (int pvid = startId; pvid < pathCoords.size(); pvid++)
-        {
-            mCurMarkCoords.push_back(pathCoords.at(pvid));
-        }
-        mLastCutVertexId = pickedId;
-        UpdateMarkDisplay();
     }
 
     void UVUnfoldApp::SnapFrontGeodesics()
     {
         GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-        if (mLastCutVertexId == -1 || triMesh == NULL || mCurPointsOnEdge.empty())
+        if (mLastCutVertexId == -1 || triMesh == NULL)
+        {
+            return;
+        }
+        if ((mIsCutLineAccurate && mCurPointsOnEdge.empty()) || (!mIsCutLineAccurate && mCurPointsOnVertex.empty()))
         {
             return;
         }
@@ -573,33 +708,60 @@ namespace MagicApp
         std::vector<GPP::Int> sectionVertexIds;
         sectionVertexIds.push_back(mLastCutVertexId);
         sectionVertexIds.push_back(pickId);
-        std::vector<GPP::Vector3> pathCoords;
-        std::vector<GPP::PointOnEdge> pathInfos;
-        GPP::Real distance = 0;
-        GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(triMesh, sectionVertexIds, false, 
-            pathCoords, distance, &pathInfos, 0.5);
-        if (res != GPP_NO_ERROR)
+        if (mIsCutLineAccurate && mCurPointsOnEdge.size() > 0)
         {
-            MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
-            return;
+            std::vector<GPP::Vector3> pathCoords;
+            std::vector<GPP::PointOnEdge> pathInfos;
+            GPP::Real distance = 0;
+            GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(triMesh, sectionVertexIds, false, 
+                pathCoords, distance, &pathInfos, 0.5);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                return;
+            }
+            int startId = 1;
+            for (int pvid = startId; pvid < pathInfos.size(); pvid++)
+            {
+                mCurPointsOnEdge.push_back(pathInfos.at(pvid));
+            }
+            for (int pvid = startId; pvid < pathCoords.size(); pvid++)
+            {
+                mCurMarkCoords.push_back(pathCoords.at(pvid));
+            }
+            mLastCutVertexId = pickId;
+            UpdateMarkDisplay();
         }
-        int startId = 1;
-        for (int pvid = startId; pvid < pathInfos.size(); pvid++)
+        else if (!mIsCutLineAccurate && mCurPointsOnVertex.size() > 0)
         {
-            mCurPointsOnEdge.push_back(pathInfos.at(pvid));
+            std::vector<int> pathVertexIds;
+            GPP::Real distance = 0;
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, sectionVertexIds, false, pathVertexIds, distance);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                return;
+            }
+            int startId = 1;
+            for (int pvid = startId; pvid < pathVertexIds.size(); pvid++)
+            {
+                mCurPointsOnVertex.push_back(pathVertexIds.at(pvid));
+                mCurMarkCoords.push_back(triMesh->GetVertexCoord(pathVertexIds.at(pvid)));
+            }
+            mLastCutVertexId = pickId;
+            UpdateMarkDisplay();
         }
-        for (int pvid = startId; pvid < pathCoords.size(); pvid++)
-        {
-            mCurMarkCoords.push_back(pathCoords.at(pvid));
-        }
-        mLastCutVertexId = pickId;
-        UpdateMarkDisplay();
     }
     
     void UVUnfoldApp::SnapBackGeodesics()
     {
         GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-        if (mLastCutVertexId == -1 || triMesh == NULL || mCurPointsOnEdge.empty())
+        if (mLastCutVertexId == -1 || triMesh == NULL)
+        {
+            return;
+        }
+        if ((mIsCutLineAccurate && mCurPointsOnEdge.empty()) || (!mIsCutLineAccurate && mCurPointsOnVertex.empty()))
         {
             return;
         }
@@ -609,7 +771,15 @@ namespace MagicApp
         }
         int pickId = -1;
         double minDist = GPP::REAL_LARGE;
-        GPP::Vector3 headCoord = triMesh->GetVertexCoord(mCurPointsOnEdge.at(0).mVertexIdStart);
+        GPP::Vector3 headCoord;
+        if (mIsCutLineAccurate)
+        {
+            headCoord = triMesh->GetVertexCoord(mCurPointsOnEdge.at(0).mVertexIdStart);
+        }
+        else
+        {
+            headCoord = triMesh->GetVertexCoord(mCurPointsOnVertex.at(0));
+        }
         for (std::vector<int>::iterator sitr = mSnapIds.begin(); sitr != mSnapIds.end(); ++sitr)
         {
             double curDist = (headCoord - triMesh->GetVertexCoord(*sitr)).LengthSquared();
@@ -619,35 +789,69 @@ namespace MagicApp
                 pickId = *sitr;
             }
         }
-        if (pickId == -1 || pickId == mCurPointsOnEdge.at(0).mVertexIdStart)
+        if (pickId == -1)
         {
             return;
         }
-        std::vector<GPP::Int> sectionVertexIds;
-        sectionVertexIds.push_back(pickId);
-        sectionVertexIds.push_back(mCurPointsOnEdge.at(0).mVertexIdStart);
-        std::vector<GPP::Vector3> pathCoords;
-        std::vector<GPP::PointOnEdge> pathInfos;
-        GPP::Real distance = 0;
-        GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(triMesh, sectionVertexIds, false, 
-            pathCoords, distance, &pathInfos, 0.5);
-        if (res != GPP_NO_ERROR)
+        if (mIsCutLineAccurate && mCurPointsOnEdge.size() > 0)
         {
-            MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
-            return;
+            if (pickId == mCurPointsOnEdge.at(0).mVertexIdStart)
+            {
+                return;
+            }
+            std::vector<GPP::Int> sectionVertexIds;
+            sectionVertexIds.push_back(pickId);
+            sectionVertexIds.push_back(mCurPointsOnEdge.at(0).mVertexIdStart);
+            std::vector<GPP::Vector3> pathCoords;
+            std::vector<GPP::PointOnEdge> pathInfos;
+            GPP::Real distance = 0;
+            GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(triMesh, sectionVertexIds, false, 
+                pathCoords, distance, &pathInfos, 0.5);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                return;
+            }
+            std::vector<GPP::PointOnEdge> newPonitsOnEdge;
+            for (int pvid = 0; pvid < pathInfos.size() - 1; pvid++)
+            {
+                newPonitsOnEdge.push_back(pathInfos.at(pvid));
+            }
+            newPonitsOnEdge.insert(newPonitsOnEdge.end(), mCurPointsOnEdge.begin(), mCurPointsOnEdge.end());
+            mCurPointsOnEdge.swap(newPonitsOnEdge);
+            for (int pvid = 0; pvid < pathCoords.size(); pvid++)
+            {
+                mCurMarkCoords.push_back(pathCoords.at(pvid));
+            }
+            UpdateMarkDisplay();
         }
-        std::vector<GPP::PointOnEdge> newPonitsOnEdge;
-        for (int pvid = 0; pvid < pathInfos.size() - 1; pvid++)
+        else if (!mIsCutLineAccurate && mCurPointsOnVertex.size() > 0)
         {
-            newPonitsOnEdge.push_back(pathInfos.at(pvid));
+            if (pickId == mCurPointsOnVertex.at(0))
+            {
+                return;
+            }
+            std::vector<GPP::Int> sectionVertexIds;
+            sectionVertexIds.push_back(pickId);
+            sectionVertexIds.push_back(mCurPointsOnVertex.at(0));
+            std::vector<int> pathVertexIds;
+            GPP::Real distance = 0;
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, sectionVertexIds, false, pathVertexIds, distance);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "测量失败", "温馨提示", MB_OK);
+                return;
+            }
+            for (int pvid = 0; pvid < pathVertexIds.size(); pvid++)
+            {
+                mCurMarkCoords.push_back(triMesh->GetVertexCoord(pathVertexIds.at(pvid)));
+            }
+            pathVertexIds.pop_back();
+            pathVertexIds.insert(pathVertexIds.end(), mCurPointsOnVertex.begin(), mCurPointsOnVertex.end());
+            mCurPointsOnVertex.swap(pathVertexIds);
+            UpdateMarkDisplay();
         }
-        newPonitsOnEdge.insert(newPonitsOnEdge.end(), mCurPointsOnEdge.begin(), mCurPointsOnEdge.end());
-        mCurPointsOnEdge.swap(newPonitsOnEdge);
-        for (int pvid = 0; pvid < pathCoords.size(); pvid++)
-        {
-            mCurMarkCoords.push_back(pathCoords.at(pvid));
-        }
-        UpdateMarkDisplay();
     }
 
     void UVUnfoldApp::InsertHolesToSnapIds()
@@ -679,6 +883,10 @@ namespace MagicApp
         {
             mCurMarkCoords.clear();
         }
+        if (!mCurPointsOnVertex.empty())
+        {
+            mCurPointsOnVertex.clear();
+        }
         if (!mCurPointsOnEdge.empty())
         {
             mCurPointsOnEdge.clear();
@@ -690,6 +898,65 @@ namespace MagicApp
     {
         mHideMarks = !mHideMarks;
         UpdateMarkDisplay();
+    }
+
+    void UVUnfoldApp::SetCutLineType(bool isAccurate)
+    {
+        mIsCutLineAccurate = isAccurate;
+        if (isAccurate && mCurPointsOnVertex.size() > 0)
+        {
+            mLastCutVertexId = -1;
+            mCurMarkCoords.clear();
+            mCurPointsOnVertex.clear();
+            UpdateMarkDisplay();
+        }
+        else if (!isAccurate &&  mCurPointsOnEdge.size() > 0)
+        {
+            mLastCutVertexId = -1;
+            mCurMarkCoords.clear();
+            mCurPointsOnEdge.clear();
+            UpdateMarkDisplay();
+        }
+    }
+
+    void UVUnfoldApp::SmoothCutLine()
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (mCurPointsOnVertex.empty())
+        {
+            return;
+        }
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh == NULL)
+        {
+            MessageBox(NULL, "请导入需要UV展开的网格", "温馨提示", MB_OK);
+            return;
+        }
+#if MAKEDUMPFILE
+        GPP::DumpOnce();
+#endif
+        GPP::ErrorCode res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, mCurPointsOnVertex, 0.2, 10);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "割线优化失败", "温馨提示", MB_OK);
+            return;
+        }
+        mCurMarkCoords.clear();
+        mCurMarkCoords.reserve(mCurPointsOnVertex.size());
+        for (std::vector<GPP::Int>::iterator vitr = mCurPointsOnVertex.begin(); vitr != mCurPointsOnVertex.end(); ++vitr)
+        {
+            mCurMarkCoords.push_back(triMesh->GetVertexCoord(*vitr));
+        }
+        UpdateMarkDisplay();
+        UpdateDisplay();
     }
 
     void UVUnfoldApp::GenerateSplitLines(int splitChartCount)
@@ -1270,15 +1537,7 @@ namespace MagicApp
         if (!mHideMarks && ModelManager::Get()->GetMesh() && (mSnapIds.size() > 0 || mCurMarkCoords.size() > 0 || mLastCutVertexId != -1))
         {
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-            std::vector<GPP::Vector3> cutVerticesRed;
-            cutVerticesRed.reserve(mSnapIds.size());
-            for (std::vector<int>::iterator vitr = mSnapIds.begin(); vitr != mSnapIds.end(); ++vitr)
-            {
-                cutVerticesRed.push_back(triMesh->GetVertexCoord(*vitr));
-            }
-            MagicCore::RenderSystem::Get()->RenderPointList("CutVertexRed_UVUnfoldApp", "SimplePoint_Large", 
-                GPP::Vector3(1, 0, 0), cutVerticesRed, MagicCore::RenderSystem::MODEL_NODE_CENTER);
-
+            
             std::vector<GPP::Vector3> cutVerticesYellow;
             cutVerticesYellow.reserve(mCurMarkCoords.size() + 1);
             for (std::vector<GPP::Vector3>::iterator coordItr = mCurMarkCoords.begin(); coordItr != mCurMarkCoords.end(); ++coordItr)
@@ -1290,7 +1549,16 @@ namespace MagicApp
                 cutVerticesYellow.push_back(triMesh->GetVertexCoord(mLastCutVertexId));
             }
             MagicCore::RenderSystem::Get()->RenderPointList("CutVertexYellow_UVUnfoldApp", "SimplePoint_Large", 
-                GPP::Vector3(1, 1, 0), cutVerticesYellow, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+                GPP::Vector3(0, 1, 0), cutVerticesYellow, MagicCore::RenderSystem::MODEL_NODE_CENTER);
+
+            std::vector<GPP::Vector3> cutVerticesRed;
+            cutVerticesRed.reserve(mSnapIds.size());
+            for (std::vector<int>::iterator vitr = mSnapIds.begin(); vitr != mSnapIds.end(); ++vitr)
+            {
+                cutVerticesRed.push_back(triMesh->GetVertexCoord(*vitr));
+            }
+            MagicCore::RenderSystem::Get()->RenderPointList("CutVertexRed_UVUnfoldApp", "SimplePoint_Large", 
+                GPP::Vector3(1, 0, 0), cutVerticesRed, MagicCore::RenderSystem::MODEL_NODE_CENTER);
         }
         else
         {

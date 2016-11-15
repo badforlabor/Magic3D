@@ -862,4 +862,19 @@
             <State name="normal" offset="87 1993 86 86"/>
         </BasisSkin>
     </Resource>
+    <Resource type="ResourceSkin" name="But_PrincipalCurvature_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="87 2080 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_Thickness_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="172 1992 86 86"/>
+        </BasisSkin>
+    </Resource>
+    <Resource type="ResourceSkin" name="But_TextureMerge_CN" size="86 86" texture="MagicSkin.png">
+        <BasisSkin type="SubSkin" offset="0 0 86 86" align="Stretch">
+            <State name="normal" offset="173 2080 86 86"/>
+        </BasisSkin>
+    </Resource>
 </MyGUI>

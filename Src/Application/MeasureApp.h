@@ -25,7 +25,10 @@ namespace MagicApp
             GEODESICS_APPROXIMATE,
             GEOMESICS_FAST_EXACT,
             GEODESICS_EXACT,
-            DISTANCE_POINTS_TO_MESH
+            GEODESICS_CURVATURE,
+            DISTANCE_POINTS_TO_MESH,
+            PRINCIPAL_CURVATURE,
+            THICKNESS,
         };
 
     public:
@@ -50,12 +53,16 @@ namespace MagicApp
         void ComputeApproximateGeodesics(bool isSubThread = true);
         void FastComputeExactGeodesics(double accuracy, bool isSubThread = true);
         void ComputeExactGeodesics(bool isSubThread = true);
+        void ComputeCurvatureGeodesics(double curvatureWeight, bool isSubThread = true);
+        
         void ComputePointsToMeshDistance(bool isSubThread = true);
         void ShowReferenceMesh(bool isShow);
 
         void MeasureArea(void);
         void MeasureVolume(void);
         void MeasureCurvature(void);
+        void MeasurePrincipalCurvature(bool isSubThread = true);
+        void MeasureThickness(bool isSubThread = true);
 
 #if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -94,5 +101,11 @@ namespace MagicApp
         bool mIsFlatRenderingMode;
         GPP::TriMesh* mpRefTriMesh;
         bool mUpdateRefModelRendering;
+        std::vector<GPP::Real> mMinCurvature;
+        std::vector<GPP::Real> mMaxCurvature;
+        std::vector<GPP::Vector3> mMinCurvatureDirs;
+        std::vector<GPP::Vector3> mMaxCurvatureDirs;
+        int mDisplayPrincipalCurvature;
+        GPP::Real mCurvatureWeight;
     };
 }

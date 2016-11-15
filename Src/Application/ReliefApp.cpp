@@ -7,6 +7,7 @@
 #include "../Common/ToolKit.h"
 #include "../Common/ViewTool.h"
 #include "../Common/RenderSystem.h"
+#include "../Common/ScriptSystem.h"
 #include "Gpp.h"
 
 namespace MagicApp
@@ -147,6 +148,10 @@ namespace MagicApp
         else if (arg.key == OIS::KC_S)
         {
             mImageStartId = 0;
+        }
+        else if (arg.key == OIS::KC_N)
+        {
+            RunScript();
         }
         return true;
     }
@@ -383,12 +388,17 @@ namespace MagicApp
         ModelManager::Get()->SetMesh(copiedTriMesh);
     }
 
-    void ReliefApp::CaptureDepthPointCloud(int scanResolution, int imageResolution, std::string shadeName)
+    void ReliefApp::CaptureDepthPointCloud(int scanResolution, int imageResolution, const char* shadeName)
     {
         GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
         if (triMesh == NULL)
         {
             MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
+            return;
+        }
+        if (scanResolution < 0 || imageResolution < 0)
+        {
+            MessageBox(NULL, "请设置合适的分辨率", "温馨提示", MB_OK);
             return;
         }
 
@@ -510,6 +520,128 @@ namespace MagicApp
         UpdateModelRendering();
     }
 
+    void ReliefApp::SaveDepthPointCloud(const char* fileNameStr)
+    {
+        if (fileNameStr == NULL || mpDepthPointCloud == NULL)
+        {
+            return;
+        }
+        std::string fileName(fileNameStr);
+        if (fileName.empty())
+        {
+            return;
+        }
+        size_t dotPos = fileName.rfind('.');
+        if (dotPos == std::string::npos)
+        {
+            MessageBox(NULL, "请输入文件后缀名", "温馨提示", MB_OK);
+            return;
+        }
+        mpDepthPointCloud->SetHasColor(false);
+        GPP::ErrorCode res = GPP::Parser::ExportPointCloud(fileName, mpDepthPointCloud);
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "导出点云失败", "温馨提示", MB_OK);
+        }
+
+        dotPos = fileName.rfind('.');
+        std::stringstream dumpStream;
+        dumpStream << fileName.substr(0, dotPos) << ".jpg";
+        std::string imageName;
+        dumpStream >> imageName;
+        cv::imwrite(imageName, mDepthImage);
+
+        std::vector<int> hStartList(mImageSegCount);
+        std::vector<int> hEndList(mImageSegCount);
+        if (mImageSegCount > 1)
+        {
+            int imageW = mDepthImage.cols;
+            int imageH = mDepthImage.rows;
+            int deltaH = imageH / mImageSegCount;
+                
+            for (int segId = 0; segId < mImageSegCount; segId++)
+            {
+                hStartList.at(segId) = segId * deltaH;
+                if (segId == mImageSegCount - 1)
+                {
+                    hEndList.at(segId) = imageH - 1;
+                }
+                else
+                {
+                    hEndList.at(segId) = (segId + 1) * deltaH - 1;
+                }
+                int segHeight = hEndList.at(segId) - hStartList.at(segId) + 1;
+                cv::Mat segImage = cv::Mat(segHeight, imageW, CV_8UC4);
+                for (int x = 0; x < imageW; ++x)
+                {
+                    for (int y = 0; y < segHeight; ++y)
+                    {
+                        unsigned char* originPixel = mDepthImage.ptr(imageH - (y + hStartList.at(segId)) - 1, x);
+                        unsigned char* segPixel = segImage.ptr(segHeight - y - 1, x);
+                        segPixel[0] = originPixel[0];
+                        segPixel[1] = originPixel[1];
+                        segPixel[2] = originPixel[2];
+                        segPixel[3] = originPixel[3];
+                    }
+                }
+                std::stringstream ss;
+                ss << fileName.substr(0, dotPos) << "_" << segId << ".jpg";
+                std::string segImageName;
+                ss >> segImageName;
+                cv::imwrite(segImageName, segImage);
+                segImage.release();
+            }
+        }
+        double scaleValue = 2.0 / 3.0;
+        double minX = -1.0 * scaleValue;
+        double maxX = 1.0 * scaleValue;
+        double minY = -1.0 * scaleValue;
+        double maxY = 1.0 * scaleValue;
+        double deltaX = (maxX - minX) / mScanResolution;
+        double deltaY = (maxY - minY) / mScanResolution;
+        dotPos = fileName.rfind('.');
+        std::stringstream pairStream;
+        pairStream << fileName.substr(0, dotPos) << ".map";
+        std::string pairName;
+        pairStream >> pairName;
+        std::ofstream pairOut(pairName);
+        int pointCount = mpDepthPointCloud->GetPointCount();
+        std::vector<int> coordXList(pointCount);
+        std::vector<int> coordYList(pointCount);
+        for (int pid = 0; pid < pointCount; pid++)
+        {
+            GPP::Vector3 coord = mpDepthPointCloud->GetPointCoord(pid);
+            int imageX = floor((coord[0] - minX) / deltaX * mImageResolution / mScanResolution + 0.5);
+            int imageY = floor((coord[1] - minY) / deltaY * mImageResolution / mScanResolution + 0.5);
+            pairOut << imageX << " " << imageY << std::endl;
+            coordXList.at(pid) = imageX;
+            coordYList.at(pid) = imageY;
+        }
+        pairOut.close();
+        if (mImageSegCount > 1)
+        {
+            std::stringstream ss;
+            ss << fileName.substr(0, dotPos) << ".mmap";
+            std::string mmapName;
+            ss >> mmapName;
+            std::ofstream mmapOut(mmapName);
+            mmapOut << pointCount << std::endl;;
+            for (int pid = 0; pid < pointCount; pid++)
+            {
+                for (int sid = 0; sid < mImageSegCount; sid++)
+                {
+                    if (coordYList.at(pid) >= hStartList.at(sid) && coordYList.at(pid) <= hEndList.at(sid))
+                    {
+                        mmapOut << mImageStartId + sid << " " << coordXList.at(pid) << " " << coordYList.at(pid) - hStartList.at(sid) << std::endl;
+                        break;
+                    }
+                }
+            }
+            mmapOut.close();
+            mImageStartId += mImageSegCount;
+        }
+    }
+
     void ReliefApp::SavePointCloud()
     {
         if (mpDepthPointCloud == NULL)
@@ -521,116 +653,7 @@ namespace MagicApp
         char filterName[] = "Support format(*.obj, *.ply, *.asc, *.gpc)\0*.*\0";
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
-            size_t dotPos = fileName.rfind('.');
-            if (dotPos == std::string::npos)
-            {
-                MessageBox(NULL, "请输入文件后缀名", "温馨提示", MB_OK);
-                return;
-            }
-            mpDepthPointCloud->SetHasColor(false);
-            GPP::ErrorCode res = GPP::Parser::ExportPointCloud(fileName, mpDepthPointCloud);
-            if (res != GPP_NO_ERROR)
-            {
-                MessageBox(NULL, "导出点云失败", "温馨提示", MB_OK);
-            }
-
-            dotPos = fileName.rfind('.');
-            std::stringstream dumpStream;
-            dumpStream << fileName.substr(0, dotPos) << ".jpg";
-            std::string imageName;
-            dumpStream >> imageName;
-            cv::imwrite(imageName, mDepthImage);
-
-            std::vector<int> hStartList(mImageSegCount);
-            std::vector<int> hEndList(mImageSegCount);
-            if (mImageSegCount > 1)
-            {
-                int imageW = mDepthImage.cols;
-                int imageH = mDepthImage.rows;
-                int deltaH = imageH / mImageSegCount;
-                
-                for (int segId = 0; segId < mImageSegCount; segId++)
-                {
-                    hStartList.at(segId) = segId * deltaH;
-                    if (segId == mImageSegCount - 1)
-                    {
-                        hEndList.at(segId) = imageH - 1;
-                    }
-                    else
-                    {
-                        hEndList.at(segId) = (segId + 1) * deltaH - 1;
-                    }
-                    int segHeight = hEndList.at(segId) - hStartList.at(segId) + 1;
-                    cv::Mat segImage = cv::Mat(segHeight, imageW, CV_8UC4);
-                    for (int x = 0; x < imageW; ++x)
-                    {
-                        for (int y = 0; y < segHeight; ++y)
-                        {
-                            unsigned char* originPixel = mDepthImage.ptr(imageH - (y + hStartList.at(segId)) - 1, x);
-                            unsigned char* segPixel = segImage.ptr(segHeight - y - 1, x);
-                            segPixel[0] = originPixel[0];
-                            segPixel[1] = originPixel[1];
-                            segPixel[2] = originPixel[2];
-                            segPixel[3] = originPixel[3];
-                        }
-                    }
-                    std::stringstream ss;
-                    ss << fileName.substr(0, dotPos) << "_" << segId << ".jpg";
-                    std::string segImageName;
-                    ss >> segImageName;
-                    cv::imwrite(segImageName, segImage);
-                    segImage.release();
-                }
-            }
-
-            double scaleValue = 2.0 / 3.0;
-            double minX = -1.0 * scaleValue;
-            double maxX = 1.0 * scaleValue;
-            double minY = -1.0 * scaleValue;
-            double maxY = 1.0 * scaleValue;
-            double deltaX = (maxX - minX) / mScanResolution;
-            double deltaY = (maxY - minY) / mScanResolution;
-            dotPos = fileName.rfind('.');
-            std::stringstream pairStream;
-            pairStream << fileName.substr(0, dotPos) << ".map";
-            std::string pairName;
-            pairStream >> pairName;
-            std::ofstream pairOut(pairName);
-            int pointCount = mpDepthPointCloud->GetPointCount();
-            std::vector<int> coordXList(pointCount);
-            std::vector<int> coordYList(pointCount);
-            for (int pid = 0; pid < pointCount; pid++)
-            {
-                GPP::Vector3 coord = mpDepthPointCloud->GetPointCoord(pid);
-                int imageX = floor((coord[0] - minX) / deltaX * mImageResolution / mScanResolution + 0.5);
-                int imageY = floor((coord[1] - minY) / deltaY * mImageResolution / mScanResolution + 0.5);
-                pairOut << imageX << " " << imageY << std::endl;
-                coordXList.at(pid) = imageX;
-                coordYList.at(pid) = imageY;
-            }
-            pairOut.close();
-            if (mImageSegCount > 1)
-            {
-                std::stringstream ss;
-                ss << fileName.substr(0, dotPos) << ".mmap";
-                std::string mmapName;
-                ss >> mmapName;
-                std::ofstream mmapOut(mmapName);
-                mmapOut << pointCount << std::endl;;
-                for (int pid = 0; pid < pointCount; pid++)
-                {
-                    for (int sid = 0; sid < mImageSegCount; sid++)
-                    {
-                        if (coordYList.at(pid) >= hStartList.at(sid) && coordYList.at(pid) <= hEndList.at(sid))
-                        {
-                            mmapOut << mImageStartId + sid << " " << coordXList.at(pid) << " " << coordYList.at(pid) - hStartList.at(sid) << std::endl;
-                            break;
-                        }
-                    }
-                }
-                mmapOut.close();
-                mImageStartId += mImageSegCount;
-            }
+            SaveDepthPointCloud(fileName.c_str());
         }
     }
 
@@ -639,6 +662,14 @@ namespace MagicApp
         if (mpViewTool == NULL)
         {
             mpViewTool = new MagicCore::ViewTool;
+        }
+    }
+
+    void ReliefApp::RotateView(double axisX, double axisY, double axisZ, double angle)
+    {
+        if (mpViewTool)
+        {
+            mpViewTool->Rotate(axisX, axisY, axisZ, angle);
         }
     }
 
@@ -699,5 +730,25 @@ namespace MagicApp
             }
         }
         return triMesh;
+    }
+
+    void ReliefApp::RunScript()
+    {
+        if (MagicCore::ScriptSystem::Get()->IsOnRunningScript())
+        {
+            MessageBox(NULL, "请等待前一脚本执行完毕", "温馨提示", MB_OK);
+            return;
+        }
+        std::string fileName;
+        char filterName[] = "GPP Script File(*.gsf)\0*.gsf\0";
+        if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
+        {
+            InfoLog << "Run Script file: " << fileName.c_str() << std::endl;
+            if (MagicCore::ScriptSystem::Get()->RunScriptFile(fileName.c_str()))
+            {
+                UpdateModelRendering();
+                MessageBox(NULL, "脚本执行完毕", "温馨提示", MB_OK);
+            }
+        }
     }
 }

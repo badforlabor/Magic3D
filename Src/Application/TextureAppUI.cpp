@@ -27,6 +27,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ImportTriMesh")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ImportTriMesh);
         
         mRoot.at(0)->findWidget("But_ImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ImageColorIds);
+        mRoot.at(0)->findWidget("But_ComputePixelMap")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ComputeImageColorIds);
         mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::LoadImageColorIds);
         mRoot.at(0)->findWidget("But_SaveImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::SaveImageColorIds);
 
@@ -126,8 +127,18 @@ namespace MagicApp
     void TextureAppUI::ImageColorIds(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->isVisible();
+        mRoot.at(0)->findWidget("But_ComputePixelMap")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_SaveImageColorIds")->castType<MyGUI::Button>()->setVisible(!isVisible);
+    }
+
+    void TextureAppUI::ComputeImageColorIds(MyGUI::Widget* pSender)
+    {
+        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
+        if (textureApp != NULL)
+        {
+            textureApp->ComputeImageColorIds(true);
+        }
     }
 
     void TextureAppUI::LoadImageColorIds(MyGUI::Widget* pSender)
@@ -153,7 +164,7 @@ namespace MagicApp
         TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
         if (textureApp != NULL)
         {
-            textureApp->FuseMeshColor();
+            textureApp->FuseMeshColor(true);
         }
     }
 

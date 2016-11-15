@@ -43,10 +43,12 @@ namespace MagicApp
 
         void SetImageColorIds(std::vector<GPP::ImageColorId>* imageColorIds);
         void SetColorIds(std::vector<int>* colorIds);
+        void SetImageColorIdFlags(std::vector<int>* flags);
 
     private:
         GPP::ITriMesh* mTriMesh;
         std::vector<GPP::ImageColorId>* mImageColorIds;
         std::vector<int>* mColorIds;
+        std::vector<int>* mImageColorIdFlags;
     };
 }

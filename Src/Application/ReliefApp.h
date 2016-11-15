@@ -45,8 +45,10 @@ namespace MagicApp
         bool ImportModel(void);
         void GenerateRelief(double compressRatio, int resolution);
         void ExportReliefMesh(void);
-        void CaptureDepthPointCloud(int scanResolution, int imageResolution, std::string shadeName);
+        void CaptureDepthPointCloud(int scanResolution, int imageResolution, const char* shadeName);
         void SavePointCloud(void);
+        void SaveDepthPointCloud(const char* pointCloudName);
+        void RotateView(double axisX, double axisY, double axisZ, double angle);
 
 #if DEBUGDUMPFILE
         void SetDumpInfo(GPP::DumpBase* dumpInfo);
@@ -61,6 +63,7 @@ namespace MagicApp
         void InitViewTool(void);
         void UpdateModelRendering(void);
         GPP::TriMesh* GenerateTriMeshFromHeightField(const std::vector<GPP::Real>& heightField, int resolutionX, int resolutionY);
+        void RunScript();
 
     private:
         ReliefAppUI* mpUI;

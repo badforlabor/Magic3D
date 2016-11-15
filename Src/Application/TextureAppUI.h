@@ -26,6 +26,7 @@ namespace MagicApp
         void ImportTriMesh(MyGUI::Widget* pSender);
 
         void ImageColorIds(MyGUI::Widget* pSender);
+        void ComputeImageColorIds(MyGUI::Widget* pSender);
         void LoadImageColorIds(MyGUI::Widget* pSender);
         void SaveImageColorIds(MyGUI::Widget* pSender);
 

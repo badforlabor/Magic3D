@@ -34,7 +34,8 @@ namespace MagicApp
             SIMPLIFYSELECTVERTEX,
             FILLHOLE,
             UNIFORMREMESH,
-            OPTIMIZEMESH
+            OPTIMIZEMESH,
+            RUNSCRIPT
         };
 
         enum RightMouseType
@@ -89,6 +90,7 @@ namespace MagicApp
         void DeleteSelections(void);
         void IgnoreBack(bool ignore);
         void MoveModel(void);
+        void RunScript(bool isSubThread = true);
 
         int GetMeshVertexCount(void);
         bool IsCommandInProgress(void);

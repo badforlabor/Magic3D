@@ -21,6 +21,7 @@ namespace MagicCore
         void SetScale(double scale);
         void SetLeftNodeFixed(bool fixed);
         void SetRightNodeFixed(bool fixed);
+        void Rotate(double axisX, double axisY, double axisZ, double angle);
         ~ViewTool();
 
     private:

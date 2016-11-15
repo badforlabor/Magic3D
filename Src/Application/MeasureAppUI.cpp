@@ -16,9 +16,11 @@ namespace MagicApp
         mVolume(0),
         mGeodesicsDistance(0),
         mRefMeshFaceCount(0),
-        mIsCalculted(false),
+        mIsShowDistance(false),
         mMinDistance(0.0),
-        mMaxDistance(0.0)
+        mMaxDistance(0.0),
+        mIsShowThickness(false),
+        mMedianThickness(0.0)
     {
     }
 
@@ -39,11 +41,14 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeApproximateGeodesics);
         mRoot.at(0)->findWidget("But_QuickExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::FastComputeExactGeodesics);
         mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeExactGeodesics);
+        mRoot.at(0)->findWidget("But_CurvatureGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeCurvatureGeodesics);
 
         mRoot.at(0)->findWidget("But_MeasureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureModel);
         mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureArea);
         mRoot.at(0)->findWidget("But_VolumeRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureVolume);
         mRoot.at(0)->findWidget("But_CurvatureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureCurvature);
+        mRoot.at(0)->findWidget("But_PrincipalCurvature")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasurePrincipalCurvature);
+        mRoot.at(0)->findWidget("But_Thickness")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureThickness);
 
         mRoot.at(0)->findWidget("But_PointsToMeshDist")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::PointsToMeshDistance);
         mRoot.at(0)->findWidget("But_ImportMeasureData")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ImportRefModel);
@@ -96,10 +101,25 @@ namespace MagicApp
 
     void MeasureAppUI::SetDistanceInfo(int refFaceCount, bool bCalculted, double minDist, double maxDist)
     {
-        mIsCalculted = bCalculted;
+        mIsShowDistance = bCalculted;
         mRefMeshFaceCount = refFaceCount;
         mMinDistance = minDist;
         mMaxDistance = maxDist;
+        if (mIsShowDistance)
+        {
+            mIsShowThickness = false;
+        }
+        UpdateTextInfo();
+    }
+
+    void MeasureAppUI::SetThicknessInfo(bool bShow, double medianThickness)
+    {
+        mIsShowThickness = bShow;
+        mMedianThickness = medianThickness;
+        if (mIsShowThickness)
+        {
+            mIsShowDistance = false;
+        }
         UpdateTextInfo();
     }
 
@@ -147,12 +167,20 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ApproximateGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_QuickExactGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_CurvatureGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_GeodesicAccuracy")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
         {
             std::string textString = "0.5";
             mRoot.at(0)->findWidget("Edit_GeodesicAccuracy")->castType<MyGUI::EditBox>()->setOnlyText(textString);
             mRoot.at(0)->findWidget("Edit_GeodesicAccuracy")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+        }
+        mRoot.at(0)->findWidget("Edit_CurvtureWeight")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        if (isVisible)
+        {
+            std::string textString = "1";
+            mRoot.at(0)->findWidget("Edit_CurvtureWeight")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_CurvtureWeight")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
         }
     }
 
@@ -200,12 +228,31 @@ namespace MagicApp
         }
     }
 
+    void MeasureAppUI::ComputeCurvatureGeodesics(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            std::string textString = mRoot.at(0)->findWidget("Edit_CurvtureWeight")->castType<MyGUI::EditBox>()->getOnlyText();
+            double weight = std::atof(textString.c_str());
+            if (weight < 0)
+            {
+                std::string newStr = "1";
+                mRoot.at(0)->findWidget("Edit_CurvtureWeight")->castType<MyGUI::EditBox>()->setOnlyText(newStr);
+                return;
+            }
+            measureShop->ComputeCurvatureGeodesics(weight, true);
+        }
+    }
+
     void MeasureAppUI::MeasureModel(MyGUI::Widget* pSender)
     {
         bool isVisible = mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_VolumeRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_CurvatureRef")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_PrincipalCurvature")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_Thickness")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
 
     void MeasureAppUI::MeasureArea(MyGUI::Widget* pSender)
@@ -232,6 +279,24 @@ namespace MagicApp
         if (measureShop != NULL)
         {
             measureShop->MeasureCurvature();
+        }
+    }
+
+    void MeasureAppUI::MeasurePrincipalCurvature(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->MeasurePrincipalCurvature(true);
+        }
+    }
+
+    void MeasureAppUI::MeasureThickness(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->MeasureThickness(true);
         }
     }
 
@@ -350,7 +415,7 @@ namespace MagicApp
             textString += "\n";
         }
 
-        if (mIsCalculted)
+        if (mIsShowDistance)
         {
             textString += "Maximum distance = ";
             std::stringstream ss;
@@ -365,6 +430,17 @@ namespace MagicApp
             std::string distanceString2;
             ss2 >> distanceString2;
             textString += distanceString2;
+            textString += "\n";
+        }
+
+        if (mIsShowThickness)
+        {
+            textString += "Median thickness = ";
+            std::stringstream ss;
+            ss << mMedianThickness;
+            std::string thicknessString;
+            ss >> thicknessString;
+            textString += thicknessString;
             textString += "\n";
         }
 
