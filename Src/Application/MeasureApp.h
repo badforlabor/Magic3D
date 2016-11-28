@@ -54,6 +54,7 @@ namespace MagicApp
         void FastComputeExactGeodesics(double accuracy, bool isSubThread = true);
         void ComputeExactGeodesics(bool isSubThread = true);
         void ComputeCurvatureGeodesics(double curvatureWeight, bool isSubThread = true);
+        void SmoothGeodesicsOnVertex(void);
         
         void ComputePointsToMeshDistance(bool isSubThread = true);
         void ShowReferenceMesh(bool isShow);
@@ -92,6 +93,7 @@ namespace MagicApp
         GPP::DumpBase* mpDumpInfo;
 #endif
         std::vector<GPP::Int> mMarkIds;
+        std::vector<GPP::Int> mGeodesicsOnVertices;
         std::vector<GPP::Vector3> mMarkPoints;
         CommandType mCommandType;
         bool mIsCommandInProgress;
@@ -107,5 +109,6 @@ namespace MagicApp
         std::vector<GPP::Vector3> mMaxCurvatureDirs;
         int mDisplayPrincipalCurvature;
         GPP::Real mCurvatureWeight;
+        bool mIsGeodesicsClose;
     };
 }

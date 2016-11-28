@@ -938,7 +938,7 @@ namespace MagicApp
 #if MAKEDUMPFILE
         GPP::DumpOnce();
 #endif
-        GPP::ErrorCode res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, mCurPointsOnVertex, 0.2, 10);
+        GPP::ErrorCode res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, mCurPointsOnVertex, false, 0.2, 10);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);

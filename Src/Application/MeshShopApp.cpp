@@ -181,6 +181,61 @@ namespace MagicApp
         return true;
     }
 
+    static void CollectTriMeshVerticesColorFields(const GPP::TriMesh* triMesh, std::vector<GPP::Real> *vertexColorFields)
+    {
+        if (triMesh == NULL || vertexColorFields == NULL)
+        {
+            return;
+        }
+        GPP::Int verticeSize = triMesh->GetVertexCount();
+        GPP::Int dim = 3;
+        vertexColorFields->resize(verticeSize * dim, 0.0);
+        for (GPP::Int vid = 0; vid < verticeSize; ++vid)
+        {
+            GPP::Vector3 color = triMesh->GetVertexColor(vid);
+            GPP::Int offset = vid * 3;
+            vertexColorFields->at(offset) = color[0];
+            vertexColorFields->at(offset+1) = color[1];
+            vertexColorFields->at(offset+2) = color[2];
+        }
+    }
+
+    static GPP::Vector3 TrimVector(const GPP::Vector3& vec, GPP::Real minValue, GPP::Real maxValue)
+    {
+        GPP::Vector3 out(vec);
+        for (GPP::Int ii = 0; ii < 3; ++ii)
+        {
+            if (out[ii] < minValue)
+            {
+                out[ii] = minValue;
+            }
+            else if (out[ii] > maxValue)
+            {
+                out[ii] = maxValue;
+            }
+        }
+        return out;
+    }
+
+    static void UpdateTriMeshVertexColors(GPP::TriMesh *triMesh, GPP::Int oldTriMeshVertexSize, const std::vector<GPP::Real>& insertedVertexFields)
+    {
+        if (triMesh == NULL || insertedVertexFields.empty())
+        {
+            return;
+        }
+        GPP::Int insertedVertexSize = (triMesh->GetVertexCount() - oldTriMeshVertexSize);
+        if (insertedVertexFields.size() != insertedVertexSize * 3)
+        {
+            return;
+        }
+        for (GPP::Int vid = 0; vid < insertedVertexSize; ++vid)
+        {
+            GPP::Int newVertexId = vid + oldTriMeshVertexSize;
+            GPP::Vector3 color(insertedVertexFields[vid * 3 + 0], insertedVertexFields[vid * 3 + 1], insertedVertexFields[vid * 3 + 2]);
+            triMesh->SetVertexColor(newVertexId, TrimVector(color, 0.0, 1.0));
+        }
+    }
+
     bool MeshShopApp::KeyPressed( const OIS::KeyEvent &arg )
     {
         if (arg.key == OIS::KC_D)
@@ -215,7 +270,22 @@ namespace MagicApp
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
-            GPP::ErrorCode res = GPP::SplitMesh::SplitByPlane(triMesh, &plane, &triangleFlags);
+            GPP::ErrorCode res = GPP_NO_ERROR;
+            if (triMesh->HasColor())
+            {
+                std::vector<GPP::Real> vertexFields, insertedFields;
+                CollectTriMeshVerticesColorFields(triMesh, &vertexFields);
+                int originVertexCount = triMesh->GetVertexCount();
+                res = GPP::SplitMesh::SplitByPlane(triMesh, &plane, &triangleFlags, &vertexFields, &insertedFields);
+                if (res == GPP_NO_ERROR)
+                {
+                    UpdateTriMeshVertexColors(triMesh, originVertexCount, insertedFields);
+                }
+            }
+            else
+            {
+                res = GPP::SplitMesh::SplitByPlane(triMesh, &plane, &triangleFlags, NULL, NULL);
+            }
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
                 MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
@@ -512,7 +582,7 @@ namespace MagicApp
                         else if (mRightMouseType == SELECT_ADD)
                         {
                             mVertexSelectFlag.at(vid) = 1;
-                            InfoLog << vid << std::endl;
+                            //InfoLog << vid << std::endl;
                         }
                         else
                         {
@@ -639,7 +709,7 @@ namespace MagicApp
             return false;
         }
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0GPT Files(*.gpt)\0*.gpt\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             ModelManager::Get()->ClearPointCloud();
@@ -710,61 +780,6 @@ namespace MagicApp
             {
                 MessageBox(NULL, "网格导出失败", "温馨提示", MB_OK);
             }
-        }
-    }
-
-    static void CollectTriMeshVerticesColorFields(const GPP::TriMesh* triMesh, std::vector<GPP::Real> *vertexColorFields)
-    {
-        if (triMesh == NULL || vertexColorFields == NULL)
-        {
-            return;
-        }
-        GPP::Int verticeSize = triMesh->GetVertexCount();
-        GPP::Int dim = 3;
-        vertexColorFields->resize(verticeSize * dim, 0.0);
-        for (GPP::Int vid = 0; vid < verticeSize; ++vid)
-        {
-            GPP::Vector3 color = triMesh->GetVertexColor(vid);
-            GPP::Int offset = vid * 3;
-            vertexColorFields->at(offset) = color[0];
-            vertexColorFields->at(offset+1) = color[1];
-            vertexColorFields->at(offset+2) = color[2];
-        }
-    }
-
-    static GPP::Vector3 TrimVector(const GPP::Vector3& vec, GPP::Real minValue, GPP::Real maxValue)
-    {
-        GPP::Vector3 out(vec);
-        for (GPP::Int ii = 0; ii < 3; ++ii)
-        {
-            if (out[ii] < minValue)
-            {
-                out[ii] = minValue;
-            }
-            else if (out[ii] > maxValue)
-            {
-                out[ii] = maxValue;
-            }
-        }
-        return out;
-    }
-
-    static void UpdateTriMeshVertexColors(GPP::TriMesh *triMesh, GPP::Int oldTriMeshVertexSize, const std::vector<GPP::Real>& insertedVertexFields)
-    {
-        if (triMesh == NULL || insertedVertexFields.empty())
-        {
-            return;
-        }
-        GPP::Int insertedVertexSize = (triMesh->GetVertexCount() - oldTriMeshVertexSize);
-        if (insertedVertexFields.size() != insertedVertexSize * 3)
-        {
-            return;
-        }
-        for (GPP::Int vid = 0; vid < insertedVertexSize; ++vid)
-        {
-            GPP::Int newVertexId = vid + oldTriMeshVertexSize;
-            GPP::Vector3 color(insertedVertexFields[vid * 3 + 0], insertedVertexFields[vid * 3 + 1], insertedVertexFields[vid * 3 + 2]);
-            triMesh->SetVertexColor(newVertexId, TrimVector(color, 0.0, 1.0));
         }
     }
 
@@ -847,6 +862,49 @@ namespace MagicApp
         return mIsCommandInProgress;
     }
 
+    void MeshShopApp::UpdateAddedVertexInfo(std::map<int, int>& insertVertexIdMap)
+    {
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh && insertVertexIdMap.size() > 0)
+        {
+            int curVertexCount = triMesh->GetVertexCount();
+            std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
+            if (imageColorIds)
+            {
+                imageColorIds->resize(curVertexCount);
+                for (std::map<int, int>::iterator itr = insertVertexIdMap.begin(); itr != insertVertexIdMap.end(); ++itr)
+                {
+                    imageColorIds->at(itr->first) = imageColorIds->at(itr->second);
+                }
+            }
+            std::vector<int>* imageColorIdFlags = ModelManager::Get()->GetImageColorIdFlagsPointer();
+            if (imageColorIdFlags)
+            {
+                imageColorIdFlags->resize(curVertexCount);
+                for (std::map<int, int>::iterator itr = insertVertexIdMap.begin(); itr != insertVertexIdMap.end(); ++itr)
+                {
+                    imageColorIdFlags->at(itr->first) = imageColorIdFlags->at(itr->second);
+                }
+            }
+            std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
+            if (colorIds)
+            {
+                colorIds->resize(curVertexCount);
+                for (std::map<int, int>::iterator itr = insertVertexIdMap.begin(); itr != insertVertexIdMap.end(); ++itr)
+                {
+                    colorIds->at(itr->first) = colorIds->at(itr->second);
+                }
+            }
+            if (triMesh->HasColor())
+            {
+                for (std::map<int, int>::iterator itr = insertVertexIdMap.begin(); itr != insertVertexIdMap.end(); ++itr)
+                {
+                    triMesh->SetVertexColor(itr->first, triMesh->GetVertexColor(itr->second));
+                }
+            }
+        }
+    }
+
     void MeshShopApp::ConsolidateTopology(bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
@@ -861,11 +919,15 @@ namespace MagicApp
         else
         {
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            int originVertexCount = triMesh->GetVertexCount();
+            MagicMesh magicMesh(triMesh);
+            ConstructMagicMeshInfo(&magicMesh);
             mIsCommandInProgress = true;
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
-            GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(triMesh);
+            std::map<int, int> insertVertexIdMap;
+            GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(&magicMesh, &insertVertexIdMap);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -877,6 +939,7 @@ namespace MagicApp
                 MessageBox(NULL, "拓扑修复失败", "温馨提示", MB_OK);
                 return;
             }
+            UpdateAddedVertexInfo(insertVertexIdMap);
             ResetSelection();
             bool isManifold = GPP::ConsolidateMesh::_IsTriMeshManifold(triMesh);
             if (!isManifold)
@@ -955,21 +1018,7 @@ namespace MagicApp
             }
             DebugLog << "MeshShopApp::RemoveOutlier deleteIndex size=" << deleteIndex.size() << std::endl;
             MagicMesh magicMesh(triMesh);
-            std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
-            if (imageColorIds && imageColorIds->size() == triMesh->GetVertexCount())
-            {
-                magicMesh.SetImageColorIds(imageColorIds);
-            }
-            std::vector<int>* imageColorIdFlags = ModelManager::Get()->GetImageColorIdFlagsPointer();
-            if (imageColorIdFlags && imageColorIdFlags->size() == triMesh->GetVertexCount())
-            {
-                magicMesh.SetImageColorIdFlags(imageColorIdFlags);
-            }
-            std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
-            if (colorIds && colorIds->size() == triMesh->GetVertexCount())
-            {
-                magicMesh.SetColorIds(colorIds);
-            }
+            ConstructMagicMeshInfo(&magicMesh);
             //res = GPP::DeleteTriMeshVertices(triMesh, deleteIndex);
             res = GPP::DeleteTriMeshVertices(&magicMesh, deleteIndex);
             if (res != GPP_NO_ERROR)
@@ -1827,91 +1876,31 @@ namespace MagicApp
         else
         {
             mIsCommandInProgress = true;
-
-            GPP::Int oldTriMeshVertexSize = ModelManager::Get()->GetMesh()->GetVertexCount();
             
-            bool isHoleSelected = false;
+            std::vector<GPP::Int> holeSeeds;            
             for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
             {
-                if (isHoleSelected)
-                {
-                    break;
-                }
+                bool needFill = true;
                 for (std::vector<GPP::Int>::iterator loopItr = mShowHoleLoopIds.at(vLoop).begin(); loopItr != mShowHoleLoopIds.at(vLoop).end(); ++loopItr)
                 {
                     if (mVertexSelectFlag.at(*loopItr))
                     {
-                        isHoleSelected = true;
+                        needFill = false;
                         break;
                     }
                 }
-            }
-            std::vector<GPP::Int> holeSeeds;
-            int holeCount = mShowHoleLoopIds.size();
-            std::vector<bool> holeValidFlags(holeCount, 1);
-            std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
-            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
-            if (imageColorIds && imageColorIds->size() == triMesh->GetVertexCount())
-            {
-                for (GPP::Int vLoop = 0; vLoop < holeCount; ++vLoop)
+                if (mShowHoleLoopIds.at(vLoop).size() > 0 && needFill)
                 {
-                    if (mShowHoleLoopIds.at(vLoop).size() > 0)
-                    {
-                        int curImageId = imageColorIds->at(mShowHoleLoopIds.at(vLoop).at(0)).GetImageIndex();
-                        for (std::vector<GPP::Int>::iterator loopItr = mShowHoleLoopIds.at(vLoop).begin(); loopItr != mShowHoleLoopIds.at(vLoop).end(); ++loopItr)
-                        {
-                            if (imageColorIds->at(*loopItr).GetImageIndex() != curImageId)
-                            {
-                                holeValidFlags.at(vLoop) = 0;
-                                break;
-                            }
-                        }
-                    }
+                    holeSeeds.push_back(mShowHoleLoopIds.at(vLoop).at(0));
                 }
-            }
-            if (isHoleSelected)
-            {
-                for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
-                {
-                    if (!holeValidFlags.at(vLoop))
-                    {
-                        continue;
-                    }
-                    for (std::vector<GPP::Int>::iterator loopItr = mShowHoleLoopIds.at(vLoop).begin(); loopItr != mShowHoleLoopIds.at(vLoop).end(); ++loopItr)
-                    {
-                        if (mVertexSelectFlag.at(*loopItr))
-                        {
-                            holeSeeds.push_back(*loopItr);
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                for (GPP::Int vLoop = 0; vLoop < mShowHoleLoopIds.size(); ++vLoop)
-                {
-                    if (!holeValidFlags.at(vLoop))
-                    {
-                        continue;
-                    }
-                    if (mShowHoleLoopIds.at(vLoop).size() > 0)
-                    {
-                        holeSeeds.push_back(mShowHoleLoopIds.at(vLoop).at(0));
-                    }
-                }
-            }
-            if (imageColorIds && imageColorIds->size() == triMesh->GetVertexCount() && holeSeeds.empty())
-            {
-                MessageBox(NULL, "没有找到合理的洞", "温馨提示", MB_OK);
-                return;
             }
             
-            GPP::ErrorCode res = GPP_NO_ERROR;
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
             int originVertexCount = triMesh->GetVertexCount();
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
+            GPP::ErrorCode res = GPP_NO_ERROR;
             if (triMesh->HasColor())
             {
                 std::vector<GPP::Real> vertexScaleFields, outputScaleFields;
@@ -1920,7 +1909,7 @@ namespace MagicApp
                     &vertexScaleFields, &outputScaleFields);
                 if (res == GPP_NO_ERROR)
                 {
-                    UpdateTriMeshVertexColors(triMesh, oldTriMeshVertexSize, outputScaleFields);
+                    UpdateTriMeshVertexColors(triMesh, originVertexCount, outputScaleFields);
                 }
             }
             else
@@ -1938,6 +1927,7 @@ namespace MagicApp
                 MessageBox(NULL, "网格补洞失败", "温馨提示", MB_OK);
                 return;
             }
+            std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
             if (imageColorIds && imageColorIds->size() == originVertexCount)
             {
                 int curVertexCount = triMesh->GetVertexCount();
@@ -2229,21 +2219,7 @@ namespace MagicApp
             }
         }
         MagicMesh magicMesh(triMesh);
-        std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
-        if (imageColorIds && imageColorIds->size() == triMesh->GetVertexCount())
-        {
-            magicMesh.SetImageColorIds(imageColorIds);
-        }
-        std::vector<int>* imageColorIdFlags = ModelManager::Get()->GetImageColorIdFlagsPointer();
-        if (imageColorIdFlags && imageColorIdFlags->size() == triMesh->GetVertexCount())
-        {
-            magicMesh.SetImageColorIdFlags(imageColorIdFlags);
-        }
-        std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
-        if (colorIds && colorIds->size() == triMesh->GetVertexCount())
-        {
-            magicMesh.SetColorIds(colorIds);
-        }
+        ConstructMagicMeshInfo(&magicMesh);
         //res = GPP::DeleteTriMeshVertices(triMesh, deleteIndex);
         GPP::ErrorCode res = GPP::DeleteTriMeshVertices(&magicMesh, deleteIndex);
         if (res != GPP_NO_ERROR)
@@ -2255,7 +2231,8 @@ namespace MagicApp
         {
             if (MessageBox(NULL, "警告：删除面片后的网格有非流形结构，是否需要修复？", "温馨提示", MB_OKCANCEL) == IDOK)
             {
-                GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(triMesh);
+                std::map<int, int> insertVertexIdMap;
+                GPP::ErrorCode res = GPP::ConsolidateMesh::MakeTriMeshManifold(&magicMesh, &insertVertexIdMap);
                 if (res == GPP_API_IS_NOT_AVAILABLE)
                 {
                     MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
@@ -2266,6 +2243,7 @@ namespace MagicApp
                     MessageBox(NULL, "拓扑修复失败", "温馨提示", MB_OK);
                     return;
                 }
+                UpdateAddedVertexInfo(insertVertexIdMap);
             }
         }
         ResetSelection();
@@ -2547,6 +2525,25 @@ namespace MagicApp
         }
 
         UpdateMeshRendering();
+    }
+
+    void MeshShopApp::ConstructMagicMeshInfo(MagicMesh* magicMesh)
+    {
+        std::vector<GPP::ImageColorId>* imageColorIds = ModelManager::Get()->GetImageColorIdsPointer();
+        if (imageColorIds && imageColorIds->size() == magicMesh->GetVertexCount())
+        {
+            magicMesh->SetImageColorIds(imageColorIds);
+        }
+        std::vector<int>* imageColorIdFlags = ModelManager::Get()->GetImageColorIdFlagsPointer();
+        if (imageColorIdFlags && imageColorIdFlags->size() == magicMesh->GetVertexCount())
+        {
+            magicMesh->SetImageColorIdFlags(imageColorIdFlags);
+        }
+        std::vector<int>* colorIds = ModelManager::Get()->GetColorIdsPointer();
+        if (colorIds && colorIds->size() == magicMesh->GetVertexCount())
+        {
+            magicMesh->SetColorIds(colorIds);
+        }
     }
 
     void MeshShopApp::SetToShowHoleLoopVrtIds(const std::vector<std::vector<GPP::Int> >& toShowHoleLoopVrtIds)

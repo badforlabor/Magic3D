@@ -246,7 +246,7 @@ namespace MagicApp
     void PointShopApp::SaveImageColorInfo()
     {
         std::string fileName;
-        char filterName[] = "Support format(*.gii)\0*.*\0";
+        char filterName[] = "Support format(*.gii)\0*.gii\0";
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
             std::ofstream fout(fileName);
@@ -988,14 +988,13 @@ namespace MagicApp
                 }
                 int imageWidth = image.cols;
                 int imageHeight = image.rows;
-                std::vector<GPP::Vector3> imageData(imageWidth * imageHeight);
+                std::vector<GPP::Color4> imageData(imageWidth * imageHeight);
                 for (int y = 0; y < imageHeight; ++y)
                 {
                     for (int x = 0; x < imageWidth; ++x)
                     {
                         const unsigned char* pixel = image.ptr(imageHeight - 1 - y, x);
-                        GPP::Vector3 color(pixel[2] / 255.0, pixel[1] / 255.0, pixel[0] / 255.0);
-                        imageData.at(x + y * imageWidth) = color;
+                        imageData.at(x + y * imageWidth) = GPP::Color4(pixel[2], pixel[1], pixel[0]);
                     }
                 }
                 GPP::ErrorCode res = GPP::IntrinsicColor::TuneImageByPointColor(pointCoords, pointColors, 
@@ -1009,11 +1008,11 @@ namespace MagicApp
                 {
                     for (int x = 0; x < imageWidth; ++x)
                     {
-                        GPP::Vector3 curColor = imageData.at(x + y * imageWidth);
+                        GPP::Color4 curColor = imageData.at(x + y * imageWidth);
                         unsigned char* pixel = image.ptr(imageHeight - y - 1, x);
-                        pixel[0] = unsigned char(curColor[2] * 255);
-                        pixel[1] = unsigned char(curColor[1] * 255);
-                        pixel[2] = unsigned char(curColor[0] * 255);
+                        pixel[0] = curColor[2];
+                        pixel[1] = curColor[1];
+                        pixel[2] = curColor[0];
                     }
                 }
                 std::string tuneImageName = textureImageFiles.at(iid) + "_tune_point.jpg";
@@ -1173,11 +1172,10 @@ namespace MagicApp
             }
             std::vector<GPP::Real> isolation;
             mIsCommandInProgress = true;
-            std::vector<int>* cloudIds = ModelManager::Get()->GetCloudIdsPointer();
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
-            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(pointCloud, &isolation, 20, cloudIds);
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(pointCloud, &isolation, 20, NULL);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {

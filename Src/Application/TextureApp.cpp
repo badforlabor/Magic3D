@@ -653,19 +653,22 @@ namespace MagicApp
             }
         }
         
-        std::vector<GPP::Vector3> imageData;
+        //std::vector<GPP::Vector3> imageData;
+        std::vector<GPP::Color4> imageData;
         mTextureImageMasks.clear();
         GPP::ErrorCode res = GPP_NO_ERROR;
         if (isByVertexColor)
         {
-            std::vector<GPP::Vector3> vertexColors(faceCount * 3);
+            //std::vector<GPP::Vector3> vertexColors(faceCount * 3);
+            std::vector<GPP::Color4> vertexColors(faceCount * 3);
             GPP::Int vertexIds[3] = {-1};
             for (GPP::Int fid = 0; fid < faceCount; ++fid)
             {
                 triMesh->GetTriangleVertexIds(fid, vertexIds);
                 for (int fvid = 0; fvid < 3; ++fvid)
                 {
-                    vertexColors.at(fid * 3 + fvid) = triMesh->GetVertexColor(vertexIds[fvid]);
+                    GPP::Vector3 vColor = triMesh->GetVertexColor(vertexIds[fvid]);
+                    vertexColors.at(fid * 3 + fvid) = GPP::Color4::Vector3ToColor4(vColor);
                 }
             }
             res = GPP::TextureImage::CreateTextureImageByVertexColors(textureCoords, textureIds, 
@@ -685,7 +688,7 @@ namespace MagicApp
             }
             std::vector<std::string> textureImageFiles = ModelManager::Get()->GetTextureImageFiles();
             int imageCount = textureImageFiles.size();
-            std::vector<std::vector<GPP::Vector3> > imageListData;
+            std::vector<std::vector<GPP::Color4> > imageListData;
             imageListData.reserve(imageCount);
             std::vector<GPP::Int> imageInfos;
             imageInfos.reserve(imageCount * 2);
@@ -700,13 +703,14 @@ namespace MagicApp
                 int width = image.cols;
                 int height = image.rows;
 
-                std::vector<GPP::Vector3> oneImageData(width * height);
+                std::vector<GPP::Color4> oneImageData(width * height);
                 for (int y = 0; y < height; ++y)
                 {
                     for (int x = 0; x < width; ++x)
                     {
                         const unsigned char* pixel = image.ptr(height - 1 - y, x);
-                        GPP::Vector3 color(pixel[2] / 255.0, pixel[1] / 255.0, pixel[0] / 255.0);
+                        //GPP::Vector3 color(pixel[2] / 255.0, pixel[1] / 255.0, pixel[0] / 255.0);
+                        GPP::Color4 color(pixel[2], pixel[1], pixel[0]);
                         oneImageData.at(x + y * width) = color;
                     }
                 }
@@ -724,7 +728,7 @@ namespace MagicApp
         }
         
         cv::Mat textureImage(mTextureImageSize, mTextureImageSize, CV_8UC4);
-        cv::Mat alphaImage(mTextureImageSize, mTextureImageSize, CV_8UC1);
+        cv::Mat alphaImage(mTextureImageSize, mTextureImageSize, CV_8UC4);
         GPP::Int maxAlpha = *std::max_element(mTextureImageMasks.begin(), mTextureImageMasks.end());
         if (maxAlpha == 0)
         {
@@ -735,13 +739,30 @@ namespace MagicApp
             for (int x = 0; x < mTextureImageSize; ++x)
             {
                 cv::Vec4b& col = textureImage.at<cv::Vec4b>(mTextureImageSize - 1 - y, x);
-                GPP::Vector3 vCol = imageData.at(x + y * mTextureImageSize);
-                col[0] = vCol[2] * 255;
-                col[1] = vCol[1] * 255;
-                col[2] = vCol[0] * 255;
+                //GPP::Vector3 vCol = imageData.at(x + y * mTextureImageSize);
+                GPP::Color4 cColor = imageData.at(x + y * mTextureImageSize);
+                col[0] = cColor[2];
+                col[1] = cColor[1];
+                col[2] = cColor[0];
                 col[3] = 255;
 
-                alphaImage.at<uchar>(mTextureImageSize - 1 - y, x) = 1.0 * mTextureImageMasks.at(x + y * mTextureImageSize) / maxAlpha * 255;
+                cv::Vec4b& alpha = alphaImage.at<cv::Vec4b>(mTextureImageSize - 1 - y, x);
+                int mask = mTextureImageMasks.at(x + y * mTextureImageSize);
+                if (mask < 3)
+                {
+                    alpha[0] = 0;
+                    alpha[1] = 0;
+                    alpha[2] = 0;
+                    alpha[3] = 255;
+                    alpha[mask] = 255;
+                }
+                else
+                {
+                    alpha[0] = mask * 255 / maxAlpha;
+                    alpha[1] = mask * 255 / maxAlpha;
+                    alpha[2] = mask * 255 / maxAlpha;
+                    alpha[3] = 255;
+                }
             }
         }
         cv::imwrite(mTextureImageName, textureImage);
@@ -857,14 +878,13 @@ namespace MagicApp
                 }
                 int imageWidth = image.cols;
                 int imageHeight = image.rows;
-                std::vector<GPP::Vector3> imageData(imageWidth * imageHeight);
+                std::vector<GPP::Color4> imageData(imageWidth * imageHeight);
                 for (int y = 0; y < imageHeight; ++y)
                 {
                     for (int x = 0; x < imageWidth; ++x)
                     {
                         const unsigned char* pixel = image.ptr(imageHeight - 1 - y, x);
-                        GPP::Vector3 color(pixel[2] / 255.0, pixel[1] / 255.0, pixel[0] / 255.0);
-                        imageData.at(x + y * imageWidth) = color;
+                        imageData.at(x + y * imageWidth) = GPP::Color4(pixel[2], pixel[1], pixel[0]);
                     }
                 }
                 GPP::ErrorCode res = GPP::IntrinsicColor::TuneImageByTriangleColor(vertexCoords, vertexColors, vertexFlags,
@@ -878,11 +898,11 @@ namespace MagicApp
                 {
                     for (int x = 0; x < imageWidth; ++x)
                     {
-                        GPP::Vector3 curColor = imageData.at(x + y * imageWidth);
+                        GPP::Color4 curColor = imageData.at(x + y * imageWidth);
                         unsigned char* pixel = image.ptr(imageHeight - y - 1, x);
-                        pixel[0] = unsigned char(curColor[2] * 255);
-                        pixel[1] = unsigned char(curColor[1] * 255);
-                        pixel[2] = unsigned char(curColor[0] * 255);
+                        pixel[0] = curColor[2];
+                        pixel[1] = curColor[1];
+                        pixel[2] = curColor[0];
                     }
                 }
                 std::string tuneImageName = textureImageFiles.at(iid) + "_tune_triangle.jpg";
@@ -890,6 +910,60 @@ namespace MagicApp
                 textureImageFiles.at(iid) = tuneImageName;
             }
             ModelManager::Get()->SetTextureImageFiles(textureImageFiles);
+        }
+    }
+
+    static void MapTriMesh2ImageSpace(const GPP::ITriMesh* triMesh, const std::vector<GPP::ImageColorId>& imageColorIds)
+    {
+        int vertexCount = triMesh->GetVertexCount();
+        std::vector<bool> vertexVisitFlags(vertexCount, 0);
+        std::vector<int> vertex2SubmeshMap(vertexCount, -1);
+        int meshId = 0;
+        int faceCount = triMesh->GetTriangleCount();
+        for (int vid = 0; vid < vertexCount; vid++)
+        {
+            if (vertexVisitFlags.at(vid))
+            {
+                continue;
+            }
+            int curImageId = imageColorIds.at(vid).GetImageIndex();
+            std::vector<int> vertexList;
+            for (int svid = 0; svid < vertexCount; svid++)
+            {
+                if (vertexVisitFlags.at(svid) || imageColorIds.at(svid).GetImageIndex() != curImageId)
+                {
+                    continue;
+                }
+                vertexVisitFlags.at(svid) = 1;
+                vertexList.push_back(svid);
+            }
+            int subVertexCount = vertexList.size();
+            GPP::TriMesh subTriMesh;
+            for (int svid = 0; svid < subVertexCount; svid++)
+            {
+                vertex2SubmeshMap.at(vertexList.at(svid)) = svid;
+                GPP::ImageColorId imageColorId = imageColorIds.at(vertexList.at(svid));
+                subTriMesh.InsertVertex(GPP::Vector3(imageColorId.GetLocalX(), imageColorId.GetLocalY(), 0));
+            }
+            int vertexIds[3] = {-1};
+            for (int fid = 0; fid < faceCount; fid++)
+            {
+                triMesh->GetTriangleVertexIds(fid, vertexIds);
+                if (imageColorIds.at(vertexIds[0]).GetImageIndex() != curImageId || 
+                    imageColorIds.at(vertexIds[1]).GetImageIndex() != curImageId || 
+                    imageColorIds.at(vertexIds[2]).GetImageIndex() != curImageId)
+                {
+                    continue;
+                }
+                subTriMesh.InsertTriangle(vertex2SubmeshMap.at(vertexIds[0]), vertex2SubmeshMap.at(vertexIds[1]), 
+                    vertex2SubmeshMap.at(vertexIds[2]));
+            }
+            std::stringstream ss;
+            ss << "submesh_" << meshId << ".obj";
+            std::string meshName;
+            ss >> meshName;
+            GPP::Parser::ExportTriMesh(meshName, &subTriMesh);
+            meshId++;
         }
     }
 
@@ -940,13 +1014,14 @@ namespace MagicApp
                 return;
             }
             ModelManager::Get()->SetImageColorIds(imageColorIds);
+            //MapTriMesh2ImageSpace(triMesh, imageColorIds);
         }
     }
 
     void TextureApp::SaveImageColorInfo()
     {
         std::string fileName;
-        char filterName[] = "Support format(*.gii)\0*.*\0";
+        char filterName[] = "Support format(*.gii)\0*.gii\0";
         if (MagicCore::ToolKit::FileSaveDlg(fileName, filterName))
         {
             std::ofstream fout(fileName);

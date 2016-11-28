@@ -15,7 +15,7 @@ namespace MagicCore
 namespace MagicApp
 {
     class MeshShopAppUI;
-
+    class MagicMesh;
     class MeshShopApp : public AppBase
     {
         enum CommandType
@@ -121,6 +121,9 @@ namespace MagicApp
         void SaveImageColorInfo(void);
         void LoadImageColorInfo(void);
         void PickMeshColorFromImages(void);
+
+        void ConstructMagicMeshInfo(MagicMesh* magicMesh);
+        void UpdateAddedVertexInfo(std::map<int, int>& insertVertexIdMap);
 
     private:
         MeshShopAppUI* mpUI;

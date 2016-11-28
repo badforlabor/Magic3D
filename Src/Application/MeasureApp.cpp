@@ -36,6 +36,7 @@ namespace MagicApp
         mpDumpInfo(NULL),
 #endif
         mMarkIds(),
+        mGeodesicsOnVertices(),
         mMarkPoints(),
         mCommandType(NONE),
         mIsCommandInProgress(false),
@@ -50,7 +51,8 @@ namespace MagicApp
         mMinCurvatureDirs(),
         mMaxCurvatureDirs(),
         mDisplayPrincipalCurvature(0),
-        mCurvatureWeight(0)
+        mCurvatureWeight(0),
+        mIsGeodesicsClose(false)
     {
     }
 
@@ -121,6 +123,10 @@ namespace MagicApp
         {
             mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_MIDDLE_DOWN);
         }
+        else if (arg.state.buttonDown(OIS::MB_Left) && arg.state.buttonDown(OIS::MB_Right) && mpViewTool != NULL)
+        {
+            mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_RIGHT_DOWN);
+        }
         else if (arg.state.buttonDown(OIS::MB_Left) && mpViewTool != NULL)
         {
             mpViewTool->MouseMoved(arg.state.X.abs, arg.state.Y.abs, MagicCore::ViewTool::MM_LEFT_DOWN);
@@ -169,15 +175,468 @@ namespace MagicApp
         return  true;
     }
 
+    static bool ChamferCurve(GPP::TriMesh* triMesh, const std::vector<int>& centerCurve, const std::vector<int>& topCurve,
+        const std::vector<int>& downCurve, bool isCurveClose)
+    {
+        int originVertexCount = triMesh->GetVertexCount();
+        std::vector<std::set<int> > vertexNeighbors(originVertexCount, std::set<int>());
+        int vertexIds[3] = {-1};
+        int originFaceCount = triMesh->GetTriangleCount();
+        for (int fid = 0; fid < originFaceCount; fid++)
+        {
+            triMesh->GetTriangleVertexIds(fid, vertexIds);
+            vertexNeighbors.at(vertexIds[0]).insert(vertexIds[1]);
+            vertexNeighbors.at(vertexIds[0]).insert(vertexIds[2]);
+            vertexNeighbors.at(vertexIds[1]).insert(vertexIds[2]);
+            vertexNeighbors.at(vertexIds[1]).insert(vertexIds[0]);
+            vertexNeighbors.at(vertexIds[2]).insert(vertexIds[0]);
+            vertexNeighbors.at(vertexIds[2]).insert(vertexIds[1]);
+        }
+        std::vector<int> deleteTriangles;
+        if (isCurveClose)
+        {
+            std::vector<bool> vertexMark(originVertexCount, 0);
+            for (std::vector<int>::const_iterator itr = topCurve.begin(); itr != topCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = downCurve.begin(); itr != downCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = centerCurve.begin(); itr != centerCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            std::vector<int> vertexStack = centerCurve;
+            while (vertexStack.size() > 0)
+            {
+                std::vector<int> vertexStackNext;
+                for (std::vector<int>::iterator stackItr = vertexStack.begin(); stackItr != vertexStack.end(); ++stackItr)
+                {
+                    for (std::set<int>::iterator nitr = vertexNeighbors.at(*stackItr).begin(); nitr != vertexNeighbors.at(*stackItr).end(); ++nitr)
+                    {
+                        if (vertexMark.at(*nitr))
+                        {
+                            continue;
+                        }
+                        vertexMark.at(*nitr) = 1;
+                        vertexStackNext.push_back(*nitr);
+                    }
+                }
+                vertexStack.swap(vertexStackNext);
+            }
+            for (int fid = 0; fid < originFaceCount; fid++)
+            {
+                triMesh->GetTriangleVertexIds(fid, vertexIds);
+                if (vertexMark.at(vertexIds[0]) && vertexMark.at(vertexIds[1]) && vertexMark.at(vertexIds[2]))
+                {
+                    deleteTriangles.push_back(fid);
+                }
+            }
+            GPP::ErrorCode res = GPP::DeleteTriMeshTriangles(triMesh, deleteTriangles, false);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            int stringSize = topCurve.size();
+            for (int vid = 0; vid < stringSize; vid++)
+            {
+                triMesh->InsertTriangle(topCurve.at(vid), topCurve.at((vid - 1 + stringSize) % stringSize), downCurve.at(vid));
+                triMesh->InsertTriangle(downCurve.at(vid), topCurve.at((vid - 1 + stringSize) % stringSize), downCurve.at((vid - 1 + stringSize) % stringSize));
+            }
+            res = GPP::DeleteIsolatedVertices(triMesh);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            triMesh->UpdateNormal();
+        }
+        else
+        {
+            int stringSize = topCurve.size();
+            std::vector<int> sectionVertexIds;
+            sectionVertexIds.push_back(topCurve.at(0));
+            sectionVertexIds.push_back(downCurve.at(0));
+            std::vector<int> leftCurves;
+            GPP::Real distance;
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, sectionVertexIds, false, leftCurves, distance);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            sectionVertexIds.clear();
+            sectionVertexIds.push_back(topCurve.at(stringSize - 1));
+            sectionVertexIds.push_back(downCurve.at(stringSize - 1));
+            std::vector<int> rightCurves;
+            res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, sectionVertexIds, false, rightCurves, distance);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+
+            std::vector<bool> vertexMark(originVertexCount, 0);
+            for (std::vector<int>::const_iterator itr = topCurve.begin(); itr != topCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = downCurve.begin(); itr != downCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = leftCurves.begin(); itr != leftCurves.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = rightCurves.begin(); itr != rightCurves.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            int seedVertex = centerCurve.at(centerCurve.size() / 2);
+            std::vector<int> vertexStack;
+            vertexStack.push_back(seedVertex);
+            vertexMark.at(seedVertex) = 1;
+            while (vertexStack.size() > 0)
+            {
+                std::vector<int> vertexStackNext;
+                for (std::vector<int>::iterator stackItr = vertexStack.begin(); stackItr != vertexStack.end(); ++stackItr)
+                {
+                    for (std::set<int>::iterator nitr = vertexNeighbors.at(*stackItr).begin(); nitr != vertexNeighbors.at(*stackItr).end(); ++nitr)
+                    {
+                        if (vertexMark.at(*nitr))
+                        {
+                            continue;
+                        }
+                        vertexMark.at(*nitr) = 1;
+                        vertexStackNext.push_back(*nitr);
+                    }
+                }
+                vertexStack.swap(vertexStackNext);
+            }
+            for (int fid = 0; fid < originFaceCount; fid++)
+            {
+                triMesh->GetTriangleVertexIds(fid, vertexIds);
+                if (vertexMark.at(vertexIds[0]) && vertexMark.at(vertexIds[1]) && vertexMark.at(vertexIds[2]))
+                {
+                    deleteTriangles.push_back(fid);
+                }
+            }
+            res = GPP::DeleteTriMeshTriangles(triMesh, deleteTriangles, false);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            for (int vid = 1; vid < stringSize; vid++)
+            {
+                triMesh->InsertTriangle(topCurve.at(vid), topCurve.at((vid - 1 + stringSize) % stringSize), downCurve.at(vid));
+                triMesh->InsertTriangle(downCurve.at(vid), topCurve.at((vid - 1 + stringSize) % stringSize), downCurve.at((vid - 1 + stringSize) % stringSize));
+            }
+            std::vector<int> boundarySeedIds;
+            boundarySeedIds.push_back(topCurve.at(0));
+            boundarySeedIds.push_back(topCurve.at(stringSize - 1));
+            res = GPP::FillMeshHole::FillHoles(triMesh, &boundarySeedIds);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            res = GPP::DeleteIsolatedVertices(triMesh);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            triMesh->UpdateNormal();
+        }
+        return true;
+    }
+
+    static bool ComputeControlPoint(const GPP::Vector3& point, const GPP::Vector3& normal, const GPP::Vector3& opPoint,
+        GPP::Vector3& controlPoint)
+    {
+        GPP::Vector3 opVec = opPoint - point;
+        double opLength = fabs(opVec * normal);
+        GPP::Vector3 pointVec = normal * opLength;
+        if (pointVec * opVec > 0)
+        {
+            pointVec *= (-1.0);
+        }
+        GPP::Vector3 extendVec = pointVec + opVec;
+        controlPoint = point + extendVec * 0.5;
+        return true;
+    }
+
+    static bool BlendCurve(GPP::TriMesh* triMesh, const std::vector<int>& centerCurve, const std::vector<int>& topCurve,
+        const std::vector<int>& downCurve, bool isCurveClose)
+    {
+        int originVertexCount = triMesh->GetVertexCount();
+        std::vector<std::set<int> > vertexNeighbors(originVertexCount, std::set<int>());
+        int vertexIds[3] = {-1};
+        int originFaceCount = triMesh->GetTriangleCount();
+        for (int fid = 0; fid < originFaceCount; fid++)
+        {
+            triMesh->GetTriangleVertexIds(fid, vertexIds);
+            vertexNeighbors.at(vertexIds[0]).insert(vertexIds[1]);
+            vertexNeighbors.at(vertexIds[0]).insert(vertexIds[2]);
+            vertexNeighbors.at(vertexIds[1]).insert(vertexIds[2]);
+            vertexNeighbors.at(vertexIds[1]).insert(vertexIds[0]);
+            vertexNeighbors.at(vertexIds[2]).insert(vertexIds[0]);
+            vertexNeighbors.at(vertexIds[2]).insert(vertexIds[1]);
+        }
+        std::vector<int> deleteTriangles;
+        if (isCurveClose)
+        {
+            std::vector<bool> vertexMark(originVertexCount, 0);
+            for (std::vector<int>::const_iterator itr = topCurve.begin(); itr != topCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = downCurve.begin(); itr != downCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = centerCurve.begin(); itr != centerCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            std::vector<int> vertexStack = centerCurve;
+            while (vertexStack.size() > 0)
+            {
+                std::vector<int> vertexStackNext;
+                for (std::vector<int>::iterator stackItr = vertexStack.begin(); stackItr != vertexStack.end(); ++stackItr)
+                {
+                    for (std::set<int>::iterator nitr = vertexNeighbors.at(*stackItr).begin(); nitr != vertexNeighbors.at(*stackItr).end(); ++nitr)
+                    {
+                        if (vertexMark.at(*nitr))
+                        {
+                            continue;
+                        }
+                        vertexMark.at(*nitr) = 1;
+                        vertexStackNext.push_back(*nitr);
+                    }
+                }
+                vertexStack.swap(vertexStackNext);
+            }
+            for (int fid = 0; fid < originFaceCount; fid++)
+            {
+                triMesh->GetTriangleVertexIds(fid, vertexIds);
+                if (vertexMark.at(vertexIds[0]) && vertexMark.at(vertexIds[1]) && vertexMark.at(vertexIds[2]))
+                {
+                    deleteTriangles.push_back(fid);
+                }
+            }
+            GPP::ErrorCode res = GPP::DeleteTriMeshTriangles(triMesh, deleteTriangles, false);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+
+            int stringSize = topCurve.size();
+            std::vector<std::vector<GPP::Vector3> > subdCoordList;
+            for (int vid = 0; vid < stringSize; vid++)
+            {
+                GPP::Vector3 topControlCoord;
+                if (!ComputeControlPoint(triMesh->GetVertexCoord(topCurve.at(vid)), triMesh->GetVertexNormal(topCurve.at(vid)), 
+                    triMesh->GetVertexCoord(downCurve.at(vid)), topControlCoord))
+                {
+                    return false;
+                }
+                GPP::Vector3 downControlCoord;
+                if (!ComputeControlPoint(triMesh->GetVertexCoord(downCurve.at(vid)), triMesh->GetVertexNormal(downCurve.at(vid)), 
+                    triMesh->GetVertexCoord(topCurve.at(vid)), downControlCoord))
+                {
+                    return false;
+                }
+                std::vector<GPP::Vector3> subdCoords(4);
+                subdCoords.at(0) = triMesh->GetVertexCoord(topCurve.at(vid));
+                subdCoords.at(1) = topControlCoord;
+                subdCoords.at(2) = downControlCoord;
+                subdCoords.at(3) = triMesh->GetVertexCoord(downCurve.at(vid));
+                if (GPP::OptimiseCurve::SubdividePolyline(subdCoords, 3, false) != GPP_NO_ERROR)
+                {
+                    return false;
+                }
+                subdCoordList.push_back(subdCoords);
+            }
+            int subdSize = subdCoordList.at(0).size();
+            std::vector<std::vector<int> > subdIndexList(subdSize, std::vector<int>(stringSize)); 
+            for (int vid = 0; vid < stringSize; vid++)
+            {
+                subdIndexList.at(0).at(vid) = topCurve.at(vid);
+                subdIndexList.at(subdSize - 1).at(vid) = downCurve.at(vid);
+                for (int sid = 1; sid < subdSize - 1; sid++)
+                {
+                    subdIndexList.at(sid).at(vid) = triMesh->InsertVertex(subdCoordList.at(vid).at(sid));
+                }
+            }
+            for (int vid = 0; vid < stringSize; vid++)
+            {
+                for (int sid = 0; sid < subdSize - 1; sid++)
+                {
+                    triMesh->InsertTriangle(subdIndexList.at(sid).at((vid + 1) % stringSize), subdIndexList.at(sid).at(vid), 
+                        subdIndexList.at(sid + 1).at((vid + 1) % stringSize));
+                    triMesh->InsertTriangle(subdIndexList.at(sid).at(vid), subdIndexList.at(sid + 1).at(vid), 
+                        subdIndexList.at(sid + 1).at((vid + 1) % stringSize));
+                }
+            }
+            res = GPP::DeleteIsolatedVertices(triMesh);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            triMesh->UpdateNormal();
+        }
+        else
+        {
+            int stringSize = topCurve.size();
+            std::vector<int> sectionVertexIds;
+            sectionVertexIds.push_back(topCurve.at(0));
+            sectionVertexIds.push_back(downCurve.at(0));
+            std::vector<int> leftCurves;
+            GPP::Real distance;
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, sectionVertexIds, false, leftCurves, distance);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, leftCurves, false, 0.2, 10);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "leftCurves Smooth Failed", "温馨提示", MB_OK);
+            }
+            sectionVertexIds.clear();
+            sectionVertexIds.push_back(topCurve.at(stringSize - 1));
+            sectionVertexIds.push_back(downCurve.at(stringSize - 1));
+            std::vector<int> rightCurves;
+            res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, sectionVertexIds, false, rightCurves, distance);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, rightCurves, false, 0.2, 10);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "rightCurves Smooth Failed", "温馨提示", MB_OK);
+            }
+            std::vector<bool> vertexMark(originVertexCount, 0);
+            for (std::vector<int>::const_iterator itr = topCurve.begin(); itr != topCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = downCurve.begin(); itr != downCurve.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = leftCurves.begin(); itr != leftCurves.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            for (std::vector<int>::const_iterator itr = rightCurves.begin(); itr != rightCurves.end(); ++itr)
+            {
+                vertexMark.at(*itr) = 1;
+            }
+            int seedVertex = centerCurve.at(centerCurve.size() / 2);
+            std::vector<int> vertexStack;
+            vertexStack.push_back(seedVertex);
+            vertexMark.at(seedVertex) = 1;
+            while (vertexStack.size() > 0)
+            {
+                std::vector<int> vertexStackNext;
+                for (std::vector<int>::iterator stackItr = vertexStack.begin(); stackItr != vertexStack.end(); ++stackItr)
+                {
+                    for (std::set<int>::iterator nitr = vertexNeighbors.at(*stackItr).begin(); nitr != vertexNeighbors.at(*stackItr).end(); ++nitr)
+                    {
+                        if (vertexMark.at(*nitr))
+                        {
+                            continue;
+                        }
+                        vertexMark.at(*nitr) = 1;
+                        vertexStackNext.push_back(*nitr);
+                    }
+                }
+                vertexStack.swap(vertexStackNext);
+            }
+            for (int fid = 0; fid < originFaceCount; fid++)
+            {
+                triMesh->GetTriangleVertexIds(fid, vertexIds);
+                if (vertexMark.at(vertexIds[0]) && vertexMark.at(vertexIds[1]) && vertexMark.at(vertexIds[2]))
+                {
+                    deleteTriangles.push_back(fid);
+                }
+            }
+            res = GPP::DeleteTriMeshTriangles(triMesh, deleteTriangles, false);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+
+            std::vector<std::vector<GPP::Vector3> > subdCoordList;
+            for (int vid = 0; vid < stringSize; vid++)
+            {
+                GPP::Vector3 topControlCoord;
+                if (!ComputeControlPoint(triMesh->GetVertexCoord(topCurve.at(vid)), triMesh->GetVertexNormal(topCurve.at(vid)), 
+                    triMesh->GetVertexCoord(downCurve.at(vid)), topControlCoord))
+                {
+                    return false;
+                }
+                GPP::Vector3 downControlCoord;
+                if (!ComputeControlPoint(triMesh->GetVertexCoord(downCurve.at(vid)), triMesh->GetVertexNormal(downCurve.at(vid)), 
+                    triMesh->GetVertexCoord(topCurve.at(vid)), downControlCoord))
+                {
+                    return false;
+                }
+                std::vector<GPP::Vector3> subdCoords(4);
+                subdCoords.at(0) = triMesh->GetVertexCoord(topCurve.at(vid));
+                subdCoords.at(1) = topControlCoord;
+                subdCoords.at(2) = downControlCoord;
+                subdCoords.at(3) = triMesh->GetVertexCoord(downCurve.at(vid));
+                if (GPP::OptimiseCurve::SubdividePolyline(subdCoords, 3, false) != GPP_NO_ERROR)
+                {
+                    return false;
+                }
+                subdCoordList.push_back(subdCoords);
+            }
+            int subdSize = subdCoordList.at(0).size();
+            std::vector<std::vector<int> > subdIndexList(subdSize, std::vector<int>(stringSize)); 
+            for (int vid = 0; vid < stringSize; vid++)
+            {
+                subdIndexList.at(0).at(vid) = topCurve.at(vid);
+                subdIndexList.at(subdSize - 1).at(vid) = downCurve.at(vid);
+                for (int sid = 1; sid < subdSize - 1; sid++)
+                {
+                    subdIndexList.at(sid).at(vid) = triMesh->InsertVertex(subdCoordList.at(vid).at(sid));
+                }
+            }
+            for (int vid = 0; vid < stringSize - 1; vid++)
+            {
+                for (int sid = 0; sid < subdSize - 1; sid++)
+                {
+                    triMesh->InsertTriangle(subdIndexList.at(sid).at(vid + 1), subdIndexList.at(sid).at(vid), 
+                        subdIndexList.at(sid + 1).at(vid + 1));
+                    triMesh->InsertTriangle(subdIndexList.at(sid).at(vid), subdIndexList.at(sid + 1).at(vid), 
+                        subdIndexList.at(sid + 1).at(vid + 1));
+                }
+            }
+
+            std::vector<int> boundarySeedIds;
+            boundarySeedIds.push_back(topCurve.at(0));
+            boundarySeedIds.push_back(topCurve.at(stringSize - 1));
+            res = GPP::FillMeshHole::FillHoles(triMesh, &boundarySeedIds);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            res = GPP::DeleteIsolatedVertices(triMesh);
+            if (res != GPP_NO_ERROR)
+            {
+                return false;
+            }
+            triMesh->UpdateNormal();
+        }
+        return true;
+    }
+
     bool MeasureApp::KeyPressed( const OIS::KeyEvent &arg )
     {
-        if (arg.key == OIS::KC_D)
-        {
-#if DEBUGDUMPFILE
-            RunDumpInfo();
-#endif
-        }
-        else if (arg.key == OIS::KC_G)
+        if (arg.key == OIS::KC_G)
         {
             GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
             std::vector<GPP::Real> curvature;
@@ -187,6 +646,7 @@ namespace MagicApp
                 return true;
             }
             GPP::Int vertexCount = triMesh->GetVertexCount();
+            triMesh->SetHasColor(true);
             for (GPP::Int vid = 0; vid < vertexCount; vid++)
             {
                 triMesh->SetVertexColor(vid, MagicCore::ToolKit::ColorCoding(0.6 + fabs(curvature.at(vid)) * 2.0));
@@ -202,6 +662,222 @@ namespace MagicApp
                 lineSegments.push_back(mMarkPoints.at(mid + 1));
             }
             GPP::Parser::ExportLineSegmentToPovray("edge.inc", lineSegments, 0.0025, GPP::Vector3(0.09, 0.48627, 0.69));
+        }
+        else if (arg.key == OIS::KC_C)
+        {
+            mIsGeodesicsClose = true;
+        }
+        else if (arg.key == OIS::KC_O)
+        {
+            mIsGeodesicsClose = false;
+        }
+        else if (arg.key == OIS::KC_A)
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL || mGeodesicsOnVertices.empty())
+            {
+                return true;
+            }
+            std::vector<GPP::Int> topCurve, downCurve, stringTriangles;
+            GPP::ErrorCode res = GPP::OptimiseCurve::ApproximateOffsetCurveOnMesh(triMesh, mGeodesicsOnVertices, mIsGeodesicsClose, 0.1, 
+                topCurve, downCurve, stringTriangles);
+            if (res != GPP_NO_ERROR)
+            {
+                return true;
+            }
+            if (topCurve.size() > 0)
+            {
+                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, topCurve, mIsGeodesicsClose, 0.2, 10);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "topString Smooth Failed", "温馨提示", MB_OK);
+                }
+            }
+            if (downCurve.size() > 0)
+            {
+                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, downCurve, mIsGeodesicsClose, 0.2, 10);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "downString Smooth Failed", "温馨提示", MB_OK);
+                }
+            }
+            if (topCurve.size() > 0 && downCurve.size() > 0)
+            {
+                res = GPP::OptimiseCurve::MakeCurveBijective(triMesh, topCurve, downCurve, mIsGeodesicsClose);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "MakeCurveBijective Failed", "温馨提示", MB_OK);
+                }
+                res = GPP::OptimiseCurve::MakeCurvePairPerpendicular(triMesh, mGeodesicsOnVertices, topCurve, downCurve, 
+                    mIsGeodesicsClose);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "MakeCurvePairPerpendicular Failed", "温馨提示", MB_OK);
+                }
+                if (!ChamferCurve(triMesh, mGeodesicsOnVertices, topCurve, downCurve, mIsGeodesicsClose))
+                {
+                    MessageBox(NULL, "ChamferCurve Failed", "温馨提示", MB_OK);
+                }
+            }
+            mGeodesicsOnVertices.clear();
+            mMarkPoints.clear();
+            mMarkIds.clear();
+            mUpdateModelRendering = true;
+            mUpdateMarkRendering = true;
+        }
+        else if (arg.key == OIS::KC_D)
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL || mGeodesicsOnVertices.empty())
+            {
+                return true;
+            }
+            std::vector<GPP::Int> topCurve, downCurve, stringTriangles;
+            GPP::ErrorCode res = GPP::OptimiseCurve::ApproximateOffsetCurveOnMesh(triMesh, mGeodesicsOnVertices, mIsGeodesicsClose, 0.1, 
+                topCurve, downCurve, stringTriangles);
+            if (res != GPP_NO_ERROR)
+            {
+                return true;
+            }
+            if (topCurve.size() > 0)
+            {
+                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, topCurve, mIsGeodesicsClose, 0.2, 10);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "topString Smooth Failed", "温馨提示", MB_OK);
+                }
+            }
+            if (downCurve.size() > 0)
+            {
+                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, downCurve, mIsGeodesicsClose, 0.2, 10);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "downString Smooth Failed", "温馨提示", MB_OK);
+                }
+            }
+            if (topCurve.size() > 0 && downCurve.size() > 0)
+            {
+                res = GPP::OptimiseCurve::MakeCurveBijective(triMesh, topCurve, downCurve, mIsGeodesicsClose);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "MakeCurveBijective Failed", "温馨提示", MB_OK);
+                }
+                res = GPP::OptimiseCurve::MakeCurvePairPerpendicular(triMesh, mGeodesicsOnVertices, topCurve, downCurve, 
+                    mIsGeodesicsClose);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "MakeCurvePairPerpendicular Failed", "温馨提示", MB_OK);
+                }
+                if (!BlendCurve(triMesh, mGeodesicsOnVertices, topCurve, downCurve, mIsGeodesicsClose))
+                {
+                    MessageBox(NULL, "BlendCurve Failed", "温馨提示", MB_OK);
+                }
+            }
+            mGeodesicsOnVertices.clear();
+            mMarkPoints.clear();
+            mMarkIds.clear();
+            mUpdateModelRendering = true;
+            mUpdateMarkRendering = true;
+        }
+        else if (arg.key == OIS::KC_S)
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            if (triMesh == NULL || mGeodesicsOnVertices.empty())
+            {
+                return true;
+            }
+            GPP::Real radius = 0.1 * 0.1;
+            GPP::Int centerVertexCount = mGeodesicsOnVertices.size();
+            GPP::Ann ann;
+            GPP::Real* refData = new GPP::Real[centerVertexCount * 3];
+            for (GPP::Int vid = 0; vid < centerVertexCount; vid++)
+            {
+                GPP::Vector3 coord = triMesh->GetVertexCoord(mGeodesicsOnVertices.at(vid));
+                refData[vid * 3] = coord[0];
+                refData[vid * 3 + 1] = coord[1];
+                refData[vid * 3 + 2] = coord[2];
+            }
+            GPP::ErrorCode res = ann.Init(refData, centerVertexCount, 3);
+            GPPFREEARRAY(refData);
+            if (res != GPP_NO_ERROR)
+            {
+                return true;
+            }
+            GPP::Real searchData[3] = {-1};
+            GPP::Int indexRes[1] = {-1};
+            GPP::Real distanceRes[1] = {-1};
+            GPP::Int vertexCount = triMesh->GetVertexCount();
+            GPP::Int faceCount = triMesh->GetTriangleCount();
+            std::vector<std::set<GPP::Int> > vertexNeighbors(vertexCount, std::set<GPP::Int>());
+            GPP::Int vertexIds[3] = {-1};
+            for (GPP::Int fid = 0; fid < faceCount; fid++)
+            {
+                triMesh->GetTriangleVertexIds(fid, vertexIds);
+                vertexNeighbors.at(vertexIds[0]).insert(vertexIds[1]);
+                vertexNeighbors.at(vertexIds[0]).insert(vertexIds[2]);
+                vertexNeighbors.at(vertexIds[1]).insert(vertexIds[2]);
+                vertexNeighbors.at(vertexIds[1]).insert(vertexIds[0]);
+                vertexNeighbors.at(vertexIds[2]).insert(vertexIds[0]);
+                vertexNeighbors.at(vertexIds[2]).insert(vertexIds[1]);
+            }
+            std::vector<bool> vertexVisitFlag(vertexCount, 0);
+            std::vector<GPP::Int> vertexStack;
+            std::vector<GPP::Int> vertexString;
+            std::vector<GPP::Int> stringIds;
+            int gvid = 0;
+            for (std::vector<int>::iterator itr = mGeodesicsOnVertices.begin(); itr != mGeodesicsOnVertices.end(); ++itr)
+            {
+                vertexVisitFlag.at(*itr) = 1;
+                vertexStack.push_back(*itr);
+                vertexString.push_back(*itr);
+                stringIds.push_back(gvid);
+                gvid++;
+            }
+            while (vertexStack.size() > 0)
+            {
+                std::vector<GPP::Int> vertexStackNext;
+                for (std::vector<GPP::Int>::iterator stackItr = vertexStack.begin(); stackItr != vertexStack.end(); ++stackItr)
+                {
+                    for (std::set<GPP::Int>::iterator nitr = vertexNeighbors.at(*stackItr).begin(); nitr != vertexNeighbors.at(*stackItr).end(); ++nitr)
+                    {
+                        if (vertexVisitFlag.at(*nitr))
+                        {
+                            continue;
+                        }
+                        vertexVisitFlag.at(*nitr) = 1;
+                        GPP::Vector3 nCoord = triMesh->GetVertexCoord(*nitr);
+                        searchData[0] = nCoord[0];
+                        searchData[1] = nCoord[1];
+                        searchData[2] = nCoord[2];
+                        res = ann.FindNearestNeighbors(searchData, 1, 1, indexRes, distanceRes);
+                        if (res != GPP_NO_ERROR)
+                        {
+                            return true;
+                        }
+                        if (distanceRes[0] > radius)
+                        {
+                            continue;
+                        }
+                        vertexStackNext.push_back(*nitr);
+                        vertexString.push_back(*nitr);
+                        stringIds.push_back(indexRes[0]);
+                    }
+                }
+                vertexStack.swap(vertexStackNext);
+            }
+            triMesh->SetHasColor(true);
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                triMesh->SetVertexColor(vid, GPP::Vector3(0.86, 0.86, 0.86));
+            }
+            double colorDelta = 0.25;
+            int maxColorId = 5;
+            int stringVertexCount = vertexString.size();
+            for (int svid = 0; svid < stringVertexCount; ++svid)
+            {
+                triMesh->SetVertexColor(vertexString.at(svid), MagicCore::ToolKit::ColorCoding(0.2 + colorDelta * (stringIds.at(svid) % maxColorId)));
+            }
+            mUpdateModelRendering = true;
         }
         return true;
     }
@@ -258,6 +934,7 @@ namespace MagicApp
         GPPFREEPOINTER(mpDumpInfo);
 #endif
         mMarkIds.clear();
+        mGeodesicsOnVertices.clear();
         mMarkPoints.clear();
         mMinCurvature.clear();
         mMaxCurvature.clear();
@@ -425,7 +1102,7 @@ namespace MagicApp
             return false;
         }
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0GPT Files(*.gpt)\0*.gpt\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             mpUI->SetGeodesicsInfo(0);
@@ -439,6 +1116,7 @@ namespace MagicApp
             mpUI->SetModelInfo(triMesh->GetVertexCount(), triMesh->GetTriangleCount());
             UpdateModelRendering();
             mMarkIds.clear();
+            mGeodesicsOnVertices.clear();
             mMarkPoints.clear();
             mMinCurvature.clear();
             mMaxCurvature.clear();
@@ -469,7 +1147,7 @@ namespace MagicApp
             return false;
         }
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0GPT Files(*.gpt)\0*.gpt\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             mpUI->SetGeodesicsInfo(0);
@@ -497,7 +1175,11 @@ namespace MagicApp
         {
             return;
         }
-        mMarkIds.pop_back();
+        if (mMarkIds.size() > 0)
+        {
+            mMarkIds.pop_back();
+        }
+        mGeodesicsOnVertices.clear();
         mMarkPoints.clear();
         UpdateMarkRendering();
         mpUI->SetGeodesicsInfo(0);
@@ -527,11 +1209,11 @@ namespace MagicApp
         }
         else
         {
-            std::vector<GPP::Int> pathVertexIds;
+            mGeodesicsOnVertices.clear();
             GPP::Real distance = 0;
             //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, mMarkIds, false, pathVertexIds, distance);
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, mMarkIds, mIsGeodesicsClose, mGeodesicsOnVertices, distance);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -545,7 +1227,7 @@ namespace MagicApp
             }
             mpUI->SetGeodesicsInfo(distance / ModelManager::Get()->GetScaleValue());
             mMarkPoints.clear();
-            for (std::vector<GPP::Int>::iterator pathItr = pathVertexIds.begin(); pathItr != pathVertexIds.end(); ++pathItr)
+            for (std::vector<GPP::Int>::iterator pathItr = mGeodesicsOnVertices.begin(); pathItr != mGeodesicsOnVertices.end(); ++pathItr)
             {
                 mMarkPoints.push_back(triMesh->GetVertexCoord(*pathItr));
             }
@@ -584,14 +1266,14 @@ namespace MagicApp
         }
         else
         {
-            std::vector<GPP::Int> pathVertexIds;
+            mGeodesicsOnVertices.clear();
             GPP::Real distance = 0;
             //GPP::DumpOnce();
             mIsCommandInProgress = true;
             GPP::TriangleList triangleList(triMesh);
             GPP::PrincipalCurvatureDistance meshDistance(&triangleList, &mMinCurvatureDirs, &mMaxCurvatureDirs, 
                 &mMinCurvature, &mMaxCurvature, curvatureWeight);
-            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, mMarkIds, false, pathVertexIds, 
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeApproximateGeodesics(triMesh, mMarkIds, mIsGeodesicsClose, mGeodesicsOnVertices, 
                 distance, &meshDistance);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -606,12 +1288,51 @@ namespace MagicApp
             }
             mpUI->SetGeodesicsInfo(distance / ModelManager::Get()->GetScaleValue());
             mMarkPoints.clear();
-            for (std::vector<GPP::Int>::iterator pathItr = pathVertexIds.begin(); pathItr != pathVertexIds.end(); ++pathItr)
+            for (std::vector<GPP::Int>::iterator pathItr = mGeodesicsOnVertices.begin(); pathItr != mGeodesicsOnVertices.end(); ++pathItr)
             {
                 mMarkPoints.push_back(triMesh->GetVertexCoord(*pathItr));
             }
             mUpdateMarkRendering = true;
         }
+    }
+
+    void MeasureApp::SmoothGeodesicsOnVertex()
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        if (mGeodesicsOnVertices.empty())
+        {
+            return;
+        }
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh == NULL)
+        {
+            MessageBox(NULL, "请导入网格", "温馨提示", MB_OK);
+            return;
+        }
+#if MAKEDUMPFILE
+        GPP::DumpOnce();
+#endif
+        GPP::ErrorCode res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, mGeodesicsOnVertices, mIsGeodesicsClose, 0.2, 10);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "顶点上的测地线优化失败", "温馨提示", MB_OK);
+            return;
+        }
+        mMarkPoints.clear();
+        for (std::vector<GPP::Int>::iterator pathItr = mGeodesicsOnVertices.begin(); pathItr != mGeodesicsOnVertices.end(); ++pathItr)
+        {
+            mMarkPoints.push_back(triMesh->GetVertexCoord(*pathItr));
+        }
+        mUpdateModelRendering = true;
+        mUpdateMarkRendering = true;
     }
  
     void MeasureApp::FastComputeExactGeodesics(double accuracy, bool isSubThread)
@@ -644,7 +1365,7 @@ namespace MagicApp
             GPP::Real distance = 0;
             //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(triMesh, mMarkIds, false, 
+            GPP::ErrorCode res = GPP::MeasureMesh::FastComputeExactGeodesics(triMesh, mMarkIds, mIsGeodesicsClose, 
                 pathPoints, distance, &pathInfos, accuracy);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
@@ -700,7 +1421,7 @@ namespace MagicApp
             GPP::Real distance = 0;
             //GPP::DumpOnce();
             mIsCommandInProgress = true;
-            GPP::ErrorCode res = GPP::MeasureMesh::ComputeExactGeodesics(triMesh, mMarkIds, false, pathPoints, distance, &pathInfos);
+            GPP::ErrorCode res = GPP::MeasureMesh::ComputeExactGeodesics(triMesh, mMarkIds, mIsGeodesicsClose, pathPoints, distance, &pathInfos);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {

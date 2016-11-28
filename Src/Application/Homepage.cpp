@@ -294,7 +294,7 @@ namespace MagicApp
     void Homepage::ImportMesh()
     {
         std::string fileName;
-        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0";
+        char filterName[] = "OBJ Files(*.obj)\0*.obj\0STL Files(*.stl)\0*.stl\0OFF Files(*.off)\0*.off\0PLY Files(*.ply)\0*.ply\0GPT Files(*.gpt)\0*.gpt\0";
         if (MagicCore::ToolKit::FileOpenDlg(fileName, filterName))
         {
             ModelManager::Get()->ClearPointCloud();

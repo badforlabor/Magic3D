@@ -36,6 +36,7 @@ namespace MagicApp
         void FastComputeExactGeodesics(MyGUI::Widget* pSender);
         void ComputeExactGeodesics(MyGUI::Widget* pSender);
         void ComputeCurvatureGeodesics(MyGUI::Widget* pSender);
+        void SmoothGeodesicsOnVertex(MyGUI::Widget* pSender);
 
         void PointsToMeshDistance(MyGUI::Widget* pSender);
         void ComputePointsToMeshDistance(MyGUI::Widget* pSender);

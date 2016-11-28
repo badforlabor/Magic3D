@@ -42,6 +42,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_QuickExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::FastComputeExactGeodesics);
         mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeExactGeodesics);
         mRoot.at(0)->findWidget("But_CurvatureGeodesics")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::ComputeCurvatureGeodesics);
+        mRoot.at(0)->findWidget("But_SmoothGeodesicsOnVertex")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::SmoothGeodesicsOnVertex);
 
         mRoot.at(0)->findWidget("But_MeasureRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureModel);
         mRoot.at(0)->findWidget("But_AreaRef")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &MeasureAppUI::MeasureArea);
@@ -169,6 +170,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_ExactGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_CurvatureGeodesics")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_GeodesicAccuracy")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_SmoothGeodesicsOnVertex")->castType<MyGUI::Button>()->setVisible(isVisible);
         if (isVisible)
         {
             std::string textString = "0.5";
@@ -242,6 +244,15 @@ namespace MagicApp
                 return;
             }
             measureShop->ComputeCurvatureGeodesics(weight, true);
+        }
+    }
+
+    void MeasureAppUI::SmoothGeodesicsOnVertex(MyGUI::Widget* pSender)
+    {
+        MeasureApp* measureShop = dynamic_cast<MeasureApp* >(AppManager::Get()->GetApp("MeasureApp"));
+        if (measureShop != NULL)
+        {
+            measureShop->SmoothGeodesicsOnVertex();
         }
     }
 

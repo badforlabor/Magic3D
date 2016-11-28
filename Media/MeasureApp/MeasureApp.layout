@@ -31,6 +31,9 @@
             <Property key="TextColour" value="0.3 0.3 0.3"/>
             <Property key="Visible" value="false"/>
         </Widget>
+        <Widget type="Button" skin="But_Smooth_CN" position="287 90 43 43" align="Left Top" name="But_SmoothGeodesicsOnVertex">
+            <Property key="Visible" value="false"/>
+        </Widget>
 
         <Widget type="Button" skin="But_Measure_CN" position="15 145 60 60" align="Left Top" name="But_MeasureRef"></Widget>
         <Widget type="Button" skin="But_Area_CN" position="75 155 43 43" align="Left Top" name="But_AreaRef">
