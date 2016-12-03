@@ -307,6 +307,383 @@ namespace MagicApp
         return true;
     }
 
+    struct ImageBoundingBox
+    {
+        ImageBoundingBox(int sx, int sy, int ex, int ey) :
+            mStartX(sx),
+            mStartY(sy),
+            mEndX(ex),
+            mEndY(ey)
+        {
+        }
+
+        int mStartX;
+        int mStartY;
+        int mEndX;
+        int mEndY;
+    };
+
+    static void CreateTextureMesh(const std::vector<GPP::IPointCloud*>& pointCloudList, 
+        const std::vector<std::vector<GPP::ImageColorId> >& imageColorIdList, 
+        const std::vector<std::string>& textureImageFiles,
+        bool needRegistration, int intervalCount, bool needRemoveIsolate, int textureSize)
+    {
+        GPP::Real startTime = GPP::Profiler::GetTime();
+        if (needRegistration)
+        {
+            std::vector<GPP::Matrix4x4> resultTransform;
+            GPP::ErrorCode res = GPP::RegistratePointCloud::GlobalRegistrate(&pointCloudList, 10, &resultTransform, 
+                    NULL, true, 0, NULL);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "全局注册失败", "温馨提示", MB_OK);
+                return;
+            }
+            int pointListCount = pointCloudList.size();
+            for (int cloudid = 0; cloudid < pointListCount; cloudid++)
+            {
+                GPP::IPointCloud* curPointCloud = pointCloudList.at(cloudid);
+                int curPointCount = curPointCloud->GetPointCount();
+                for (int pid = 0; pid < curPointCount; pid++)
+                {
+                    curPointCloud->SetPointCoord(pid, resultTransform.at(cloudid).TransformPoint(curPointCloud->GetPointCoord(pid)));
+                    curPointCloud->SetPointNormal(pid, resultTransform.at(cloudid).RotateVector(curPointCloud->GetPointNormal(pid)));
+                }
+            }
+        }
+        // Fuse to one point cloud
+        GPP::PointCloud fusedPointCloud;
+        std::vector<GPP::ImageColorId> imageColorIds_point;
+        {
+            GPP::Vector3 bboxMin, bboxMax;
+            GPP::ErrorCode res = GPP::CalculatePointCloudListBoundingBox(pointCloudList, NULL, bboxMin, bboxMax);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "包围盒计算失败", "温馨提示", MB_OK);
+                return;
+            }
+            GPP::PointCloudPointList pointList(pointCloudList.at(0));
+            double density = 0;
+            res = GPP::CalculatePointListDensity(&pointList, 5, density);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "点云密度计算失败", "温馨提示", MB_OK);
+                return;
+            }
+            density *= intervalCount;
+            GPP::SumPointCloud sum(density, bboxMin, bboxMax, true, 25, 2);
+            int pointCloudCount = pointCloudList.size();
+            for (int cid = 0; cid < pointCloudCount; cid++)
+            {
+                GPP::IPointCloud* curPointCloud = pointCloudList.at(cid);
+                GPP::Int curPointCount = curPointCloud->GetPointCount();
+ 
+                int fieldDim = 1;
+                std::vector<GPP::Real> pointFields(curPointCount * fieldDim, 0);
+                for (int pid = 0; pid < curPointCount; pid++)
+                {
+                    pointFields.at(pid * fieldDim) = pid;
+                }
+                res = sum.UpdateSumFunction(curPointCloud, NULL, &pointFields);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "点云融合失败", "温馨提示", MB_OK);
+                    return;
+                }
+            }
+            std::vector<GPP::Real> pointFieldsFused;
+            std::vector<int> cloudIds;
+            res = sum.ExtractPointCloud(&fusedPointCloud, &pointFieldsFused, &cloudIds);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "点云抽取失败", "温馨提示", MB_OK);
+                return;
+            }
+            int fieldDim = 1;
+            int pointCountFused = fusedPointCloud.GetPointCount();
+            std::vector<int> pointIds(pointCountFused);
+            for (int pid = 0; pid < pointCountFused; pid++)
+            {
+                pointIds.at(pid) = int(pointFieldsFused.at(pid * fieldDim));
+            }
+            imageColorIds_point.reserve(pointCountFused);
+            for (int pid = 0; pid < pointCountFused; pid++)
+            {
+                imageColorIds_point.push_back(imageColorIdList.at(cloudIds.at(pid)).at(pointIds.at(pid)));
+            }
+        }
+
+        if (needRemoveIsolate)
+        {
+            std::vector<GPP::Real> isolation;
+            GPP::ErrorCode res = GPP::ConsolidatePointCloud::CalculateIsolation(&fusedPointCloud, &isolation, 20, NULL);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "点云去除孤立项失败", "温馨提示", MB_OK);
+                return;
+            }
+            int fusedPointCount = fusedPointCloud.GetPointCount();
+            std::vector<GPP::Int> deleteIndex;
+            GPP::Real isolateValue = 0.05; // parameter
+            for (GPP::Int pid = 0; pid < fusedPointCount; pid++)
+            {
+                if (isolation[pid] < isolateValue)
+                {
+                    deleteIndex.push_back(pid);
+                }
+            }
+            MagicPointCloud magicPointCloud(&fusedPointCloud);
+            magicPointCloud.SetImageColorIds(&imageColorIds_point);
+            res = GPP::DeletePointCloudElements(&magicPointCloud, deleteIndex);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "点云删点失败", "温馨提示", MB_OK);
+                return;
+            }
+        }
+
+        // Reconstruct Mesh
+        GPP::TriMesh triMesh;
+        std::vector<GPP::ImageColorId> imageColorIds_mesh;
+        {
+            int quality = 5;
+            GPP::ErrorCode res = GPP::ReconstructMesh::Reconstruct(&fusedPointCloud, &triMesh, quality, false, NULL, NULL);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "点云三角化失败", "温馨提示", MB_OK);
+                return;
+            }
+            GPP::PointCloudPointList pointList(&fusedPointCloud);
+            GPP::Ann ann;
+            res = ann.Init(&pointList);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "Ann Init Failed", "温馨提示", MB_OK);
+                return;
+            }
+
+            int vertexCount = triMesh.GetVertexCount();
+            imageColorIds_mesh.resize(vertexCount);
+            double searchData[3] = {-1};
+            int indexRes[1] = {-1};
+            for (int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 coord = triMesh.GetVertexCoord(vid);
+                searchData[0] = coord[0];
+                searchData[1] = coord[1];
+                searchData[2] = coord[2];
+                res = ann.FindNearestNeighbors(searchData, 1, 1, indexRes, NULL);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "Ann FindNearestNeighbors Failed", "温馨提示", MB_OK);
+                    return;
+                }
+                imageColorIds_mesh.at(vid) = imageColorIds_point.at(indexRes[0]);
+            }
+            fusedPointCloud.Clear();
+            std::vector<GPP::ImageColorId>().swap(imageColorIds_point);
+        }
+
+        // Compute texture coordinates
+        std::vector<GPP::Real> texCoords;
+        std::vector<GPP::Int> faceTexIds;
+        {
+            int initChartCount = 36;
+            GPP::ErrorCode res = GPP::UnfoldMesh::GenerateUVAtlas(&triMesh, initChartCount, &texCoords, &faceTexIds, true, true, true);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "UV Atlas 生成失败", "温馨提示", MB_OK);
+                return;
+            }
+        }
+
+        // Compute texture image
+        std::vector<GPP::Color4> imageData;
+        std::vector<GPP::Int> textureImageMasks;
+        {
+            int faceCount = triMesh.GetTriangleCount();
+            std::vector<GPP::ImageColorId> imageColorIds(faceCount * 3);
+            std::vector<int> textureIds(faceCount *  3);
+            std::vector<GPP::Real> textureCoords(faceCount * 3 * 2);
+            GPP::Int vertexIds[3] = {-1};
+            for (GPP::Int fid = 0; fid < faceCount; ++fid)
+            {
+                triMesh.GetTriangleVertexIds(fid, vertexIds);
+                for (int fvid = 0; fvid < 3; ++fvid)
+                {
+                    GPP::Int baseIndex = fid * 3 + fvid;
+                    imageColorIds.at(baseIndex) = imageColorIds_mesh.at(vertexIds[fvid]);
+                    GPP::Int tid = faceTexIds.at(fid * 3 + fvid);
+                    textureCoords.at(baseIndex * 2) = texCoords.at(tid * 2);
+                    textureCoords.at(baseIndex * 2 + 1) = texCoords.at(tid * 2 + 1);
+                    textureIds.at(baseIndex) = baseIndex;
+                }
+            }
+            int imageCount = textureImageFiles.size();
+            std::vector<ImageBoundingBox> imageBBoxList(imageCount, ImageBoundingBox(GPP::INT_LARGE, GPP::INT_LARGE, 0, 0));
+            for (std::vector<GPP::ImageColorId>::iterator itr = imageColorIds_mesh.begin(); itr != imageColorIds_mesh.end(); ++itr)
+            {
+                int imageIndex = itr->GetImageIndex();
+                if (itr->GetLocalX() < imageBBoxList.at(imageIndex).mStartX)
+                {
+                    imageBBoxList.at(imageIndex).mStartX = itr->GetLocalX();
+                }
+                else if (itr->GetLocalX() > imageBBoxList.at(imageIndex).mEndX)
+                {
+                    imageBBoxList.at(imageIndex).mEndX = itr->GetLocalX();
+                }
+                if (itr->GetLocalY() < imageBBoxList.at(imageIndex).mStartY)
+                {
+                    imageBBoxList.at(imageIndex).mStartY = itr->GetLocalY();
+                }
+                else if (itr->GetLocalY() > imageBBoxList.at(imageIndex).mEndY)
+                {
+                    imageBBoxList.at(imageIndex).mEndY = itr->GetLocalY();
+                }
+            }
+            for (std::vector<GPP::ImageColorId>::iterator itr = imageColorIds.begin(); itr != imageColorIds.end(); ++itr)
+            {
+                int imageIndex = itr->GetImageIndex();
+                int localX = itr->GetLocalX();
+                int localY = itr->GetLocalY();
+                itr->Set(imageIndex, localX - imageBBoxList.at(imageIndex).mStartX, localY - imageBBoxList.at(imageIndex).mStartY);
+            }
+
+            std::vector<std::vector<GPP::Color4> > imageListData;
+            imageListData.reserve(imageCount);
+            std::vector<GPP::Int> imageInfos;
+            imageInfos.reserve(imageCount * 2);
+            for (int iid = 0; iid < imageCount; ++iid)
+            {
+                int width = imageBBoxList.at(iid).mEndX + 1 - imageBBoxList.at(iid).mStartX;
+                int height = imageBBoxList.at(iid).mEndY + 1 - imageBBoxList.at(iid).mStartY;
+                InfoLog << "iid " << iid << " width=" << width << " height=" << height 
+                    << " startX=" << imageBBoxList.at(iid).mStartX
+                    << " startY=" << imageBBoxList.at(iid).mStartY << std::endl;
+                if (width > 0 && height > 0)
+                {
+                    cv::Mat image = cv::imread(textureImageFiles.at(iid));
+                    if (image.data == NULL)
+                    {
+                        MessageBox(NULL, "图片读取失败", "温馨提示", MB_OK);
+                        return;
+                    }
+                    std::vector<GPP::Color4> oneImageData(width * height);
+                    int startX = imageBBoxList.at(iid).mStartX;
+                    int startY = imageBBoxList.at(iid).mStartY;
+                    int imageHeight = image.rows;
+                    for (int y = 0; y < height; ++y)
+                    {
+                        for (int x = 0; x < width; ++x)
+                        {
+                            const unsigned char* pixel = image.ptr(imageHeight - 1 - y - startY, startX + x);
+                            GPP::Color4 color(pixel[2], pixel[1], pixel[0]);
+                            oneImageData.at(x + y * width) = color;
+                        }
+                    }
+                    imageListData.push_back(oneImageData);
+                    imageInfos.push_back(width);
+                    imageInfos.push_back(height);
+                }
+                else
+                {
+                    std::vector<GPP::Color4> oneImageData;
+                    imageListData.push_back(oneImageData);
+                    imageInfos.push_back(0);
+                    imageInfos.push_back(0);
+                }
+            }
+
+            GPP::ErrorCode res = GPP::TextureImage::CreateTextureImageByRefImages(textureCoords, textureIds, imageColorIds, 
+                imageListData, imageInfos, textureSize, textureSize, imageData, &textureImageMasks);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "纹理图生成失败", "温馨提示", MB_OK);
+                return;
+            }
+        }
+
+        // Output to obj file
+        {
+            cv::Mat textureImage(textureSize, textureSize, CV_8UC4);
+            cv::Mat alphaImage(textureSize, textureSize, CV_8UC4);
+            GPP::Int maxAlpha = *std::max_element(textureImageMasks.begin(), textureImageMasks.end());
+            if (maxAlpha == 0)
+            {
+                maxAlpha = 1;
+            }
+            for (int y = 0; y < textureSize; ++y)
+            {
+                for (int x = 0; x < textureSize; ++x)
+                {
+                    cv::Vec4b& col = textureImage.at<cv::Vec4b>(textureSize - 1 - y, x);
+                    GPP::Color4 cColor = imageData.at(x + y * textureSize);
+                    col[0] = cColor[2];
+                    col[1] = cColor[1];
+                    col[2] = cColor[0];
+                    col[3] = 255;
+
+                    cv::Vec4b& alpha = alphaImage.at<cv::Vec4b>(textureSize - 1 - y, x);
+                    int mask = textureImageMasks.at(x + y * textureSize);
+                    if (mask < 3)
+                    {
+                        alpha[0] = 0;
+                        alpha[1] = 0;
+                        alpha[2] = 0;
+                        alpha[3] = 255;
+                        alpha[mask] = 255;
+                    }
+                    else
+                    {
+                        alpha[0] = mask * 255 / maxAlpha;
+                        alpha[1] = mask * 255 / maxAlpha;
+                        alpha[2] = mask * 255 / maxAlpha;
+                        alpha[3] = 255;
+                    }
+                }
+            }
+            cv::imwrite("texture_mesh.png", textureImage);
+            cv::imwrite("Overlapped.png", alphaImage);
+
+            std::string objName = "texture_mesh.obj";
+            std::ofstream objOut(objName.c_str());
+            objOut << "mtllib texture_mesh.mtl" << std::endl;
+            objOut << "usemtl texture_mesh" << std::endl;
+            GPP::Int vertexCount = triMesh.GetVertexCount();
+            for (GPP::Int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 coord = triMesh.GetVertexCoord(vid);
+                objOut << "v " << coord[0] << " " << coord[1] << " " << coord[2] << "\n";
+            }
+            GPP::Int faceCount = triMesh.GetTriangleCount();
+            for (GPP::Int fid = 0; fid < faceCount; fid++)
+            {
+                for (int localId = 0; localId < 3; localId++)
+                {
+                    GPP::Int tid = faceTexIds.at(fid * 3 + localId);
+                    objOut << "vt " << texCoords.at(tid * 2) << " " << texCoords.at(tid * 2 + 1) << "\n";
+                }
+            }
+            GPP::Int vertexIds[3];
+            for (GPP::Int fid = 0; fid < faceCount; fid++)
+            {
+                triMesh.GetTriangleVertexIds(fid, vertexIds);
+                objOut << "f " << vertexIds[0] + 1 << "/" << fid * 3 + 1 << " " 
+                    << vertexIds[1] + 1 << "/" << fid * 3 + 2 << " " << vertexIds[2] + 1 << "/" << fid * 3 + 3 << "\n"; 
+            }
+            objOut.close();
+
+            // export mtl file
+            std::string mtlName = "texture_mesh.mtl";
+            std::ofstream mtlOut(mtlName.c_str());
+            mtlOut << "newmtl texture_mesh" << std::endl;
+            mtlOut << "Kd " << 0.75 << " " << 0.75 << " " << 0.75 << std::endl;
+            mtlOut << "map_Kd texture_mesh.png" << std::endl;
+            mtlOut.close();
+        }
+        InfoLog << "CreateTextureMesh total time: " << GPP::Profiler::GetTime() - startTime << std::endl;
+    }
+
     bool RegistrationApp::KeyPressed( const OIS::KeyEvent &arg )
     {
         if (arg.key == OIS::KC_R)
@@ -318,6 +695,20 @@ namespace MagicApp
         else if (arg.key == OIS::KC_S)
         {
             mSaveGlobalRegistrateResult = true;
+        }
+        else if (arg.key == OIS::KC_T)
+        {
+            std::vector<GPP::IPointCloud*> pointCloudList;
+            for (std::vector<GPP::PointCloud*>::iterator itr = mPointCloudList.begin(); itr != mPointCloudList.end(); ++itr)
+            {
+                pointCloudList.push_back(*itr);
+                if ((*itr)->HasNormal() == false)
+                {
+                    MessageBox(NULL, "点云需要法线信息", "温馨提示", MB_OK);
+                    return true;
+                }
+            }
+            CreateTextureMesh(pointCloudList, mImageColorIdList, mTextureImageFiles, true, 3, true, 4096);
         }
 
         return true;
