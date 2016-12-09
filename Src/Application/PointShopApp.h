@@ -105,7 +105,7 @@ namespace MagicApp
         void SetupMagicPointCloud(MagicPointCloud& magicPointCloud);
         
         void PickPointCloudColorFromImages(void);
-        void ConstructImageColorIdForMesh(const GPP::ITriMesh* triMesh, const GPP::IPointCloud* pointCloud);
+        void ConstructImageColorIdForMesh(GPP::TriMesh* triMesh, const GPP::IPointCloud* pointCloud);
 
     private:
         void SetupScene(void);

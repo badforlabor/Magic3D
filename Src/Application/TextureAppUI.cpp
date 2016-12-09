@@ -28,6 +28,7 @@ namespace MagicApp
         
         mRoot.at(0)->findWidget("But_ImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ImageColorIds);
         mRoot.at(0)->findWidget("But_ComputePixelMap")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::ComputeImageColorIds);
+        mRoot.at(0)->findWidget("But_OptimiseIsolatePixelMap")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::OptimiseIsolateImageColorIds);
         mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::LoadImageColorIds);
         mRoot.at(0)->findWidget("But_SaveImageColorIds")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &TextureAppUI::SaveImageColorIds);
 
@@ -128,6 +129,7 @@ namespace MagicApp
     {
         bool isVisible = mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->isVisible();
         mRoot.at(0)->findWidget("But_ComputePixelMap")->castType<MyGUI::Button>()->setVisible(!isVisible);
+        mRoot.at(0)->findWidget("But_OptimiseIsolatePixelMap")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->setVisible(!isVisible);
         mRoot.at(0)->findWidget("But_SaveImageColorIds")->castType<MyGUI::Button>()->setVisible(!isVisible);
     }
@@ -138,6 +140,15 @@ namespace MagicApp
         if (textureApp != NULL)
         {
             textureApp->ComputeImageColorIds(true);
+        }
+    }
+
+    void TextureAppUI::OptimiseIsolateImageColorIds(MyGUI::Widget* pSender)
+    {
+        TextureApp* textureApp = dynamic_cast<TextureApp* >(AppManager::Get()->GetApp("TextureApp"));
+        if (textureApp != NULL)
+        {
+            textureApp->OptimiseIsolateImageColorIds();
         }
     }
 

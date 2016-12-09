@@ -68,6 +68,7 @@ namespace MagicApp
         void ImportTriMesh(void);
 
         void ComputeImageColorIds(bool isSubThread = true);
+        void OptimiseIsolateImageColorIds(void);
         void SaveImageColorInfo(void);
         void LoadImageColorInfo(void);
         void PickMeshColorFromImages(void);

@@ -39,12 +39,15 @@ namespace MagicApp
         virtual bool KeyPressed(const OIS::KeyEvent &arg);
 
         bool ImportModel(void);
-        void InitDeformation(int controlPointCount);
+        void InitControlPoint(int controlPointCount);
+        
         void SelectFreeControlPoint(void);
         void ClearFreeControlPoint(void);
-        void DeformControlPoint(void);
         void MoveControlPoint(void);
-        void AppJump(void);
+
+        void InitDeformation(void);
+        void DoDeformation(void);
+        void RealTimeDeform(void);
 
     private:
         void InitViewTool(void);
@@ -69,14 +72,14 @@ namespace MagicApp
     private:
         AnimationAppUI* mpUI;
         MagicCore::ViewTool* mpViewTool;
-        GPP::DeformPointList* mDeformation;
+        GPP::DeformPointList* mDeformPointList;
+        GPP::DeformMesh* mDeformMesh;
         std::vector<GPP::Int> mControlIds;
         bool mIsDeformationInitialised;
         int mPickControlId;
         GPP::Vector3 mPickTargetCoord;
         GPP::Vector2 mMousePressdCoord;
-        std::vector<std::set<int> > mControlNeighbors;
-        std::vector<bool> mControlFixFlags;
+        std::vector<int> mControlFlags; // 0-free, 1-fix, 2-handle
         RightMouseType mRightMouseType;
         bool mAddSelection;
         bool mFirstAlert;

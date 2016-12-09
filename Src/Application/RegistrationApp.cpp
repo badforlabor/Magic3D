@@ -371,7 +371,7 @@ namespace MagicApp
                 return;
             }
             density *= intervalCount;
-            GPP::SumPointCloud sum(density, bboxMin, bboxMax, true, 25, 2);
+            GPP::SumPointCloud sum(density, bboxMin, bboxMax, true, 0, 0);
             int pointCloudCount = pointCloudList.size();
             for (int cid = 0; cid < pointCloudCount; cid++)
             {
@@ -453,32 +453,12 @@ namespace MagicApp
                 MessageBox(NULL, "点云三角化失败", "温馨提示", MB_OK);
                 return;
             }
-            GPP::PointCloudPointList pointList(&fusedPointCloud);
-            GPP::Ann ann;
-            res = ann.Init(&pointList);
+            res = GPP::OptimiseMapping::TransferMappingToMesh(&fusedPointCloud, imageColorIds_point,
+                &triMesh, imageColorIds_mesh, 1.5, false);
             if (res != GPP_NO_ERROR)
             {
-                MessageBox(NULL, "Ann Init Failed", "温馨提示", MB_OK);
+                MessageBox(NULL, "TransferMappingToMesh Failed", "温馨提示", MB_OK);
                 return;
-            }
-
-            int vertexCount = triMesh.GetVertexCount();
-            imageColorIds_mesh.resize(vertexCount);
-            double searchData[3] = {-1};
-            int indexRes[1] = {-1};
-            for (int vid = 0; vid < vertexCount; vid++)
-            {
-                GPP::Vector3 coord = triMesh.GetVertexCoord(vid);
-                searchData[0] = coord[0];
-                searchData[1] = coord[1];
-                searchData[2] = coord[2];
-                res = ann.FindNearestNeighbors(searchData, 1, 1, indexRes, NULL);
-                if (res != GPP_NO_ERROR)
-                {
-                    MessageBox(NULL, "Ann FindNearestNeighbors Failed", "温馨提示", MB_OK);
-                    return;
-                }
-                imageColorIds_mesh.at(vid) = imageColorIds_point.at(indexRes[0]);
             }
             fusedPointCloud.Clear();
             std::vector<GPP::ImageColorId>().swap(imageColorIds_point);
@@ -488,7 +468,7 @@ namespace MagicApp
         std::vector<GPP::Real> texCoords;
         std::vector<GPP::Int> faceTexIds;
         {
-            int initChartCount = 36;
+            int initChartCount = 40;
             GPP::ErrorCode res = GPP::UnfoldMesh::GenerateUVAtlas(&triMesh, initChartCount, &texCoords, &faceTexIds, true, true, true);
             if (res != GPP_NO_ERROR)
             {
@@ -708,7 +688,9 @@ namespace MagicApp
                     return true;
                 }
             }
-            CreateTextureMesh(pointCloudList, mImageColorIdList, mTextureImageFiles, true, 3, true, 4096);
+#if DEVELOPSTATE
+            CreateTextureMesh(pointCloudList, mImageColorIdList, mTextureImageFiles, false, 3, true, 4096);
+#endif
         }
 
         return true;
@@ -2362,7 +2344,7 @@ namespace MagicApp
         char filterName[] = "ASC Files(*.asc)\0*.asc\0OBJ Files(*.obj)\0*.obj\0PLY Files(*.ply)\0*.ply\0Geometry++ Point Cloud(*.gpc)\0*.gpc\0XYZ Files(*.xyz)\0*.xyz\0";
         if (MagicCore::ToolKit::MultiFileOpenDlg(fileNames, filterName))
         {
-            if (fileNames.size() > 1)
+            if (fileNames.size() > 0)
             {
                 ResetGlobalRegistrationData();
                 ClearPairwiseRegistrationData();
@@ -2415,6 +2397,11 @@ namespace MagicApp
         }
         else
         {
+            if (mPointCloudList.size() < 2)
+            {
+                MessageBox(NULL, "点云个数少于2", "温馨提示", MB_OK);
+                return;
+            }
             if (MessageBox(NULL, "单光源点云颜色修正，是否继续", "温馨提示", MB_OKCANCEL) != IDOK)
             {
                 return;

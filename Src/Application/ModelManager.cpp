@@ -247,11 +247,12 @@ namespace MagicApp
         int count = 0;
         loadIn >> count;
         mImageColorIds.reserve(count);
-        int imageIndex, localX, localY;
+        int imageIndex;
+        double localX, localY;
         for (int iid = 0; iid < count; iid++)
         {
             loadIn >> imageIndex >> localX >> localY;
-            mImageColorIds.push_back(GPP::ImageColorId(imageIndex, localX, localY));
+            mImageColorIds.push_back(GPP::ImageColorId(imageIndex, int(localX + 0.5), int(localY + 0.5)));
         }
 
         mCloudIds.clear();

@@ -3,6 +3,7 @@
 
 #define DEBUGDUMPFILE 0
 #define MAKEDUMPFILE 0
+#define DEVELOPSTATE 0
 
 namespace Ogre
 {

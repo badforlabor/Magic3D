@@ -21,6 +21,7 @@
 #include "Remesh.h"
 #include "SampleMesh.h"
 #include "Triangulation.h"
+#include "DeformMesh.h"
 
 #include "ConsolidatePointCloud.h"
 #include "FusePointCloud.h"

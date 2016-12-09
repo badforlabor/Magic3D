@@ -13,10 +13,13 @@
         <Widget type="Button" skin="But_Calculate_CN" position="75 90 43 43" align="Left Top" name="But_ComputePixelMap">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Open" position="118 90 43 43" align="Left Top" name="But_LoadImageColorIds">
+        <Widget type="Button" skin="But_Isolate_CN" position="118 90 43 43" align="Left Top" name="But_OptimiseIsolatePixelMap">
             <Property key="Visible" value="false"/>
         </Widget>
-        <Widget type="Button" skin="But_Save" position="161 90 43 43" align="Left Top" name="But_SaveImageColorIds">
+        <Widget type="Button" skin="But_Open" position="161 90 43 43" align="Left Top" name="But_LoadImageColorIds">
+            <Property key="Visible" value="false"/>
+        </Widget>
+        <Widget type="Button" skin="But_Save" position="204 90 43 43" align="Left Top" name="But_SaveImageColorIds">
             <Property key="Visible" value="false"/>
         </Widget>
 

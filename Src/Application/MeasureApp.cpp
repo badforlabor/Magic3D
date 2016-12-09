@@ -497,7 +497,7 @@ namespace MagicApp
             {
                 return false;
             }
-            res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, leftCurves, false, 0.2, 10);
+            res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, leftCurves, false, GPP::ONE_RADIAN * 60, 0.2, 10);
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "leftCurves Smooth Failed", "温馨提示", MB_OK);
@@ -511,7 +511,7 @@ namespace MagicApp
             {
                 return false;
             }
-            res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, rightCurves, false, 0.2, 10);
+            res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, rightCurves, false, GPP::ONE_RADIAN * 60, 0.2, 10);
             if (res != GPP_NO_ERROR)
             {
                 MessageBox(NULL, "rightCurves Smooth Failed", "温馨提示", MB_OK);
@@ -687,7 +687,7 @@ namespace MagicApp
             }
             if (topCurve.size() > 0)
             {
-                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, topCurve, mIsGeodesicsClose, 0.2, 10);
+                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, topCurve, mIsGeodesicsClose, GPP::ONE_RADIAN * 60, 0.2, 10);
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "topString Smooth Failed", "温馨提示", MB_OK);
@@ -695,7 +695,7 @@ namespace MagicApp
             }
             if (downCurve.size() > 0)
             {
-                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, downCurve, mIsGeodesicsClose, 0.2, 10);
+                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, downCurve, mIsGeodesicsClose, GPP::ONE_RADIAN * 60, 0.2, 10);
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "downString Smooth Failed", "温馨提示", MB_OK);
@@ -703,13 +703,13 @@ namespace MagicApp
             }
             if (topCurve.size() > 0 && downCurve.size() > 0)
             {
-                res = GPP::OptimiseCurve::MakeCurveBijective(triMesh, topCurve, downCurve, mIsGeodesicsClose);
+                res = GPP::OptimiseCurve::MakeCurveBijective(triMesh, mGeodesicsOnVertices, topCurve, downCurve, mIsGeodesicsClose);
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "MakeCurveBijective Failed", "温馨提示", MB_OK);
                 }
-                res = GPP::OptimiseCurve::MakeCurvePairPerpendicular(triMesh, mGeodesicsOnVertices, topCurve, downCurve, 
-                    mIsGeodesicsClose);
+                //res = GPP::OptimiseCurve::MakeCurvePairPerpendicular(triMesh, mGeodesicsOnVertices, topCurve, downCurve, 
+                //    mIsGeodesicsClose, GPP::ONE_RADIAN * 60);
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "MakeCurvePairPerpendicular Failed", "温馨提示", MB_OK);
@@ -741,7 +741,7 @@ namespace MagicApp
             }
             if (topCurve.size() > 0)
             {
-                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, topCurve, mIsGeodesicsClose, 0.2, 10);
+                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, topCurve, mIsGeodesicsClose, GPP::ONE_RADIAN * 60, 0.2, 10);
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "topString Smooth Failed", "温馨提示", MB_OK);
@@ -749,7 +749,7 @@ namespace MagicApp
             }
             if (downCurve.size() > 0)
             {
-                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, downCurve, mIsGeodesicsClose, 0.2, 10);
+                res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, downCurve, mIsGeodesicsClose, GPP::ONE_RADIAN * 60, 0.2, 10);
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "downString Smooth Failed", "温馨提示", MB_OK);
@@ -757,13 +757,13 @@ namespace MagicApp
             }
             if (topCurve.size() > 0 && downCurve.size() > 0)
             {
-                res = GPP::OptimiseCurve::MakeCurveBijective(triMesh, topCurve, downCurve, mIsGeodesicsClose);
+                res = GPP::OptimiseCurve::MakeCurveBijective(triMesh, mGeodesicsOnVertices, topCurve, downCurve, mIsGeodesicsClose);
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "MakeCurveBijective Failed", "温馨提示", MB_OK);
                 }
                 res = GPP::OptimiseCurve::MakeCurvePairPerpendicular(triMesh, mGeodesicsOnVertices, topCurve, downCurve, 
-                    mIsGeodesicsClose);
+                    mIsGeodesicsClose, GPP::ONE_RADIAN * 60);
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "MakeCurvePairPerpendicular Failed", "温馨提示", MB_OK);
@@ -1315,7 +1315,7 @@ namespace MagicApp
 #if MAKEDUMPFILE
         GPP::DumpOnce();
 #endif
-        GPP::ErrorCode res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, mGeodesicsOnVertices, mIsGeodesicsClose, 0.2, 10);
+        GPP::ErrorCode res = GPP::OptimiseCurve::SmoothCurveOnMesh(triMesh, mGeodesicsOnVertices, mIsGeodesicsClose, GPP::ONE_RADIAN * 60, 0.2, 10);
         if (res == GPP_API_IS_NOT_AVAILABLE)
         {
             MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
@@ -1671,19 +1671,23 @@ namespace MagicApp
             measureMesh->SetHasColor(true);
             GPP::Real maxValue = *std::max_element(distances.begin(), distances.end());
             GPP::Real minValue = *std::min_element(distances.begin(), distances.end());
-            GPP::Real unChangedMaxValue = maxValue;
-            if (maxValue < GPP::REAL_TOL)
+            std::vector<GPP::Real> distancesCopy = distances;
+            int halfPointId = ceil(double(distancesCopy.size()) / 2.0) - 1;
+            std::nth_element(distancesCopy.begin(), distancesCopy.begin() + halfPointId, distancesCopy.end());
+            double midDist = distancesCopy.at(halfPointId);
+            if (midDist < GPP::REAL_TOL)
             {
-                maxValue = 1.0;
+                midDist = 1.0;
             }
             for (GPP::Int pid = 0; pid < points.size(); ++pid)
             {
-                GPP::Real dist = distances.at(pid);
-                GPP::Vector3 color = MagicCore::ToolKit::ColorCoding(dist / maxValue + 0.2);
+                GPP::Real dist = distances.at(pid) / midDist * 0.2 + 0.2;
+                dist = dist > 0.8 ? 0.8 : dist;
+                GPP::Vector3 color = MagicCore::ToolKit::ColorCoding(dist);
                 measureMesh->SetVertexColor(pid, color);
             }
             mpUI->SetDistanceInfo(measureMesh->GetVertexCount(), true, 
-                minValue / ModelManager::Get()->GetScaleValue(), unChangedMaxValue/ ModelManager::Get()->GetScaleValue());
+                minValue / ModelManager::Get()->GetScaleValue(), maxValue / ModelManager::Get()->GetScaleValue());
             mUpdateRefModelRendering = true;
             mUpdateModelRendering = true;
         }

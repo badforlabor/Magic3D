@@ -20,13 +20,20 @@ namespace MagicApp
         MagicCore::ResourceManager::LoadResource("../../Media/AnimationApp", "FileSystem", "AnimationApp");
         mRoot = MyGUI::LayoutManager::getInstance().loadLayout("AnimationApp.layout");
         mRoot.at(0)->findWidget("But_ImportModel")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::ImportModel);
-        mRoot.at(0)->findWidget("But_DeformModel")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::DeformModel);
-        mRoot.at(0)->findWidget("But_InitDeformation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::InitDeformation);
+        
+        mRoot.at(0)->findWidget("But_InitControlPoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::InitControlPoint);
+        mRoot.at(0)->findWidget("But_DoInitControlPoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::DoInitControlPoint);
+
         mRoot.at(0)->findWidget("But_SelectControlPoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::SelectControlPoint);
         mRoot.at(0)->findWidget("But_SelectByRectangle")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::SelectByRectangle);
         mRoot.at(0)->findWidget("But_EraseSelections")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::ClearSelection);
-        mRoot.at(0)->findWidget("But_DeformControlPoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::DeformControlPoint);
         mRoot.at(0)->findWidget("But_MoveControlPoint")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::MoveControlPoint);
+
+        mRoot.at(0)->findWidget("But_Deformation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::DeformModel);
+        mRoot.at(0)->findWidget("But_InitDeformation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::InitDeformation);
+        mRoot.at(0)->findWidget("But_DoDeformation")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::DoDeformation);
+        mRoot.at(0)->findWidget("But_RealTimeDeform")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::RealTimeDeform);
+
         mRoot.at(0)->findWidget("But_BackToHomepage")->castType<MyGUI::Button>()->eventMouseButtonClick += MyGUI::newDelegate(this, &AnimationAppUI::BackToHomepage);
     }
 
@@ -46,11 +53,11 @@ namespace MagicApp
         }
     }
 
-    void AnimationAppUI::DeformModel(MyGUI::Widget* pSender)
+    void AnimationAppUI::InitControlPoint(MyGUI::Widget* pSender)
     {
-        bool isVisible = mRoot.at(0)->findWidget("But_InitDeformation")->castType<MyGUI::Button>()->isVisible();
+        bool isVisible = mRoot.at(0)->findWidget("But_DoInitControlPoint")->castType<MyGUI::Button>()->isVisible();
         isVisible = !isVisible;
-        mRoot.at(0)->findWidget("But_InitDeformation")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_DoInitControlPoint")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_ControlPointCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
         {
@@ -63,7 +70,7 @@ namespace MagicApp
         }
     }
 
-    void AnimationAppUI::InitDeformation(MyGUI::Widget* pSender)
+    void AnimationAppUI::DoInitControlPoint(MyGUI::Widget* pSender)
     {
         AnimationApp* animationApp = dynamic_cast<AnimationApp* >(AppManager::Get()->GetApp("AnimationApp"));
         if (animationApp != NULL)
@@ -80,7 +87,7 @@ namespace MagicApp
             }
             else
             {
-                animationApp->InitDeformation(controlPointCount);
+                animationApp->InitControlPoint(controlPointCount);
             }      
         }
     }
@@ -91,7 +98,6 @@ namespace MagicApp
         isVisible = !isVisible;
         mRoot.at(0)->findWidget("But_SelectByRectangle")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_EraseSelections")->castType<MyGUI::Button>()->setVisible(isVisible);
-        mRoot.at(0)->findWidget("But_DeformControlPoint")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_MoveControlPoint")->castType<MyGUI::Button>()->setVisible(isVisible);
     }
     
@@ -113,21 +119,48 @@ namespace MagicApp
         }
     }
 
-    void AnimationAppUI::DeformControlPoint(MyGUI::Widget* pSender)
-    {
-        AnimationApp* animationApp = dynamic_cast<AnimationApp* >(AppManager::Get()->GetApp("AnimationApp"));
-        if (animationApp != NULL)
-        {
-            animationApp->DeformControlPoint();
-        }
-    }
-
     void AnimationAppUI::MoveControlPoint(MyGUI::Widget* pSender)
     {
         AnimationApp* animationApp = dynamic_cast<AnimationApp* >(AppManager::Get()->GetApp("AnimationApp"));
         if (animationApp != NULL)
         {
             animationApp->MoveControlPoint();
+        }
+    }
+
+    void AnimationAppUI::DeformModel(MyGUI::Widget* pSender)
+    {
+        bool isVisible = mRoot.at(0)->findWidget("But_InitDeformation")->castType<MyGUI::Button>()->isVisible();
+        isVisible = !isVisible;
+        mRoot.at(0)->findWidget("But_InitDeformation")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_DoDeformation")->castType<MyGUI::Button>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("But_RealTimeDeform")->castType<MyGUI::Button>()->setVisible(isVisible);
+    }
+
+    void AnimationAppUI::InitDeformation(MyGUI::Widget* pSender)
+    {
+        AnimationApp* animationApp = dynamic_cast<AnimationApp* >(AppManager::Get()->GetApp("AnimationApp"));
+        if (animationApp != NULL)
+        {
+            animationApp->InitDeformation();
+        }
+    }
+
+    void AnimationAppUI::DoDeformation(MyGUI::Widget* pSender)
+    {
+        AnimationApp* animationApp = dynamic_cast<AnimationApp* >(AppManager::Get()->GetApp("AnimationApp"));
+        if (animationApp != NULL)
+        {
+            animationApp->DoDeformation();
+        }
+    }
+
+    void AnimationAppUI::RealTimeDeform(MyGUI::Widget* pSender)
+    {
+        AnimationApp* animationApp = dynamic_cast<AnimationApp* >(AppManager::Get()->GetApp("AnimationApp"));
+        if (animationApp != NULL)
+        {
+            animationApp->RealTimeDeform();
         }
     }
 

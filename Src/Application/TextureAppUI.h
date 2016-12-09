@@ -27,6 +27,7 @@ namespace MagicApp
 
         void ImageColorIds(MyGUI::Widget* pSender);
         void ComputeImageColorIds(MyGUI::Widget* pSender);
+        void OptimiseIsolateImageColorIds(MyGUI::Widget* pSender);
         void LoadImageColorIds(MyGUI::Widget* pSender);
         void SaveImageColorIds(MyGUI::Widget* pSender);
 

@@ -332,76 +332,217 @@ namespace MagicApp
         UpdatePointCloudRendering();
     }
 
-    void PointShopApp::ConstructImageColorIdForMesh(const GPP::ITriMesh* triMesh, const GPP::IPointCloud* pointCloud)
+    void PointShopApp::ConstructImageColorIdForMesh(GPP::TriMesh* triMesh, const GPP::IPointCloud* pointCloud)
     {
         std::vector<GPP::ImageColorId> originImageColorIds = ModelManager::Get()->GetImageColorIds();
         std::vector<int> colorIds = ModelManager::Get()->GetColorIds();
-        if (originImageColorIds.empty() && colorIds.empty())
+        if (originImageColorIds.size() > 0 && originImageColorIds.size() == pointCloud->GetPointCount())
         {
-            return;
-        }
-        GPP::PointCloudPointList pointList(pointCloud);
-        GPP::Real pointDensity;
-        GPP::ErrorCode res = GPP::CalculatePointListDensity(&pointList, 5, pointDensity);
-        if (res != GPP_NO_ERROR)
-        {
-            MessageBox(NULL, "CalculatePointListDensity Failed", "温馨提示", MB_OK);
-            return;
-        }
-        pointDensity *= pointDensity;
-        InfoLog << "point cloud densidy: " << pointDensity << std::endl;
-        GPP::Ann ann;
-        res = ann.Init(&pointList);
-        if (res != GPP_NO_ERROR)
-        {
-            MessageBox(NULL, "Ann Init Failed", "温馨提示", MB_OK);
-            return;
-        }
-        int vertexCount = triMesh->GetVertexCount();
-        std::vector<GPP::ImageColorId> imageColorIds(vertexCount);
-        std::vector<GPP::Int> meshColorIds(vertexCount);
-        double searchData[3] = {-1};
-        int indexRes[1] = {-1};
-        double distanceRes[1] = {-1};
-        int invalidMapCount = 0;
-        std::vector<int> imageColorIdFlags(vertexCount, 1);
-        for (int vid = 0; vid < vertexCount; vid++)
-        {
-            GPP::Vector3 coord = triMesh->GetVertexCoord(vid);
-            searchData[0] = coord[0];
-            searchData[1] = coord[1];
-            searchData[2] = coord[2];
-            res = ann.FindNearestNeighbors(searchData, 1, 1, indexRes, distanceRes);
+            std::vector<GPP::ImageColorId> meshColorIds;
+            GPP::ErrorCode res = GPP::OptimiseMapping::TransferMappingToMesh(pointCloud, originImageColorIds,
+                triMesh, meshColorIds, 1.0, false);
             if (res != GPP_NO_ERROR)
             {
-                MessageBox(NULL, "Ann FindNearestNeighbors Failed", "温馨提示", MB_OK);
+                MessageBox(NULL, "TransferMappingToMesh Failed", "温馨提示", MB_OK);
                 return;
             }
-            if (originImageColorIds.size() > 0)
-            {
-                imageColorIds.at(vid) = originImageColorIds.at(indexRes[0]);
-                if (distanceRes[0] > pointDensity)
-                {
-                    imageColorIdFlags.at(vid) = 0;
-                    invalidMapCount++;
-                }
-            }
-            if (colorIds.size() > 0)
-            {
-                meshColorIds.at(vid) = colorIds.at(indexRes[0]);
-            }
-        }
-        InfoLog << " invalidMapCount=" << invalidMapCount << " vertexCount=" << vertexCount << std::endl;
-        if (originImageColorIds.size() > 0)
-        {
-            ModelManager::Get()->SetImageColorIds(imageColorIds);
+            std::vector<int> imageColorIdFlags(triMesh->GetVertexCount(), 1);
+            ModelManager::Get()->SetImageColorIds(meshColorIds);
             ModelManager::Get()->SetImageColorIdFlag(imageColorIdFlags);
         }
-        if (colorIds.size() > 0)
+        if (colorIds.size() > 0 && colorIds.size() == pointCloud->GetPointCount())
         {
+            GPP::PointCloudPointList pointList(pointCloud);
+            GPP::Ann ann;
+            GPP::ErrorCode res = ann.Init(&pointList);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "Ann Init Failed", "温馨提示", MB_OK);
+                return;
+            }
+            int vertexCount = triMesh->GetVertexCount();
+            std::vector<GPP::Int> meshColorIds(vertexCount);
+            double searchData[3] = {-1};
+            int indexRes[1] = {-1};
+            for (int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 coord = triMesh->GetVertexCoord(vid);
+                searchData[0] = coord[0];
+                searchData[1] = coord[1];
+                searchData[2] = coord[2];
+                res = ann.FindNearestNeighbors(searchData, 1, 1, indexRes, NULL);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "Ann FindNearestNeighbors Failed", "温馨提示", MB_OK);
+                    return;
+                }
+                meshColorIds.at(vid) = colorIds.at(indexRes[0]);
+            }
             ModelManager::Get()->SetColorIds(meshColorIds);
         }
     }
+
+    /*void PointShopApp::ConstructImageColorIdForMesh(const GPP::ITriMesh* triMesh, const GPP::IPointCloud* pointCloud)
+    {
+        std::vector<int> colorIds = ModelManager::Get()->GetColorIds();
+        if (colorIds.size() > 0)
+        {
+            GPP::PointCloudPointList pointList(pointCloud);
+            GPP::Ann ann;
+            GPP::ErrorCode res = ann.Init(&pointList);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "Ann Init Failed", "温馨提示", MB_OK);
+                return;
+            }
+            int vertexCount = triMesh->GetVertexCount();
+            std::vector<GPP::Int> meshColorIds(vertexCount);
+            double searchData[3] = {-1};
+            int indexRes[1] = {-1};
+            for (int vid = 0; vid < vertexCount; vid++)
+            {
+                GPP::Vector3 coord = triMesh->GetVertexCoord(vid);
+                searchData[0] = coord[0];
+                searchData[1] = coord[1];
+                searchData[2] = coord[2];
+                res = ann.FindNearestNeighbors(searchData, 1, 1, indexRes, NULL);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "Ann FindNearestNeighbors Failed", "温馨提示", MB_OK);
+                    return;
+                }
+                meshColorIds.at(vid) = colorIds.at(indexRes[0]);
+            }
+            ModelManager::Get()->SetColorIds(meshColorIds);
+        }
+        std::vector<GPP::ImageColorId> originImageColorIds = ModelManager::Get()->GetImageColorIds();
+        if (originImageColorIds.size() > 0)
+        {
+            GPP::PointCloudPointList pointList(pointCloud);
+            GPP::Real pointDensity;
+            GPP::ErrorCode res = GPP::CalculatePointListDensity(&pointList, 5, pointDensity);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "CalculatePointListDensity Failed", "温馨提示", MB_OK);
+                return;
+            }
+            pointDensity *= pointDensity;
+            InfoLog << "point cloud densidy: " << pointDensity << std::endl;
+            GPP::TriMeshPointList triMeshList(triMesh);
+            GPP::Ann ann;
+            res = ann.Init(&triMeshList);
+            if (res != GPP_NO_ERROR)
+            {
+                MessageBox(NULL, "Ann Init Failed", "温馨提示", MB_OK);
+                return;
+            }
+            int vertexCount = triMesh->GetVertexCount();
+            std::vector<std::vector<int> > vertex2PointMap(vertexCount, std::vector<int>());
+            std::vector<std::vector<double> > vertexMinDist(vertexCount, std::vector<double>());
+            double searchData[3] = {-1};
+            int indexRes[1] = {-1};
+            double distanceRes[1] = {-1};
+            int pointCount = pointCloud->GetPointCount();
+            for (int pid = 0; pid < pointCount; pid++)
+            {
+                GPP::Vector3 coord = pointCloud->GetPointCoord(pid);
+                searchData[0] = coord[0];
+                searchData[1] = coord[1];
+                searchData[2] = coord[2];
+                res = ann.FindNearestNeighbors(searchData, 1, 1, indexRes, distanceRes);
+                if (res != GPP_NO_ERROR)
+                {
+                    MessageBox(NULL, "Ann FindNearestNeighbors Failed", "温馨提示", MB_OK);
+                    return;
+                }
+                vertex2PointMap.at(indexRes[0]).push_back(pid);
+                vertexMinDist.at(indexRes[0]).push_back(distanceRes[0]);
+            }
+            int invalidMapCount = 0;
+            int multiMapCount = 0;
+            std::vector<int> imageColorIdFlags(vertexCount, 1);
+            std::vector<GPP::ImageColorId> imageColorIds(vertexCount);
+            for (int vid = 0; vid < vertexCount; vid++)
+            {
+                if (vertex2PointMap.at(vid).empty())
+                {
+                    invalidMapCount++;
+                    imageColorIdFlags.at(vid) = 0;
+                }
+                else if (vertex2PointMap.at(vid).size() == 1)
+                {
+                    if (vertexMinDist.at(vid).at(0) > pointDensity)
+                    {
+                        invalidMapCount++;
+                        imageColorIdFlags.at(vid) = 0;
+                    }
+                    else
+                    {
+                        imageColorIds.at(vid) = originImageColorIds.at(vertex2PointMap.at(vid).at(0));
+                    }
+                }
+                else if (vertex2PointMap.at(vid).size() > 1)
+                {
+                    int neighborSize = vertex2PointMap.at(vid).size();
+                    double minDist = GPP::REAL_LARGE;
+                    bool isAccurate = false;
+                    for (int nid = 0; nid < neighborSize; nid++)
+                    {
+                        if (vertexMinDist.at(vid).at(nid) < minDist)
+                        {
+                            minDist = vertexMinDist.at(vid).at(nid);
+                            if (minDist < GPP::REAL_TOL)
+                            {
+                                imageColorIds.at(vid) = originImageColorIds.at(vertex2PointMap.at(vid).at(nid));
+                                isAccurate = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!isAccurate)
+                    {
+                        multiMapCount++;
+                        std::map<int, int> imageIdCount;
+                        for (int nid = 0; nid < neighborSize; nid++)
+                        {
+                            imageIdCount[originImageColorIds.at(vertex2PointMap.at(vid).at(nid)).GetImageIndex()] += 1;
+                        }
+                        int imageId = imageIdCount.begin()->first;
+                        int maxImageIdCount = imageIdCount.begin()->second;
+                        for (std::map<int, int>::iterator itr = imageIdCount.begin(); itr != imageIdCount.end(); ++itr)
+                        {
+                            if (itr->second > maxImageIdCount)
+                            {
+                                maxImageIdCount = itr->second;
+                                imageId = itr->first;
+                            }
+                        }
+                        double weightSum = 0.0;
+                        minDist *= 1.0e-3;
+                        double imageX = 0;
+                        double imageY = 0;
+                        for (int nid = 0; nid < neighborSize; nid++)
+                        {
+                            if (originImageColorIds.at(vertex2PointMap.at(vid).at(nid)).GetImageIndex() != imageId)
+                            {
+                                continue;
+                            }
+                            double curW = 1.0 / (minDist + vertexMinDist.at(vid).at(nid));
+                            weightSum += curW;
+                            imageX += (curW * originImageColorIds.at(vertex2PointMap.at(vid).at(nid)).GetLocalX());
+                            imageY += (curW * originImageColorIds.at(vertex2PointMap.at(vid).at(nid)).GetLocalY());
+                        }
+                        imageX /= weightSum;
+                        imageY /= weightSum;
+                        imageColorIds.at(vid) = GPP::ImageColorId(imageId, int(imageX + 0.5), int(imageY + 0.5));
+                    }
+                }
+            }
+            InfoLog << " invalidMapCount=" << invalidMapCount << " vertexCount=" << vertexCount << " multiMapCount=" << multiMapCount << std::endl;
+            ModelManager::Get()->SetImageColorIds(imageColorIds);
+            ModelManager::Get()->SetImageColorIdFlag(imageColorIdFlags);
+        }
+    }*/
 
     bool PointShopApp::MouseMoved( const OIS::MouseEvent &arg )
     {
@@ -585,6 +726,68 @@ namespace MagicApp
                 }
                 UpdatePointCloudRendering();
             }
+        }
+        else if (arg.key == OIS::KC_I)
+        {
+            GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+            std::vector<GPP::ImageColorId> imageColorIds = ModelManager::Get()->GetImageColorIds();
+            if (pointCloud == NULL || pointCloud->GetPointCount() != imageColorIds.size())
+            {
+                return true;
+            }
+            pointCloud->SetHasColor(true);
+            int maxColorId = 10;
+            double deltaColor = 0.1;
+            int pointCount = pointCloud->GetPointCount();
+            for (int pid = 0; pid < pointCount; pid++)
+            {
+                int imageIndex = imageColorIds.at(pid).GetImageIndex();
+                if (imageIndex < 0)
+                {
+                    pointCloud->SetPointColor(pid, MagicCore::ToolKit::Get()->ColorCoding(0));
+                }
+                else
+                {
+                    pointCloud->SetPointColor(pid, MagicCore::ToolKit::Get()->ColorCoding(0.2 + imageIndex % maxColorId * deltaColor));
+                }
+            }
+            UpdatePointCloudRendering();
+        }
+        else if (arg.key == OIS::KC_S)
+        {
+            GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+            std::vector<int> cloudIds = ModelManager::Get()->GetCloudIds();
+            if (pointCloud == NULL || pointCloud->GetPointCount() != cloudIds.size())
+            {
+                return true;
+            }
+            pointCloud->SetHasColor(true);
+            int maxColorId = 10;
+            double deltaColor = 0.1;
+            int pointCount = pointCloud->GetPointCount();
+            for (int pid = 0; pid < pointCount; pid++)
+            {
+                pointCloud->SetPointColor(pid, MagicCore::ToolKit::Get()->ColorCoding(0.2 + cloudIds.at(pid) % maxColorId * deltaColor));
+            }
+            UpdatePointCloudRendering();
+        }
+        else if (arg.key == OIS::KC_A)
+        {
+            GPP::PointCloud* pointCloud = ModelManager::Get()->GetPointCloud();
+            std::vector<int> colorIds = ModelManager::Get()->GetColorIds();
+            if (pointCloud == NULL || pointCloud->GetPointCount() != colorIds.size())
+            {
+                return true;
+            }
+            pointCloud->SetHasColor(true);
+            int maxColorId = 10;
+            double deltaColor = 0.1;
+            int pointCount = pointCloud->GetPointCount();
+            for (int pid = 0; pid < pointCount; pid++)
+            {
+                pointCloud->SetPointColor(pid, MagicCore::ToolKit::Get()->ColorCoding(0.2 + colorIds.at(pid) % maxColorId * deltaColor));
+            }
+            UpdatePointCloudRendering();
         }
         return true;
     }

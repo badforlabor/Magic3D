@@ -171,8 +171,33 @@ namespace MagicApp
         }
         else if (arg.key == OIS::KC_O)
         {
+#ifdef DEVELOPSTATE
             ExportObjFile();
+#endif
         }
+        else if (arg.key == OIS::KC_I)
+        {
+            GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+            std::vector<GPP::ImageColorId> imageColorIds = ModelManager::Get()->GetImageColorIds();
+            triMesh->SetHasColor(true);
+            int maxColorId = 10;
+            double deltaColor = 0.1;
+            int vertexCount = triMesh->GetVertexCount();
+            for (int vid = 0; vid < vertexCount; vid++)
+            {
+                int imageIndex = imageColorIds.at(vid).GetImageIndex();
+                if (imageIndex < 0)
+                {
+                    triMesh->SetVertexColor(vid, MagicCore::ToolKit::Get()->ColorCoding(0));
+                }
+                else
+                {
+                    triMesh->SetVertexColor(vid, MagicCore::ToolKit::Get()->ColorCoding(0.2 + imageIndex % maxColorId * deltaColor));
+                }
+            }
+            UpdateDisplay();
+        }
+
         return true;
     }
 
@@ -471,9 +496,9 @@ namespace MagicApp
         {
             Ogre::MaterialPtr material = Ogre::MaterialManager::getSingleton().create("TextureMeshMaterial", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME); 
             material->getTechnique(0)->getPass(0)->createTextureUnitState("TriMeshTexture");
-            material->getTechnique(0)->getPass(0)->setDiffuse(0.7, 0.7, 0.7, 1.0);
-            material->getTechnique(0)->getPass(0)->setSpecular(0.55, 0.55, 0.55, 1.0);
-            material->getTechnique(0)->getPass(0)->setShininess(100);
+            material->getTechnique(0)->getPass(0)->setDiffuse(0.85, 0.85, 0.85, 1.0);
+            material->getTechnique(0)->getPass(0)->setSpecular(0.15, 0.15, 0.15, 1.0);
+            material->getTechnique(0)->getPass(0)->setShininess(10);
         }
     }
 
@@ -1002,7 +1027,7 @@ namespace MagicApp
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
-            GPP::ErrorCode res = GPP::OptimiseMapping::OptimiseImageColorIdOnMesh(triMesh, fixFlag, imageColorIds);
+            GPP::ErrorCode res = GPP::OptimiseMapping::InterpolateImageColorIdsOnMesh(triMesh, fixFlag, imageColorIds);
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
                 MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
@@ -1016,6 +1041,43 @@ namespace MagicApp
             ModelManager::Get()->SetImageColorIds(imageColorIds);
             //MapTriMesh2ImageSpace(triMesh, imageColorIds);
         }
+    }
+
+    void TextureApp::OptimiseIsolateImageColorIds(void)
+    {
+        if (IsCommandAvaliable() == false)
+        {
+            return;
+        }
+        GPP::TriMesh* triMesh = ModelManager::Get()->GetMesh();
+        if (triMesh == NULL)
+        {
+            MessageBox(NULL, "请先导入网格", "温馨提示", MB_OK);
+            return;
+        }
+        int vertexCount = triMesh->GetVertexCount();
+        std::vector<GPP::ImageColorId> imageColorIds = ModelManager::Get()->GetImageColorIds();
+        if (imageColorIds.size() != vertexCount)
+        {
+            MessageBox(NULL, "ImageColorId size != vertexCount", "温馨提示", MB_OK);
+            return;
+        }
+#if MAKEDUMPFILE
+        GPP::DumpOnce();
+#endif
+        double isolateValue = 0.001;
+        GPP::ErrorCode res = GPP::OptimiseMapping::OptimiseIsolateImageColorIdsOnMesh(triMesh, imageColorIds, isolateValue);
+        if (res == GPP_API_IS_NOT_AVAILABLE)
+        {
+            MessageBox(NULL, "软件试用时限到了，欢迎购买激活码", "温馨提示", MB_OK);
+            MagicCore::ToolKit::Get()->SetAppRunning(false);
+        }
+        if (res != GPP_NO_ERROR)
+        {
+            MessageBox(NULL, "点像对应孤立点优化失败", "温馨提示", MB_OK);
+            return;
+        }
+        ModelManager::Get()->SetImageColorIds(imageColorIds);
     }
 
     void TextureApp::SaveImageColorInfo()
