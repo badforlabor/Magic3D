@@ -762,8 +762,8 @@ namespace MagicApp
                 {
                     MessageBox(NULL, "MakeCurveBijective Failed", "温馨提示", MB_OK);
                 }
-                res = GPP::OptimiseCurve::MakeCurvePairPerpendicular(triMesh, mGeodesicsOnVertices, topCurve, downCurve, 
-                    mIsGeodesicsClose, GPP::ONE_RADIAN * 60);
+                /*res = GPP::OptimiseCurve::MakeCurvePairPerpendicular(triMesh, mGeodesicsOnVertices, topCurve, downCurve, 
+                    mIsGeodesicsClose, GPP::ONE_RADIAN * 60);*/
                 if (res != GPP_NO_ERROR)
                 {
                     MessageBox(NULL, "MakeCurvePairPerpendicular Failed", "温馨提示", MB_OK);

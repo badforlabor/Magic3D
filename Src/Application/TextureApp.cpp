@@ -171,7 +171,7 @@ namespace MagicApp
         }
         else if (arg.key == OIS::KC_O)
         {
-#ifdef DEVELOPSTATE
+#if DEVELOPSTATE
             ExportObjFile();
 #endif
         }

@@ -574,6 +574,7 @@ namespace MagicApp
                 }
             }
 
+            GPP::DumpOnce();
             GPP::ErrorCode res = GPP::TextureImage::CreateTextureImageByRefImages(textureCoords, textureIds, imageColorIds, 
                 imageListData, imageInfos, textureSize, textureSize, imageData, &textureImageMasks);
             if (res != GPP_NO_ERROR)

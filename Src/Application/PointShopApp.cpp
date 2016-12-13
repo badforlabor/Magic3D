@@ -890,7 +890,7 @@ namespace MagicApp
                 SmoothPointCloudGeoemtry(mSmoothCount, false);
                 break;
             case MagicApp::PointShopApp::FUSECOLOR:
-                FusePointCloudColor(mColorNeighborCount, false);
+                FusePointCloudColor(mColorNeighborCount, mSharpDiff, false);
                 break;
             case MagicApp::PointShopApp::FUSETEXTURE:
                 FuseTextureImage(false);
@@ -1079,7 +1079,7 @@ namespace MagicApp
         }
     }
 
-    void PointShopApp::FusePointCloudColor(int neighborCount, bool isSubThread)
+    void PointShopApp::FusePointCloudColor(int neighborCount, double sharpDiff, bool isSubThread)
     {
         if (IsCommandAvaliable() == false)
         {
@@ -1089,6 +1089,7 @@ namespace MagicApp
         {
             mCommandType = FUSECOLOR;
             mColorNeighborCount = neighborCount;
+            mSharpDiff = sharpDiff;
             DoCommand(true);
         }
         else
@@ -1116,7 +1117,8 @@ namespace MagicApp
 #if MAKEDUMPFILE
             GPP::DumpOnce();
 #endif
-            GPP::ErrorCode res = GPP::IntrinsicColor::TuneColorFromMultiFrame(pointCloud, neighborCount, colorIds, pointColors);
+            GPP::ErrorCode res = GPP::IntrinsicColor::TuneColorFromMultiFrame(pointCloud, neighborCount, 
+                colorIds, pointColors, sharpDiff);
             mIsCommandInProgress = false;
             if (res == GPP_API_IS_NOT_AVAILABLE)
             {
@@ -1770,6 +1772,7 @@ namespace MagicApp
         }
         else
         {
+            double maxHoleAreaRatio = 0.1;
             if (pointCloud->HasColor())
             {
                 GPP::Int pointCount = pointCloud->GetPointCount();
@@ -1789,7 +1792,7 @@ namespace MagicApp
                 GPP::DumpOnce();
 #endif
                 GPP::ErrorCode res = GPP::ReconstructMesh::Reconstruct(pointCloud, triMesh, quality, needFillHole, 
-                    &pointColorFields, &vertexColorField);
+                    &pointColorFields, &vertexColorField, maxHoleAreaRatio);
                 mIsCommandInProgress = false;
                 if (res == GPP_API_IS_NOT_AVAILABLE)
                 {
@@ -1825,7 +1828,8 @@ namespace MagicApp
 #if MAKEDUMPFILE
                 GPP::DumpOnce();
 #endif
-                GPP::ErrorCode res = GPP::ReconstructMesh::Reconstruct(pointCloud, triMesh, quality, needFillHole, NULL, NULL);
+                GPP::ErrorCode res = GPP::ReconstructMesh::Reconstruct(pointCloud, triMesh, quality, needFillHole, 
+                    NULL, NULL, maxHoleAreaRatio);
                 mIsCommandInProgress = false;
                 if (res == GPP_API_IS_NOT_AVAILABLE)
                 {

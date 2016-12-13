@@ -591,6 +591,7 @@ namespace MagicApp
         mRoot.at(0)->findWidget("But_LoadImageColorIds")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("But_ExportImageColorIds")->castType<MyGUI::Button>()->setVisible(isVisible);
         mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->setVisible(isVisible);
+        mRoot.at(0)->findWidget("Edit_FuseColorSharpDiff")->castType<MyGUI::EditBox>()->setVisible(isVisible);
         if (isVisible)
         {
             std::stringstream ss;
@@ -599,6 +600,13 @@ namespace MagicApp
             ss >> textString;
             mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
             mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
+
+            ss.clear();
+            textString.clear();
+            ss << 0.8;
+            ss >> textString;
+            mRoot.at(0)->findWidget("Edit_FuseColorSharpDiff")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            mRoot.at(0)->findWidget("Edit_FuseColorSharpDiff")->castType<MyGUI::EditBox>()->setTextSelectionColour(MyGUI::Colour::Black);
         }
     }
 
@@ -609,6 +617,8 @@ namespace MagicApp
         {
             std::string textString = mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->getOnlyText();
             int neighborCount = std::atoi(textString.c_str());
+            textString = mRoot.at(0)->findWidget("Edit_FuseColorSharpDiff")->castType<MyGUI::EditBox>()->getOnlyText();
+            double sharpDiff = std::atof(textString.c_str());
             if (neighborCount < 4)
             {
                 std::stringstream ss;
@@ -617,9 +627,17 @@ namespace MagicApp
                 ss >> textString;
                 mRoot.at(0)->findWidget("Edit_FuseColorNeighborCount")->castType<MyGUI::EditBox>()->setOnlyText(textString);
             }
-            else
+            if (sharpDiff < 0 || sharpDiff > 1.74)
             {
-                pointShop->FusePointCloudColor(neighborCount, true);
+                std::stringstream ss;
+                std::string textString;
+                ss << 0.8;
+                ss >> textString;
+                mRoot.at(0)->findWidget("Edit_FuseColorSharpDiff")->castType<MyGUI::EditBox>()->setOnlyText(textString);
+            }
+            if (neighborCount >= 4 && sharpDiff > 0 && sharpDiff <= 1.74)
+            {
+                pointShop->FusePointCloudColor(neighborCount, sharpDiff, true);
             }
         }
     }
